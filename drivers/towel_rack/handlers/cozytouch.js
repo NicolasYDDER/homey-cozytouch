@@ -26,8 +26,6 @@ class TowelRackCozytouchHandler {
 
   constructor(ctx) {
     this.ctx = ctx;
-    this._previousValues = {};
-    this._pollCount = 0;
   }
 
   async setTargetTemperature(value) {
@@ -73,31 +71,7 @@ class TowelRackCozytouchHandler {
 
   async updateState() {
     const caps = await this.ctx.getCapabilities();
-    this._pollCount++;
 
-    // ── Spy mode: detect changes across ALL capabilities ─────
-    const currentValues = {};
-    for (const cap of caps) {
-      currentValues[cap.capabilityId] = String(cap.value);
-    }
-
-    if (this._pollCount === 1) {
-      this.ctx.log('=== SPY MODE ACTIVE ===');
-      this.ctx.log(`Tracking ${Object.keys(currentValues).length} capabilities`);
-    }
-
-    if (Object.keys(this._previousValues).length > 0) {
-      for (const [id, value] of Object.entries(currentValues)) {
-        const prev = this._previousValues[id];
-        if (prev !== undefined && prev !== value) {
-          this.ctx.log(`>>> CHANGED: Cap [${id}] ${prev} → ${value}`);
-        }
-      }
-    }
-
-    this._previousValues = currentValues;
-
-    // ── Normal state updates ─────────────────────────────────
     const currentTemp = this.ctx.getCapValue(caps, CAP.CURRENT_TEMP);
     if (currentTemp !== null) {
       this.ctx.setCapability('measure_temperature', parseFloat(currentTemp));

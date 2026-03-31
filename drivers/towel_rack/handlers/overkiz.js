@@ -28,8 +28,6 @@ class TowelRackOverkizHandler {
 
   constructor(ctx) {
     this.ctx = ctx;
-    this._previousStates = {};
-    this._pollCount = 0;
   }
 
   async setTargetTemperature(value) {
@@ -51,33 +49,7 @@ class TowelRackOverkizHandler {
 
   async updateState() {
     const states = await this.ctx.getDeviceState();
-    this._pollCount++;
 
-    // ── Spy mode: detect state changes ───────────────────────
-    const currentStates = {};
-    for (const s of (states || [])) {
-      currentStates[s.name] = String(s.value);
-    }
-
-    if (this._pollCount === 1) {
-      this.ctx.log('=== OVERKIZ SPY MODE ACTIVE ===');
-      this.ctx.log('All states:', JSON.stringify(
-        (states || []).map((s) => ({ name: s.name, value: s.value })),
-      ));
-    }
-
-    if (Object.keys(this._previousStates).length > 0) {
-      for (const [name, value] of Object.entries(currentStates)) {
-        const prev = this._previousStates[name];
-        if (prev !== undefined && prev !== value) {
-          this.ctx.log(`>>> CHANGED: ${name}: ${prev} → ${value}`);
-        }
-      }
-    }
-
-    this._previousStates = currentStates;
-
-    // ── Normal state updates ─────────────────────────────────
     const temp = getStateValue(states, 'core:TemperatureState')
       || getStateValue(states, 'core:ComfortRoomTemperatureState');
     if (temp !== null) this.ctx.setCapability('measure_temperature', parseFloat(temp));

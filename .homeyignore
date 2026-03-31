@@ -1,0 +1,13 @@
+node_modules/
+.homeybuild/
+.git/
+.gitignore
+.github/
+env.json
+*.tgz
+README.md
+USERGUIDE.md
+CHANGELOG.md
+LICENSE
+.eslintrc.json
+.vscode/

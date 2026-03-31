@@ -20,19 +20,12 @@
     "xlarge": "/assets/images/xlarge.png"
   },
   "author": {
-    "name": "Community"
-  },
-  "contributing": {
-    "donate": {
-      "paypal": {
-        "username": ""
-      }
-    }
+    "name": "NicolasYDDER"
   },
   "bugs": {
     "url": "https://github.com/NicolasYDDER/homey-cozytouch/issues"
   },
-  "homeyCommunityTopicId": 0,
+  "source": "https://github.com/NicolasYDDER/homey-cozytouch",
   "permissions": [],
   "api": {
     "getStatus": {
