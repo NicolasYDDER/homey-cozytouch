@@ -3,29 +3,27 @@
 /**
  * CozyTouch handler for towel racks (Kelud, Asama via Magellan).
  *
- * The CozyTouch API returns NO metadata (name/type/category) for these devices,
- * only raw capabilityId + value. IDs are mapped from value analysis:
- *
- *   [40]  = target/comfort temperature (e.g. 21.0)
- *   [117] = current room temperature (e.g. 15.11)
- *   [160] = min temperature bound (e.g. 7.0)
- *   [161] = max temperature bound (e.g. 28.0)
- *   [164] = operating mode: 0=standby, 1=basic/manual, 2=internal prog
+ * Capability IDs mapped from device analysis:
+ *   [7]   = mode CONTROL (writable): 0=standby, 1=basic/manual, 2=prog
+ *   [40]  = target/comfort temperature (writable)
+ *   [117] = current room temperature (read-only)
+ *   [160] = min temperature bound (read-only)
+ *   [161] = max temperature bound (read-only)
+ *   [164] = mode STATUS (read-only readback)
  *   [172] = eco temperature setpoint
- *   [7]   = derogation/override flag
  */
 
 const CAP = {
-  TARGET_TEMP: 40,
-  CURRENT_TEMP: 117,
-  MODE: 164,
-  DEROGATION: 7,
-  ECO_TEMP: 172,
-  MIN_TEMP: 160,
-  MAX_TEMP: 161,
+  MODE_CONTROL: 7,      // Writable mode
+  TARGET_TEMP: 40,      // Writable comfort setpoint
+  CURRENT_TEMP: 117,    // Read-only measured temp
+  MIN_TEMP: 160,        // Read-only min bound
+  MAX_TEMP: 161,        // Read-only max bound
+  MODE_STATUS: 164,     // Read-only mode readback
+  ECO_TEMP: 172,        // Eco setpoint
 };
 
-// Mode values for cap 164
+// Mode values (used for both writing to cap 7 and reading from cap 164)
 const MODE_TO_API = { off: '0', manual: '1', prog: '2' };
 const API_TO_MODE = { 0: 'off', 1: 'manual', 2: 'prog' };
 
@@ -41,28 +39,27 @@ class TowelRackCozytouchHandler {
   }
 
   async setOnOff(value) {
-    // On = manual mode (1), Off = standby mode (0)
-    await this.ctx.setCapValue(CAP.MODE, value ? '1' : '0');
+    // On = manual (1), Off = standby (0)
+    await this.ctx.setCapValue(CAP.MODE_CONTROL, value ? '1' : '0');
     this.ctx.setCapability('cozytouch_heating_mode', value ? 'manual' : 'off');
   }
 
   async setMode(mode) {
     const apiValue = MODE_TO_API[mode];
     if (apiValue !== undefined) {
-      await this.ctx.setCapValue(CAP.MODE, apiValue);
+      await this.ctx.setCapValue(CAP.MODE_CONTROL, apiValue);
     } else {
-      // eco_plus not directly available, use manual as fallback
-      this.ctx.log(`Mode "${mode}" not supported, falling back to manual`);
-      await this.ctx.setCapValue(CAP.MODE, '1');
+      // eco_plus not natively available, use manual as fallback
+      this.ctx.log(`Mode "${mode}" not directly supported, using manual`);
+      await this.ctx.setCapValue(CAP.MODE_CONTROL, '1');
     }
-    this.ctx.setCapability('cozytouch_heating_mode', mode);
+    this.ctx.setCapability('cozytouch_heating_mode', mode !== 'eco_plus' ? mode : 'manual');
     this.ctx.setCapability('onoff', mode !== 'off');
   }
 
   async updateState() {
     const caps = await this.ctx.getCapabilities();
 
-    // Log raw capabilities once for debugging
     if (!this._logged) {
       this._logged = true;
       this.ctx.log('Kelud capabilities (raw):', caps.map(
@@ -70,7 +67,7 @@ class TowelRackCozytouchHandler {
       ).join(', '));
     }
 
-    // Current temperature
+    // Current temperature (read-only)
     const currentTemp = this.ctx.getCapValue(caps, CAP.CURRENT_TEMP);
     if (currentTemp !== null) {
       this.ctx.setCapability('measure_temperature', parseFloat(currentTemp));
@@ -82,10 +79,10 @@ class TowelRackCozytouchHandler {
       this.ctx.setCapability('target_temperature', parseFloat(targetTemp));
     }
 
-    // Operating mode → on/off + heating mode
-    const mode = this.ctx.getCapValue(caps, CAP.MODE);
-    if (mode !== null) {
-      const modeInt = parseInt(mode, 10);
+    // Mode status (read from cap 164, the read-only readback)
+    const modeStatus = this.ctx.getCapValue(caps, CAP.MODE_STATUS);
+    if (modeStatus !== null) {
+      const modeInt = parseInt(modeStatus, 10);
       const modeStr = API_TO_MODE[modeInt] || 'off';
       this.ctx.setCapability('cozytouch_heating_mode', modeStr);
       this.ctx.setCapability('onoff', modeStr !== 'off');
