@@ -20,7 +20,6 @@ const CMD = {
   SET_TARGET_TEMP: 'setTargetTemperature',
   SET_BOOST_DURATION: 'setBoostModeDuration',
   REFRESH_BOOST: 'refreshBoostModeDuration',
-  SET_SHOWER_COUNT: 'setExpectedNumberOfShower',
 };
 
 class WaterHeaterOverkizHandler {
@@ -76,10 +75,6 @@ class WaterHeaterOverkizHandler {
     await this.ctx.executeCommand(CMD.REFRESH_BOOST, []);
   }
 
-  async setShowerCount(value) {
-    await this.ctx.executeCommand(CMD.SET_SHOWER_COUNT, [Math.round(value)]);
-  }
-
   async setAwayMode(value) {
     await this.ctx.executeCommand(CMD.SET_OPERATING_MODE, [
       { relaunch: 'off', absence: value ? 'on' : 'off' },
@@ -108,20 +103,6 @@ class WaterHeaterOverkizHandler {
     // Away state
     const awayDuration = getStateValue(states, 'io:AwayModeDurationState');
     const isAway = awayDuration !== null && awayDuration !== '0' && awayDuration !== 0;
-
-    // Shower count
-    const showerCount = getStateValue(states, 'core:ExpectedNumberOfShowerState');
-    if (showerCount !== null) this.ctx.setCapability('cozytouch_shower_count', parseInt(showerCount, 10));
-
-    // Dynamic shower range from device
-    const minShower = getStateValue(states, 'core:MinimalShowerManualModeState');
-    const maxShower = getStateValue(states, 'core:MaximalShowerManualModeState');
-    if (minShower !== null && maxShower !== null) {
-      this.ctx.setCapabilityOptions('cozytouch_shower_count', {
-        min: parseInt(minShower, 10),
-        max: parseInt(maxShower, 10),
-      });
-    }
 
     // Mode
     if (isAway) {

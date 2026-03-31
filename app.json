@@ -133,7 +133,6 @@
         "measure_temperature",
         "cozytouch_heating_mode",
         "cozytouch_boost",
-        "cozytouch_shower_count",
         "cozytouch_away_mode",
         "onoff"
       ],

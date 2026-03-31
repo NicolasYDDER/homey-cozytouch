@@ -11,8 +11,8 @@ class WaterHeaterDevice extends CozyTouchDevice {
     if (!this.hasCapability('cozytouch_boost')) {
       await this.addCapability('cozytouch_boost');
     }
-    if (!this.hasCapability('cozytouch_shower_count')) {
-      await this.addCapability('cozytouch_shower_count');
+    if (this.hasCapability('cozytouch_shower_count')) {
+      await this.removeCapability('cozytouch_shower_count');
     }
 
     // Water heater only uses off/manual/eco_plus/auto (no prog)
@@ -53,10 +53,6 @@ class WaterHeaterDevice extends CozyTouchDevice {
         this._handler.setBoost(value));
     }
 
-    if (this.hasCapability('cozytouch_shower_count')) {
-      this._registerCapability('cozytouch_shower_count', (value) =>
-        this._handler.setShowerCount(value));
-    }
   }
 
   async setHeatingMode(mode) {
