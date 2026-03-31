@@ -25,6 +25,16 @@ class WaterHeaterDevice extends CozyTouchDevice {
 
     this._registerCapability('cozytouch_away_mode', (value) =>
       this._handler.setAwayMode(value));
+
+    if (this.hasCapability('cozytouch_boost')) {
+      this._registerCapability('cozytouch_boost', (value) =>
+        this._handler.setBoost(value));
+    }
+
+    if (this.hasCapability('cozytouch_shower_count')) {
+      this._registerCapability('cozytouch_shower_count', (value) =>
+        this._handler.setShowerCount(value));
+    }
   }
 
   async setHeatingMode(mode) {

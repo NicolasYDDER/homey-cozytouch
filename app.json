@@ -132,6 +132,8 @@
         "target_temperature",
         "measure_temperature",
         "cozytouch_heating_mode",
+        "cozytouch_boost",
+        "cozytouch_shower_count",
         "cozytouch_away_mode",
         "onoff"
       ],
@@ -352,6 +354,10 @@
         {
           "id": "prog",
           "title": { "en": "Program", "fr": "Programme" }
+        },
+        {
+          "id": "auto",
+          "title": { "en": "Auto", "fr": "Auto" }
         }
       ],
       "getable": true,
@@ -459,6 +465,29 @@
       "getable": true,
       "setable": true,
       "uiComponent": "toggle"
+    },
+    "cozytouch_boost": {
+      "type": "boolean",
+      "title": {
+        "en": "Boost",
+        "fr": "Boost"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "toggle"
+    },
+    "cozytouch_shower_count": {
+      "type": "number",
+      "title": {
+        "en": "Number of Showers",
+        "fr": "Nombre de douches"
+      },
+      "getable": true,
+      "setable": true,
+      "min": 1,
+      "max": 7,
+      "step": 1,
+      "uiComponent": "slider"
     }
   },
   "flow": {
@@ -542,7 +571,8 @@
               { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
               { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
               { "id": "eco_plus", "label": { "en": "Eco+", "fr": "Eco+" } },
-              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } }
+              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } },
+              { "id": "auto", "label": { "en": "Auto", "fr": "Auto" } }
             ]
           }
         ]
@@ -610,7 +640,8 @@
               { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
               { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
               { "id": "eco_plus", "label": { "en": "Eco+", "fr": "Eco+" } },
-              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } }
+              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } },
+              { "id": "auto", "label": { "en": "Auto", "fr": "Auto" } }
             ]
           }
         ]
