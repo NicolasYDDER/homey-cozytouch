@@ -1,0 +1,17 @@
+{
+  "pair": {
+    "login_credentials": {
+      "title": "Connexion à Cozytouch",
+      "subtitle": "Entrez vos identifiants de compte Atlantic Cozytouch"
+    },
+    "no_devices": "Aucun appareil compatible trouvé dans votre compte Cozytouch"
+  },
+  "errors": {
+    "auth_failed": "Authentification échouée. Veuillez vérifier vos identifiants.",
+    "connection_failed": "Impossible de se connecter à Cozytouch. Vérifiez votre connexion internet.",
+    "command_failed": "Échec de l'envoi de la commande à l'appareil."
+  },
+  "settings": {
+    "poll_interval": "Intervalle de mise à jour (secondes)"
+  }
+}

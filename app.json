@@ -1,0 +1,528 @@
+{
+  "id": "com.atlantic.cozytouch",
+  "version": "1.0.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "platforms": ["local"],
+  "name": {
+    "en": "Atlantic Cozytouch",
+    "fr": "Atlantic Cozytouch"
+  },
+  "description": {
+    "en": "Control your Atlantic heating devices via Cozytouch",
+    "fr": "Contrôlez vos appareils Atlantic via Cozytouch"
+  },
+  "category": ["climate"],
+  "brandColor": "#E3001B",
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Community"
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": ""
+      }
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/NicolasYDDER/homey-cozytouch/issues"
+  },
+  "homeyCommunityTopicId": 0,
+  "permissions": [],
+  "api": {
+    "getDevices": {
+      "method": "GET",
+      "path": "/devices"
+    }
+  },
+  "drivers": [
+    {
+      "id": "heater",
+      "name": {
+        "en": "Heater / Boiler",
+        "fr": "Chauffage / Chaudière"
+      },
+      "class": "heater",
+      "capabilities": [
+        "target_temperature",
+        "measure_temperature",
+        "cozytouch_heating_mode",
+        "onoff"
+      ],
+      "capabilitiesOptions": {
+        "target_temperature": {
+          "min": 5,
+          "max": 30,
+          "step": 0.5
+        }
+      },
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "/drivers/heater/assets/icon.svg"
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/heater/assets/images/small.png",
+        "large": "/drivers/heater/assets/images/large.png",
+        "xlarge": "/drivers/heater/assets/images/xlarge.png"
+      },
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Device Settings",
+            "fr": "Paramètres de l'appareil"
+          },
+          "children": [
+            {
+              "id": "poll_interval",
+              "type": "number",
+              "label": {
+                "en": "Poll interval (seconds)",
+                "fr": "Intervalle de mise à jour (secondes)"
+              },
+              "value": 60,
+              "min": 10,
+              "max": 300
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "water_heater",
+      "name": {
+        "en": "Water Heater",
+        "fr": "Chauffe-eau"
+      },
+      "class": "heater",
+      "capabilities": [
+        "target_temperature",
+        "measure_temperature",
+        "cozytouch_heating_mode",
+        "cozytouch_away_mode",
+        "onoff"
+      ],
+      "capabilitiesOptions": {
+        "target_temperature": {
+          "min": 30,
+          "max": 65,
+          "step": 1
+        }
+      },
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "/drivers/water_heater/assets/icon.svg"
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/water_heater/assets/images/small.png",
+        "large": "/drivers/water_heater/assets/images/large.png",
+        "xlarge": "/drivers/water_heater/assets/images/xlarge.png"
+      },
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Device Settings",
+            "fr": "Paramètres de l'appareil"
+          },
+          "children": [
+            {
+              "id": "poll_interval",
+              "type": "number",
+              "label": {
+                "en": "Poll interval (seconds)",
+                "fr": "Intervalle de mise à jour (secondes)"
+              },
+              "value": 60,
+              "min": 10,
+              "max": 300
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "climate",
+      "name": {
+        "en": "Heat Pump / AC",
+        "fr": "Pompe à chaleur / Climatisation"
+      },
+      "class": "thermostat",
+      "capabilities": [
+        "target_temperature",
+        "measure_temperature",
+        "cozytouch_hvac_mode",
+        "cozytouch_fan_mode",
+        "cozytouch_swing_mode",
+        "onoff"
+      ],
+      "capabilitiesOptions": {
+        "target_temperature": {
+          "min": 5,
+          "max": 35,
+          "step": 0.5
+        }
+      },
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "/drivers/climate/assets/icon.svg"
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/climate/assets/images/small.png",
+        "large": "/drivers/climate/assets/images/large.png",
+        "xlarge": "/drivers/climate/assets/images/xlarge.png"
+      },
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Device Settings",
+            "fr": "Paramètres de l'appareil"
+          },
+          "children": [
+            {
+              "id": "poll_interval",
+              "type": "number",
+              "label": {
+                "en": "Poll interval (seconds)",
+                "fr": "Intervalle de mise à jour (secondes)"
+              },
+              "value": 60,
+              "min": 10,
+              "max": 300
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "cozytouch_heating_mode": {
+      "type": "enum",
+      "title": {
+        "en": "Heating Mode",
+        "fr": "Mode de chauffage"
+      },
+      "values": [
+        {
+          "id": "off",
+          "title": { "en": "Off", "fr": "Arrêt" }
+        },
+        {
+          "id": "manual",
+          "title": { "en": "Manual", "fr": "Manuel" }
+        },
+        {
+          "id": "eco_plus",
+          "title": { "en": "Eco+", "fr": "Eco+" }
+        },
+        {
+          "id": "prog",
+          "title": { "en": "Program", "fr": "Programme" }
+        }
+      ],
+      "getable": true,
+      "setable": true,
+      "uiComponent": "picker"
+    },
+    "cozytouch_hvac_mode": {
+      "type": "enum",
+      "title": {
+        "en": "HVAC Mode",
+        "fr": "Mode CVC"
+      },
+      "values": [
+        {
+          "id": "off",
+          "title": { "en": "Off", "fr": "Arrêt" }
+        },
+        {
+          "id": "heat",
+          "title": { "en": "Heat", "fr": "Chauffage" }
+        },
+        {
+          "id": "cool",
+          "title": { "en": "Cool", "fr": "Refroidissement" }
+        },
+        {
+          "id": "auto",
+          "title": { "en": "Auto", "fr": "Automatique" }
+        },
+        {
+          "id": "dry",
+          "title": { "en": "Dry", "fr": "Séchage" }
+        },
+        {
+          "id": "fan_only",
+          "title": { "en": "Fan Only", "fr": "Ventilation" }
+        }
+      ],
+      "getable": true,
+      "setable": true,
+      "uiComponent": "picker"
+    },
+    "cozytouch_fan_mode": {
+      "type": "enum",
+      "title": {
+        "en": "Fan Speed",
+        "fr": "Vitesse du ventilateur"
+      },
+      "values": [
+        {
+          "id": "auto",
+          "title": { "en": "Auto", "fr": "Automatique" }
+        },
+        {
+          "id": "low",
+          "title": { "en": "Low", "fr": "Faible" }
+        },
+        {
+          "id": "medium",
+          "title": { "en": "Medium", "fr": "Moyen" }
+        },
+        {
+          "id": "high",
+          "title": { "en": "High", "fr": "Fort" }
+        }
+      ],
+      "getable": true,
+      "setable": true,
+      "uiComponent": "picker"
+    },
+    "cozytouch_swing_mode": {
+      "type": "enum",
+      "title": {
+        "en": "Swing Mode",
+        "fr": "Mode Oscillation"
+      },
+      "values": [
+        {
+          "id": "up",
+          "title": { "en": "Up", "fr": "Haut" }
+        },
+        {
+          "id": "middle_up",
+          "title": { "en": "Middle Up", "fr": "Mi-haut" }
+        },
+        {
+          "id": "middle_down",
+          "title": { "en": "Middle Down", "fr": "Mi-bas" }
+        },
+        {
+          "id": "down",
+          "title": { "en": "Down", "fr": "Bas" }
+        }
+      ],
+      "getable": true,
+      "setable": true,
+      "uiComponent": "picker"
+    },
+    "cozytouch_away_mode": {
+      "type": "boolean",
+      "title": {
+        "en": "Away Mode",
+        "fr": "Mode Absence"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "toggle"
+    }
+  },
+  "flow": {
+    "triggers": [
+      {
+        "id": "measure_temperature_changed",
+        "title": {
+          "en": "Temperature changed",
+          "fr": "Température changée"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=heater|water_heater|climate"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "temperature",
+            "type": "number",
+            "title": {
+              "en": "Temperature",
+              "fr": "Température"
+            },
+            "example": 21.5
+          }
+        ]
+      },
+      {
+        "id": "heating_mode_changed",
+        "title": {
+          "en": "Heating mode changed",
+          "fr": "Mode de chauffage changé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=heater|water_heater"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "mode",
+            "type": "string",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "example": "manual"
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "set_heating_mode",
+        "title": {
+          "en": "Set heating mode",
+          "fr": "Définir le mode de chauffage"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=heater|water_heater"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
+              { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
+              { "id": "eco_plus", "label": { "en": "Eco+", "fr": "Eco+" } },
+              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set_hvac_mode",
+        "title": {
+          "en": "Set HVAC mode",
+          "fr": "Définir le mode CVC"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=climate"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
+              { "id": "heat", "label": { "en": "Heat", "fr": "Chauffage" } },
+              { "id": "cool", "label": { "en": "Cool", "fr": "Refroidissement" } },
+              { "id": "auto", "label": { "en": "Auto", "fr": "Automatique" } },
+              { "id": "dry", "label": { "en": "Dry", "fr": "Séchage" } },
+              { "id": "fan_only", "label": { "en": "Fan Only", "fr": "Ventilation" } }
+            ]
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      {
+        "id": "is_heating_mode",
+        "title": {
+          "en": "Heating mode !{{is|is not}} ...",
+          "fr": "Le mode de chauffage !{{est|n'est pas}} ..."
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=heater|water_heater"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
+              { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
+              { "id": "eco_plus", "label": { "en": "Eco+", "fr": "Eco+" } },
+              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
