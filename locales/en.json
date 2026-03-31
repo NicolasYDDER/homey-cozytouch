@@ -9,7 +9,8 @@
   "errors": {
     "auth_failed": "Authentication failed. Please check your credentials.",
     "connection_failed": "Unable to connect to Cozytouch. Please check your internet connection.",
-    "command_failed": "Failed to send command to device."
+    "command_failed": "Failed to send command to device.",
+    "no_protocol": "No devices found on either Cozytouch or Overkiz protocols."
   },
   "settings": {
     "poll_interval": "Poll interval (seconds)"

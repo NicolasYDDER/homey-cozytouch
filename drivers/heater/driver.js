@@ -2,25 +2,32 @@
 
 const CozyTouchDriver = require('../../lib/CozyTouchDriver');
 const CozyTouchAPI = require('../../lib/CozyTouchAPI');
+const OverkizAPI = require('../../lib/OverkizAPI');
 
 class HeaterDriver extends CozyTouchDriver {
 
   _filterDevices(allDevices) {
-    const api = new CozyTouchAPI({});
     return allDevices.filter((dev) => {
-      const type = api.getDeviceType(dev.modelId);
+      if (dev._protocol === 'overkiz') {
+        const overkizApi = new OverkizAPI({});
+        const type = overkizApi.getDeviceType(dev);
+        return type === 'HEATER' || type === 'TOWEL_RACK' || type === 'THERMOSTAT';
+      }
+      const cozyApi = new CozyTouchAPI({});
+      const type = cozyApi.getDeviceType(dev.modelId);
       return type === 'GAZ_BOILER' || type === 'TOWEL_RACK' || type === 'THERMOSTAT';
     });
   }
 
-  _mapDevice(cozytouchDevice, username, password) {
-    const base = super._mapDevice(cozytouchDevice, username, password);
-    base.capabilities = [
-      'target_temperature',
-      'measure_temperature',
-      'cozytouch_heating_mode',
-      'onoff',
-    ];
+  _mapCozyTouchDevice(dev, username, password) {
+    const base = super._mapCozyTouchDevice(dev, username, password);
+    base.capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_heating_mode', 'onoff'];
+    return base;
+  }
+
+  _mapOverkizDevice(dev, username, password) {
+    const base = super._mapOverkizDevice(dev, username, password);
+    base.capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_heating_mode', 'onoff'];
     return base;
   }
 

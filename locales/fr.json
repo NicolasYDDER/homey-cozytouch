@@ -9,7 +9,8 @@
   "errors": {
     "auth_failed": "Authentification échouée. Veuillez vérifier vos identifiants.",
     "connection_failed": "Impossible de se connecter à Cozytouch. Vérifiez votre connexion internet.",
-    "command_failed": "Échec de l'envoi de la commande à l'appareil."
+    "command_failed": "Échec de l'envoi de la commande à l'appareil.",
+    "no_protocol": "Aucun appareil trouvé sur les protocoles Cozytouch et Overkiz."
   },
   "settings": {
     "poll_interval": "Intervalle de mise à jour (secondes)"
