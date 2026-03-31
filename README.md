@@ -420,36 +420,57 @@ Handles gas boilers, towel racks, and thermostats.
 
 ```
 homey-cozytouch/
-├── app.js                          # App entry point + credential restore
-├── app.json                        # Homey manifest (drivers, capabilities, flows)
-├── api.js                          # Settings page API routes
+├── app.js                              # App entry point, credential restore, Flow cards
+├── app.json                            # Homey manifest (drivers, capabilities, flows)
+├── api.js                              # Settings page API routes
 ├── package.json
 │
 ├── lib/
-│   ├── CozyTouchAPI.js             # CozyTouch/Magellan REST API client
-│   ├── OverkizAPI.js               # Overkiz REST API client (3-step auth)
-│   ├── CozyTouchDevice.js          # Base device (dual-protocol polling)
-│   └── CozyTouchDriver.js          # Base driver (combined discovery)
+│   ├── CozyTouchAPI.js                 # CozyTouch/Magellan REST API client
+│   ├── OverkizAPI.js                   # Overkiz REST API client (3-step auth)
+│   ├── CozyTouchDevice.js              # Base device: handler dispatch, polling, auth
+│   ├── CozyTouchDriver.js              # Base driver: pairing, combined discovery
+│   └── constants/
+│       ├── cozytouch-mappings.js       # CAP_IDS + mode maps per device type
+│       └── overkiz-mappings.js         # STATES, COMMANDS, level/DHW maps, helpers
 │
 ├── settings/
-│   └── index.html                  # App configuration page (credentials, status)
+│   └── index.html                      # App config page (credentials, status)
 │
 ├── drivers/
 │   ├── heater/
-│   │   ├── device.js               # Boiler/towel rack device
-│   │   ├── driver.js               # Filters for boiler/rack/thermostat models
+│   │   ├── device.js                   # Thin shell: creates handler, wires listeners
+│   │   ├── driver.js                   # Filters for boiler/thermostat models
+│   │   ├── handlers/
+│   │   │   ├── cozytouch.js            # CozyTouch cap IDs, mode values, API writes
+│   │   │   └── overkiz.js              # Overkiz states, commands, heating levels
 │   │   ├── assets/icon.svg
 │   │   └── pair/login_credentials.html
 │   │
 │   ├── water_heater/
-│   │   ├── device.js               # Water heater device (+ away mode)
-│   │   ├── driver.js               # Filters for water heater models
+│   │   ├── device.js                   # Thin shell + away mode listener
+│   │   ├── driver.js                   # Filters for water heater models
+│   │   ├── handlers/
+│   │   │   ├── cozytouch.js            # CozyTouch cap IDs, away mode, mode values
+│   │   │   └── overkiz.js              # Overkiz DHW commands, absence mode
 │   │   ├── assets/icon.svg
 │   │   └── pair/login_credentials.html
 │   │
-│   └── climate/
-│       ├── device.js               # Heat pump / AC device (+ fan/swing)
-│       ├── driver.js               # Filters for HP/AC models
+│   ├── climate/
+│   │   ├── device.js                   # Thin shell + fan/swing listeners
+│   │   ├── driver.js                   # Filters for heat pump/AC models
+│   │   ├── handlers/
+│   │   │   ├── cozytouch.js            # HVAC modes per model, fan, swing
+│   │   │   └── overkiz.js              # Simple heat on/off
+│   │   ├── assets/icon.svg
+│   │   └── pair/login_credentials.html
+│   │
+│   └── towel_rack/
+│       ├── device.js                   # Thin shell: delegates to handler
+│       ├── driver.js                   # Filters for towel rack models
+│       ├── handlers/
+│       │   ├── cozytouch.js            # No ON_OFF cap, mode controls power
+│       │   └── overkiz.js              # setHeatingLevel only, no on/off command
 │       ├── assets/icon.svg
 │       └── pair/login_credentials.html
 │
@@ -457,7 +478,8 @@ homey-cozytouch/
 │   ├── en.json
 │   └── fr.json
 │
-└── assets/                         # App store images (to be added)
+└── assets/
+    └── icon.svg                        # App icon
 ```
 
 ### Data Flow
@@ -469,19 +491,17 @@ User Action (Homey UI / Flow)
   registerCapabilityListener()     ← drivers/{type}/device.js
         │
         ▼
-  _setCapValue(capId, value)       ← lib/CozyTouchDevice.js
+  this._handler.setMode(value)     ← delegates to protocol handler
         │
-        ▼
-  setCapabilityValue(deviceId,     ← lib/CozyTouchAPI.js
-    capabilityId, value)
+        ├─── CozyTouch handler ──► ctx.setCapValue(capId, value)
+        │                                   │
+        │                                   ▼
+        │                          POST /magellan/executions/writecapability
         │
-        ▼
-  POST /magellan/executions/       ← Atlantic Cloud
-    writecapability
-        │
-        ▼
-  Poll execution status until      ← lib/CozyTouchAPI.js
-    state === 3 (completed)
+        └─── Overkiz handler ───► ctx.executeCommand(cmd, params)
+                                            │
+                                            ▼
+                                   POST /exec/apply
 ```
 
 ### Polling Flow
@@ -490,15 +510,17 @@ User Action (Homey UI / Flow)
 setInterval (every 60s)
         │
         ▼
-  GET /magellan/capabilities/      ← Atlantic Cloud
-    ?deviceId={id}
+  this._handler.updateState()     ← lib/CozyTouchDevice.js
         │
-        ▼
-  _updateFromCapabilities()        ← drivers/{type}/device.js
+        ├─── CozyTouch handler ──► GET /magellan/capabilities/?deviceId={id}
+        │                                   │
+        │                                   ▼
+        │                          ctx.setCapability() for each mapped cap
         │
-        ▼
-  setCapabilityValue() for each    ← Homey UI updates
-    mapped capability
+        └─── Overkiz handler ───► GET /setup/devices/{url}/states
+                                            │
+                                            ▼
+                                   ctx.setCapability() for each mapped state
 ```
 
 ---
