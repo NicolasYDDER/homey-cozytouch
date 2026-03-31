@@ -10,14 +10,14 @@ class TowelRackOverkizHandler {
 
   constructor(ctx) {
     this.ctx = ctx;
-    this._statesLogged = false;
+    this._previousStates = {};
+    this._pollCount = 0;
   }
 
   async setTargetTemperature(value) {
     await this.ctx.executeCommand(EXTRA_COMMANDS.SET_TARGET_TEMPERATURE, [value]);
   }
 
-  // Atlantic towel dryers: on/off via setHeatingLevel (no on/off command).
   async setOnOff(value) {
     const level = value ? 'comfort' : 'off';
     await this.ctx.executeCommand(COMMANDS.SET_HEATING_LEVEL, [level]);
@@ -33,15 +33,33 @@ class TowelRackOverkizHandler {
 
   async updateState() {
     const states = await this.ctx.getDeviceState();
+    this._pollCount++;
 
-    // Log available states once for debugging
-    if (!this._statesLogged) {
-      this._statesLogged = true;
-      this.ctx.log('Available Overkiz states:', JSON.stringify(
+    // ── SPY MODE: detect state changes ────────────────────────
+    const currentStates = {};
+    for (const s of (states || [])) {
+      currentStates[s.name] = String(s.value);
+    }
+
+    if (this._pollCount === 1) {
+      this.ctx.log('=== OVERKIZ SPY MODE ACTIVE ===');
+      this.ctx.log('All states:', JSON.stringify(
         (states || []).map((s) => ({ name: s.name, value: s.value })),
       ));
     }
 
+    if (Object.keys(this._previousStates).length > 0) {
+      for (const [name, value] of Object.entries(currentStates)) {
+        const prev = this._previousStates[name];
+        if (prev !== undefined && prev !== value) {
+          this.ctx.log(`>>> CHANGED: ${name}: ${prev} → ${value}`);
+        }
+      }
+    }
+
+    this._previousStates = currentStates;
+
+    // ── Normal state updates ──────────────────────────────────
     const temp = getStateValue(states, STATES.TEMPERATURE)
       || getStateValue(states, 'core:ComfortRoomTemperatureState');
     if (temp !== null) this.ctx.setCapability('measure_temperature', parseFloat(temp));
