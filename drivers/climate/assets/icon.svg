@@ -1,12 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
-  <!-- Heat pump / AC unit icon -->
-  <rect x="8" y="18" width="64" height="40" rx="6" stroke="currentColor" stroke-width="3"/>
-  <line x1="16" y1="30" x2="64" y2="30" stroke="currentColor" stroke-width="2"/>
-  <line x1="16" y1="36" x2="64" y2="36" stroke="currentColor" stroke-width="2"/>
-  <line x1="16" y1="42" x2="64" y2="42" stroke="currentColor" stroke-width="2"/>
-  <circle cx="56" cy="50" r="3" fill="currentColor"/>
-  <path d="M20 58v8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M60 58v8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M16 66h12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M52 66h12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- AC / Heat pump - right-side 3/4 angle wall-mounted view -->
+  <!-- Front face -->
+  <path d="M4 22 L46 22 L46 52 L4 52 Z" stroke="currentColor" stroke-width="2.5" fill="none"/>
+  <!-- Right side face (depth) -->
+  <path d="M46 22 L64 14 L64 44 L46 52 Z" stroke="currentColor" stroke-width="2.5" fill="none"/>
+  <!-- Top face -->
+  <path d="M4 22 L22 14 L64 14 L46 22 Z" stroke="currentColor" stroke-width="2.5" fill="none"/>
+  <!-- Vent slats on front -->
+  <line x1="10" y1="32" x2="40" y2="32" stroke="currentColor" stroke-width="1.5"/>
+  <line x1="10" y1="36" x2="40" y2="36" stroke="currentColor" stroke-width="1.5"/>
+  <line x1="10" y1="40" x2="40" y2="40" stroke="currentColor" stroke-width="1.5"/>
+  <line x1="10" y1="44" x2="40" y2="44" stroke="currentColor" stroke-width="1.5"/>
+  <!-- Status LED -->
+  <circle cx="38" cy="26" r="2" fill="currentColor"/>
+  <!-- Airflow curves below unit -->
+  <path d="M10 52 C14 58, 18 58, 22 54" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M18 54 C22 60, 26 60, 30 56" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.4"/>
+  <path d="M26 56 C30 62, 34 62, 38 58" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.25"/>
+  <!-- Depth detail lines on right face -->
+  <line x1="50" y1="26" x2="60" y2="22" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+  <line x1="50" y1="34" x2="60" y2="30" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+  <line x1="50" y1="42" x2="60" y2="38" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+  <!-- Wall mount -->
+  <rect x="0" y="28" width="4" height="6" rx="1" fill="currentColor" opacity="0.7"/>
+  <rect x="0" y="42" width="4" height="6" rx="1" fill="currentColor" opacity="0.7"/>
 </svg>

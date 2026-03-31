@@ -1,12 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
-  <!-- Water heater / tank icon -->
-  <rect x="20" y="8" width="40" height="58" rx="8" stroke="currentColor" stroke-width="3"/>
-  <path d="M40 24c-2 2.5-4 4.5-4 7a4 4 0 008 0c0-2.5-2-4.5-4-7z" fill="currentColor"/>
-  <path d="M33 26c-1 1.5-2 2.5-2 4a2 2 0 004 0c0-1.5-1-2.5-2-4z" fill="currentColor" opacity="0.5"/>
-  <path d="M47 26c-1 1.5-2 2.5-2 4a2 2 0 004 0c0-1.5-1-2.5-2-4z" fill="currentColor" opacity="0.5"/>
-  <line x1="24" y1="44" x2="56" y2="44" stroke="currentColor" stroke-width="2"/>
-  <circle cx="32" cy="52" r="3" stroke="currentColor" stroke-width="2"/>
-  <circle cx="48" cy="52" r="3" stroke="currentColor" stroke-width="2"/>
-  <path d="M32 66v6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M48 66v6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Water heater tank - right-side 3/4 angle view -->
+  <!-- Front face (tall rounded rectangle) -->
+  <path d="M10 16 C10 10, 40 10, 40 16 L40 66 C40 72, 10 72, 10 66 Z" stroke="currentColor" stroke-width="2.5" fill="none"/>
+  <!-- Top ellipse -->
+  <ellipse cx="25" cy="13" rx="15" ry="5" stroke="currentColor" stroke-width="2.5" fill="none"/>
+  <!-- Right side depth -->
+  <path d="M40 16 C42 14, 56 10, 56 12 L56 58 C56 64, 40 68, 40 66" stroke="currentColor" stroke-width="2.5" fill="none"/>
+  <!-- Top depth arc -->
+  <path d="M40 13 C42 11, 56 7, 56 10" stroke="currentColor" stroke-width="2" fill="none"/>
+  <!-- Water drop on front -->
+  <path d="M25 26 c-2 3-4.5 5-4.5 7.5 a4.5 4.5 0 009 0 c0-2.5-2.5-4.5-4.5-7.5z" fill="currentColor"/>
+  <!-- Horizontal divider -->
+  <line x1="14" y1="46" x2="36" y2="46" stroke="currentColor" stroke-width="2"/>
+  <!-- Divider depth line -->
+  <path d="M36 46 L50 40" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+  <!-- Control dials on front -->
+  <circle cx="20" cy="54" r="3" stroke="currentColor" stroke-width="2"/>
+  <circle cx="20" cy="54" r="1" fill="currentColor"/>
+  <circle cx="32" cy="54" r="3" stroke="currentColor" stroke-width="2"/>
+  <circle cx="32" cy="54" r="1" fill="currentColor"/>
+  <!-- Depth shading lines on right face -->
+  <line x1="44" y1="22" x2="52" y2="18" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+  <line x1="44" y1="36" x2="52" y2="32" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+  <line x1="44" y1="50" x2="52" y2="46" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+  <!-- Legs -->
+  <path d="M18 70 v5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <path d="M34 70 v5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
 </svg>

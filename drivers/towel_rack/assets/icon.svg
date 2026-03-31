@@ -1,13 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
-  <!-- Towel rack / heated towel rail icon -->
-  <rect x="18" y="8" width="44" height="64" rx="4" stroke="currentColor" stroke-width="3"/>
-  <!-- Horizontal heating bars -->
-  <line x1="26" y1="20" x2="54" y2="20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-  <line x1="26" y1="30" x2="54" y2="30" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-  <line x1="26" y1="40" x2="54" y2="40" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-  <line x1="26" y1="50" x2="54" y2="50" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-  <line x1="26" y1="60" x2="54" y2="60" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-  <!-- Wall mounts -->
-  <rect x="12" y="14" width="6" height="8" rx="2" fill="currentColor"/>
-  <rect x="12" y="58" width="6" height="8" rx="2" fill="currentColor"/>
+  <!-- Towel rack - right-side 3/4 angle view -->
+  <!-- Left vertical post -->
+  <path d="M10 10 L10 72" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <!-- Right vertical post (further back due to perspective) -->
+  <path d="M52 6 L52 68" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+  <!-- Horizontal heating bars (angled for perspective) -->
+  <line x1="10" y1="16" x2="52" y2="12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <line x1="10" y1="28" x2="52" y2="24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <line x1="10" y1="40" x2="52" y2="36" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <line x1="10" y1="52" x2="52" y2="48" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <line x1="10" y1="64" x2="52" y2="60" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Towel draped over bars (perspective shape) -->
+  <path d="M18 24 L46 20.5 L46 54 C46 56 44 57.5 42 57.5 L22 60.5 C20 61 18 59.5 18 57.5 Z" stroke="currentColor" stroke-width="2.5" fill="none"/>
+  <!-- Towel fold corner -->
+  <path d="M40 20.8 L40 25 C40 26 41.5 26.5 42.5 26 L46 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Towel thickness on right edge -->
+  <path d="M46 20.5 L49 19 L49 52.5 C49 54.5 47 55.5 46 54" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <!-- Wall mount plates -->
+  <rect x="4" y="12" width="6" height="8" rx="1.5" fill="currentColor" opacity="0.7"/>
+  <rect x="4" y="60" width="6" height="8" rx="1.5" fill="currentColor" opacity="0.7"/>
 </svg>
