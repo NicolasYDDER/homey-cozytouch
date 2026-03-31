@@ -1,10 +1,28 @@
 'use strict';
 
-const {
-  STATES, COMMANDS, EXTRA_COMMANDS,
-  OVERKIZ_LEVEL_TO_MODE, MODE_TO_OVERKIZ_LEVEL,
-  getStateValue,
-} = require('../../../lib/constants/overkiz-mappings');
+const { getStateValue } = require('../../../lib/constants/overkiz-mappings');
+
+/**
+ * Overkiz handler for Atlantic Electrical Towel Dryers (IC3).
+ *
+ * Uses setTowelDryerOperatingMode (not setHeatingLevel which is for basic heaters).
+ * Operating modes: external=manual, internal=prog, auto=auto, standby=off.
+ */
+
+const TOWEL_DRYER_COMMAND = 'setTowelDryerOperatingMode';
+
+const MODE_TO_OVERKIZ = {
+  off: 'standby',
+  manual: 'external',
+  prog: 'internal',
+};
+
+const OVERKIZ_TO_MODE = {
+  standby: 'off',
+  external: 'manual',
+  internal: 'prog',
+  auto: 'prog',
+};
 
 class TowelRackOverkizHandler {
 
@@ -15,18 +33,18 @@ class TowelRackOverkizHandler {
   }
 
   async setTargetTemperature(value) {
-    await this.ctx.executeCommand(EXTRA_COMMANDS.SET_TARGET_TEMPERATURE, [value]);
+    await this.ctx.executeCommand('setTargetTemperature', [value]);
   }
 
   async setOnOff(value) {
-    const level = value ? 'comfort' : 'off';
-    await this.ctx.executeCommand(COMMANDS.SET_HEATING_LEVEL, [level]);
+    const overkizMode = value ? 'external' : 'standby';
+    await this.ctx.executeCommand(TOWEL_DRYER_COMMAND, [overkizMode]);
     this.ctx.setCapability('cozytouch_heating_mode', value ? 'manual' : 'off');
   }
 
   async setMode(mode) {
-    const level = MODE_TO_OVERKIZ_LEVEL[mode] || 'off';
-    await this.ctx.executeCommand(COMMANDS.SET_HEATING_LEVEL, [level]);
+    const overkizMode = MODE_TO_OVERKIZ[mode] || 'standby';
+    await this.ctx.executeCommand(TOWEL_DRYER_COMMAND, [overkizMode]);
     this.ctx.setCapability('cozytouch_heating_mode', mode);
     this.ctx.setCapability('onoff', mode !== 'off');
   }
@@ -35,7 +53,7 @@ class TowelRackOverkizHandler {
     const states = await this.ctx.getDeviceState();
     this._pollCount++;
 
-    // ── SPY MODE: detect state changes ────────────────────────
+    // ── Spy mode: detect state changes ───────────────────────
     const currentStates = {};
     for (const s of (states || [])) {
       currentStates[s.name] = String(s.value);
@@ -59,26 +77,20 @@ class TowelRackOverkizHandler {
 
     this._previousStates = currentStates;
 
-    // ── Normal state updates ──────────────────────────────────
-    const temp = getStateValue(states, STATES.TEMPERATURE)
+    // ── Normal state updates ─────────────────────────────────
+    const temp = getStateValue(states, 'core:TemperatureState')
       || getStateValue(states, 'core:ComfortRoomTemperatureState');
     if (temp !== null) this.ctx.setCapability('measure_temperature', parseFloat(temp));
 
     const targetTemp = getStateValue(states, 'core:TargetTemperatureState')
-      || getStateValue(states, STATES.COMFORT_HEATING_TEMP);
+      || getStateValue(states, 'io:EffectiveTemperatureSetpointState');
     if (targetTemp !== null) this.ctx.setCapability('target_temperature', parseFloat(targetTemp));
 
-    const level = getStateValue(states, STATES.TARGET_HEATING_LEVEL);
-    if (level !== null) {
-      const modeStr = OVERKIZ_LEVEL_TO_MODE[level] || 'manual';
+    const opMode = getStateValue(states, 'core:OperatingModeState');
+    if (opMode !== null) {
+      const modeStr = OVERKIZ_TO_MODE[opMode] || 'manual';
       this.ctx.setCapability('cozytouch_heating_mode', modeStr);
       this.ctx.setCapability('onoff', modeStr !== 'off');
-    } else {
-      const onOff = getStateValue(states, STATES.ON_OFF);
-      if (onOff !== null) {
-        const isOn = onOff === 'on' || onOff === true || onOff === 1;
-        this.ctx.setCapability('onoff', isOn);
-      }
     }
   }
 
