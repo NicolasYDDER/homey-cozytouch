@@ -64,9 +64,13 @@ class TowelRackCozytouchHandler {
 
     if (!this._logged) {
       this._logged = true;
-      this.ctx.log('Kelud capabilities (raw):', caps.map(
-        (c) => `[${c.capabilityId}]=${c.value}`,
-      ).join(', '));
+      // Log full objects for key capabilities to see all metadata
+      const debugIds = [7, 40, 117, 152, 157, 159, 164, 172];
+      for (const cap of caps) {
+        if (debugIds.includes(cap.capabilityId)) {
+          this.ctx.log(`Cap [${cap.capabilityId}] FULL:`, JSON.stringify(cap));
+        }
+      }
     }
 
     // Current temperature (read-only)
