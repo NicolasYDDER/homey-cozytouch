@@ -6,6 +6,17 @@ const WaterHeaterOverkizHandler = require('./handlers/overkiz');
 
 class WaterHeaterDevice extends CozyTouchDevice {
 
+  async onInit() {
+    // Add capabilities that were added after initial pairing
+    if (!this.hasCapability('cozytouch_boost')) {
+      await this.addCapability('cozytouch_boost');
+    }
+    if (!this.hasCapability('cozytouch_shower_count')) {
+      await this.addCapability('cozytouch_shower_count');
+    }
+    await super.onInit();
+  }
+
   _createHandler(store, data) {
     const ctx = this._buildHandlerContext(store, data);
     return this._protocol === 'overkiz'
