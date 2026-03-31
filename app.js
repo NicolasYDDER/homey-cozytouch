@@ -13,10 +13,49 @@ class CozyTouchApp extends Homey.App {
     this._cozyInstances = {};
     this._overkizInstances = {};
 
+    // Restore saved credentials and pre-authenticate
+    await this._restoreCredentials();
+
     // Register Flow action cards
     this._registerFlowCards();
 
     this.log('Atlantic Cozytouch has been initialized');
+  }
+
+  /**
+   * Restore credentials from settings and attempt to authenticate.
+   */
+  async _restoreCredentials() {
+    const credentials = this.homey.settings.get('credentials');
+    if (!credentials || !credentials.username || !credentials.password) {
+      this.log('No saved credentials found');
+      return;
+    }
+
+    this.log(`Restoring session for ${credentials.username}`);
+
+    try {
+      const cozyApi = this.getCozyTouchApi({
+        username: credentials.username,
+        password: credentials.password,
+        deviceId: '',
+      });
+      await cozyApi.authenticate();
+      this.log('CozyTouch session restored');
+    } catch (err) {
+      this.log(`CozyTouch restore failed: ${err.message}`);
+    }
+
+    try {
+      const overkizApi = this.getOverkizApi({
+        username: credentials.username,
+        password: credentials.password,
+      });
+      await overkizApi.authenticate();
+      this.log('Overkiz session restored');
+    } catch (err) {
+      this.log(`Overkiz restore failed: ${err.message}`);
+    }
   }
 
   /**

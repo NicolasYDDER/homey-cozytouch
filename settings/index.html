@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 20px;
+      color: #333;
+      background: #f8f9fa;
+      font-size: 14px;
+    }
+
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    .subtitle { color: #666; font-size: 13px; margin-bottom: 24px; }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+      font-size: 15px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 13px; }
+    .help-text { color: #888; font-size: 12px; margin-top: 2px; }
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #E3001B; outline: none; }
+
+    .btn-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #E3001B; color: white; }
+    .btn-secondary { background: #e9ecef; color: #333; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-test { background: #0d6efd; color: white; }
+
+    /* Status indicators */
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .status-box {
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .status-box h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-green { background: #28a745; }
+    .dot-red { background: #dc3545; }
+    .dot-gray { background: #adb5bd; }
+    .status-detail { font-size: 12px; color: #666; line-height: 1.6; }
+    .status-detail strong { color: #333; }
+
+    /* Device list */
+    .device-list {
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .device-list table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .device-list th, .device-list td {
+      text-align: left;
+      padding: 6px 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .device-list th {
+      font-weight: 600;
+      color: #666;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 13px;
+      display: none;
+    }
+    .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .alert-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .section-divider { border-top: 1px solid #e9ecef; margin: 16px 0; }
+  </style>
+</head>
+<body>
+
+  <h1>Atlantic Cozytouch</h1>
+  <p class="subtitle">Manage your Cozytouch credentials and API connections</p>
+
+  <!-- Credentials Card -->
+  <div class="card">
+    <h2>Account Credentials</h2>
+
+    <div class="form-group">
+      <label for="username">Email</label>
+      <input type="email" id="username" placeholder="your.email@example.com" autocomplete="email">
+      <p class="help-text">The email address you use for the Cozytouch mobile app</p>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Your Cozytouch password">
+      <p class="help-text">Stored locally on your Homey Pro, never shared with third parties</p>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" id="btn-save" onclick="saveCredentials()">Save Credentials</button>
+      <button class="btn-test" id="btn-test" onclick="testConnection()">Test Connection</button>
+      <button class="btn-danger" id="btn-clear" onclick="clearCredentials()">Clear</button>
+    </div>
+
+    <div class="alert alert-success" id="alert-success"></div>
+    <div class="alert alert-error" id="alert-error"></div>
+  </div>
+
+  <!-- Connection Status Card -->
+  <div class="card">
+    <h2>Connection Status</h2>
+
+    <div class="status-grid">
+      <!-- CozyTouch Status -->
+      <div class="status-box">
+        <h3>
+          <span class="status-dot dot-gray" id="cozy-dot"></span>
+          CozyTouch (Magellan)
+        </h3>
+        <div class="status-detail" id="cozy-status">
+          <strong>Status:</strong> Not connected<br>
+          <strong>Endpoint:</strong> apis.groupe-atlantic.com<br>
+          <strong>Devices:</strong> -
+        </div>
+        <div class="device-list" id="cozy-devices" style="display:none"></div>
+      </div>
+
+      <!-- Overkiz Status -->
+      <div class="status-box">
+        <h3>
+          <span class="status-dot dot-gray" id="ovkz-dot"></span>
+          Overkiz
+        </h3>
+        <div class="status-detail" id="ovkz-status">
+          <strong>Status:</strong> Not connected<br>
+          <strong>Endpoint:</strong> ha110-1.overkiz.com<br>
+          <strong>Devices:</strong> -
+        </div>
+        <div class="device-list" id="ovkz-devices" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Card -->
+  <div class="card">
+    <h2>About Protocols</h2>
+    <div class="status-detail" style="line-height: 1.8;">
+      Atlantic uses <strong>two cloud backends</strong> depending on the device generation:<br><br>
+      <strong>CozyTouch (Magellan)</strong> — For newer devices: recent boilers, towel racks (Kelud), AC units (Takao).<br>
+      <strong>Overkiz</strong> — For older devices: water heaters (Calypso, Zeneo), Thermor and Sauter branded products.<br><br>
+      The app automatically queries both backends when you pair devices. A single set of credentials works for both.
+    </div>
+  </div>
+
+<script>
+  // ── Homey API helpers ────────────────────────────────────────
+
+  function apiGet(path) {
+    return new Promise((resolve, reject) => {
+      Homey.api('GET', path, null, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    });
+  }
+
+  function apiPost(path, body) {
+    return new Promise((resolve, reject) => {
+      Homey.api('POST', path, body, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    });
+  }
+
+  function apiDelete(path) {
+    return new Promise((resolve, reject) => {
+      Homey.api('DELETE', path, null, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    });
+  }
+
+  // ── UI helpers ───────────────────────────────────────────────
+
+  function showAlert(type, message) {
+    document.getElementById('alert-success').style.display = 'none';
+    document.getElementById('alert-error').style.display = 'none';
+    const el = document.getElementById(type === 'success' ? 'alert-success' : 'alert-error');
+    el.textContent = message;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 8000);
+  }
+
+  function setButtonLoading(id, loading) {
+    const btn = document.getElementById(id);
+    if (loading) {
+      btn._origText = btn.textContent;
+      btn.innerHTML = '<span class="spinner"></span> Working...';
+      btn.disabled = true;
+    } else {
+      btn.textContent = btn._origText || btn.textContent;
+      btn.disabled = false;
+    }
+  }
+
+  function setDot(id, color) {
+    const el = document.getElementById(id);
+    el.className = 'status-dot dot-' + color;
+  }
+
+  function renderDeviceTable(devices) {
+    if (!devices || devices.length === 0) return '';
+    let html = '<table><tr><th>Name</th><th>Type</th></tr>';
+    devices.forEach((d) => {
+      html += '<tr><td>' + (d.name || '-') + '</td><td>' + (d.type || '-') + '</td></tr>';
+    });
+    html += '</table>';
+    return html;
+  }
+
+  // ── Actions ──────────────────────────────────────────────────
+
+  async function loadStatus() {
+    try {
+      const status = await apiGet('/status');
+
+      if (status.username) {
+        document.getElementById('username').value = status.username;
+        document.getElementById('password').placeholder = 'Password saved (enter new to change)';
+      }
+
+      // CozyTouch status
+      if (status.cozytouch.authenticated) {
+        setDot('cozy-dot', 'green');
+        document.getElementById('cozy-status').innerHTML =
+          '<strong>Status:</strong> Connected<br>' +
+          '<strong>Endpoint:</strong> ' + status.cozytouch.baseUrl + '<br>' +
+          '<strong>Token:</strong> Active';
+      } else {
+        setDot('cozy-dot', status.hasCredentials ? 'red' : 'gray');
+        document.getElementById('cozy-status').innerHTML =
+          '<strong>Status:</strong> ' + (status.hasCredentials ? 'Disconnected' : 'Not configured') + '<br>' +
+          '<strong>Endpoint:</strong> ' + status.cozytouch.baseUrl;
+      }
+
+      // Overkiz status
+      if (status.overkiz.authenticated) {
+        setDot('ovkz-dot', 'green');
+        document.getElementById('ovkz-status').innerHTML =
+          '<strong>Status:</strong> Connected<br>' +
+          '<strong>Endpoint:</strong> ' + status.overkiz.baseUrl + '<br>' +
+          '<strong>Token:</strong> Active';
+      } else {
+        setDot('ovkz-dot', status.hasCredentials ? 'red' : 'gray');
+        document.getElementById('ovkz-status').innerHTML =
+          '<strong>Status:</strong> ' + (status.hasCredentials ? 'Disconnected' : 'Not configured') + '<br>' +
+          '<strong>Endpoint:</strong> ' + status.overkiz.baseUrl;
+      }
+    } catch (err) {
+      console.error('Failed to load status:', err);
+    }
+  }
+
+  async function saveCredentials() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!username || !password) {
+      showAlert('error', 'Please enter both email and password.');
+      return;
+    }
+
+    setButtonLoading('btn-save', true);
+    try {
+      await apiPost('/save-credentials', { username, password });
+      showAlert('success', 'Credentials saved successfully.');
+      document.getElementById('password').value = '';
+      document.getElementById('password').placeholder = 'Password saved (enter new to change)';
+      await loadStatus();
+    } catch (err) {
+      showAlert('error', 'Failed to save: ' + (err.message || err));
+    } finally {
+      setButtonLoading('btn-save', false);
+    }
+  }
+
+  async function testConnection() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    setButtonLoading('btn-test', true);
+    try {
+      const result = await apiPost('/test-connection', {
+        username: username || undefined,
+        password: password || undefined,
+      });
+
+      // Update CozyTouch status
+      if (result.cozytouch.success) {
+        setDot('cozy-dot', 'green');
+        document.getElementById('cozy-status').innerHTML =
+          '<strong>Status:</strong> Connected<br>' +
+          '<strong>Devices:</strong> ' + result.cozytouch.devices;
+        if (result.cozytouch.deviceList && result.cozytouch.deviceList.length > 0) {
+          document.getElementById('cozy-devices').innerHTML = renderDeviceTable(result.cozytouch.deviceList);
+          document.getElementById('cozy-devices').style.display = 'block';
+        }
+      } else {
+        setDot('cozy-dot', 'red');
+        document.getElementById('cozy-status').innerHTML =
+          '<strong>Status:</strong> Failed<br>' +
+          '<strong>Error:</strong> ' + (result.cozytouch.error || 'Unknown');
+        document.getElementById('cozy-devices').style.display = 'none';
+      }
+
+      // Update Overkiz status
+      if (result.overkiz.success) {
+        setDot('ovkz-dot', 'green');
+        document.getElementById('ovkz-status').innerHTML =
+          '<strong>Status:</strong> Connected<br>' +
+          '<strong>Devices:</strong> ' + result.overkiz.devices;
+        if (result.overkiz.deviceList && result.overkiz.deviceList.length > 0) {
+          document.getElementById('ovkz-devices').innerHTML = renderDeviceTable(result.overkiz.deviceList);
+          document.getElementById('ovkz-devices').style.display = 'block';
+        }
+      } else {
+        setDot('ovkz-dot', 'red');
+        document.getElementById('ovkz-status').innerHTML =
+          '<strong>Status:</strong> Failed<br>' +
+          '<strong>Error:</strong> ' + (result.overkiz.error || 'Unknown');
+        document.getElementById('ovkz-devices').style.display = 'none';
+      }
+
+      const total = result.cozytouch.devices + result.overkiz.devices;
+      if (result.cozytouch.success || result.overkiz.success) {
+        showAlert('success', 'Connection successful! Found ' + total + ' device(s) across both protocols.');
+      } else {
+        showAlert('error', 'Both protocols failed. Check your credentials.');
+      }
+    } catch (err) {
+      showAlert('error', 'Connection test failed: ' + (err.message || err));
+    } finally {
+      setButtonLoading('btn-test', false);
+    }
+  }
+
+  async function clearCredentials() {
+    if (!confirm('Clear saved credentials? Existing devices will keep working until next restart.')) return;
+
+    setButtonLoading('btn-clear', true);
+    try {
+      await apiDelete('/clear-credentials');
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('password').placeholder = 'Your Cozytouch password';
+      setDot('cozy-dot', 'gray');
+      setDot('ovkz-dot', 'gray');
+      document.getElementById('cozy-status').innerHTML = '<strong>Status:</strong> Not configured';
+      document.getElementById('ovkz-status').innerHTML = '<strong>Status:</strong> Not configured';
+      document.getElementById('cozy-devices').style.display = 'none';
+      document.getElementById('ovkz-devices').style.display = 'none';
+      showAlert('success', 'Credentials cleared.');
+    } catch (err) {
+      showAlert('error', 'Failed to clear: ' + (err.message || err));
+    } finally {
+      setButtonLoading('btn-clear', false);
+    }
+  }
+
+  // ── Init ─────────────────────────────────────────────────────
+
+  document.addEventListener('DOMContentLoaded', function() {
+    Homey.ready(function() {
+      loadStatus();
+    });
+  });
+</script>
+
+</body>
+</html>

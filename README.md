@@ -11,8 +11,10 @@ Control your Atlantic heating, hot water, and air conditioning devices through t
 1. [Prerequisites](#prerequisites)
 2. [Installation](#installation)
 3. [How the App Works](#how-the-app-works)
-4. [Atlantic Cozytouch API Reference](#atlantic-cozytouch-api-reference)
-5. [Compatible Devices](#compatible-devices)
+4. [App Configuration Page](#app-configuration-page)
+5. [Atlantic Cozytouch API Reference](#atlantic-cozytouch-api-reference)
+6. [Overkiz API Reference](#overkiz-api-reference)
+7. [Compatible Devices](#compatible-devices)
 6. [Architecture Overview](#architecture-overview)
 7. [Capability ID Reference](#capability-id-reference)
 8. [Homey Flow Integration](#homey-flow-integration)
@@ -53,43 +55,90 @@ Not yet published. Planned for a future release.
 ### High-Level Flow
 
 ```
-┌─────────────────┐     HTTPS/REST      ┌──────────────────────────┐
-│   Homey Pro      │ ──────────────────► │  Atlantic Cozytouch API  │
-│                  │ ◄────────────────── │  apis.groupe-atlantic.com│
-│  ┌────────────┐  │    JSON responses   └──────────────────────────┘
-│  │ CozyTouch  │  │                                │
-│  │   App      │  │                      ┌─────────┴─────────┐
-│  │  ┌─────┐   │  │                      │  Cozytouch Bridge │
-│  │  │ API │   │  │                      │  (in your home)   │
-│  │  └─────┘   │  │                      └─────────┬─────────┘
-│  │  ┌─────┐   │  │                         │    │    │
-│  │  │Drvrs│   │  │                      ┌──┘    │    └──┐
-│  │  └─────┘   │  │                     Boiler  DHW    AC
-│  └────────────┘  │
-└─────────────────┘
+                                    ┌──────────────────────────┐
+                    ┌──────────────►│  CozyTouch (Magellan)    │
+                    │  HTTPS/REST   │  apis.groupe-atlantic.com│
+┌─────────────────┐ │               └──────────────────────────┘
+│   Homey Pro      │─┤                         │
+│                  │ │               ┌─────────┴─────────┐
+│  ┌────────────┐  │ │               │  Cozytouch Bridge │
+│  │ CozyTouch  │  │ │               └─────────┬─────────┘
+│  │   App      │  │ │                  │    │    │
+│  │  ┌─────┐   │  │ │               Kelud  AC  Boiler (newer)
+│  │  │ API │   │  │ │
+│  │  │x 2  │   │  │ │               ┌──────────────────────────┐
+│  │  └─────┘   │  │ └──────────────►│  Overkiz                 │
+│  │  ┌─────┐   │  │    HTTPS/REST   │  ha110-1.overkiz.com     │
+│  │  │Drvrs│   │  │                 └──────────────────────────┘
+│  │  └─────┘   │  │                          │
+│  └────────────┘  │                ┌─────────┴─────────┐
+└─────────────────┘                 │  Cozytouch Bridge │
+                                    └─────────┬─────────┘
+                                       │    │    │
+                                    Calypso Zeneo Thermor (older)
 ```
+
+### Dual Protocol Architecture
+
+Atlantic uses **two separate cloud backends**:
+
+| Protocol | Endpoint | Devices | Auth |
+|----------|----------|---------|------|
+| **CozyTouch (Magellan)** | `apis.groupe-atlantic.com` | Newer: boilers, towel racks, AC | OAuth2 password grant |
+| **Overkiz** | `ha110-1.overkiz.com` | Older: water heaters, Thermor/Sauter | Atlantic token -> JWT -> Overkiz login |
+
+The app authenticates to **both** and discovers devices from each during pairing.
 
 ### Lifecycle
 
-1. **Pairing**: User enters Cozytouch email + password in the Homey pairing dialog. The app authenticates against the Atlantic API and retrieves a list of devices on the account. The user selects which devices to add.
+1. **Configuration**: User saves Cozytouch credentials in the App Configuration Page. On startup, the app restores sessions for both protocols.
 
-2. **Authentication**: The app uses an OAuth2 password grant to obtain a Bearer token. Tokens are stored in memory and automatically refreshed on 401 responses.
+2. **Pairing**: User enters credentials. The app queries both CozyTouch and Overkiz APIs to discover devices. Each device is tagged with its protocol.
 
-3. **Polling**: Each device polls the Cozytouch API at a configurable interval (default: 60 seconds) to read current capability values (temperature, mode, status, etc.).
+3. **Polling**: Each device polls its respective API at a configurable interval (default: 60 seconds). CozyTouch devices read numeric capabilities, Overkiz devices read named states.
 
-4. **Commands**: When the user changes a setting in Homey (e.g., target temperature), the app writes the new value through the API and polls the execution status until confirmed.
+4. **Commands**: When the user changes a setting, the app routes the command to the correct API. CozyTouch uses `writecapability`, Overkiz uses `exec/apply`.
 
 ### Key Classes
 
 | Class | File | Role |
 |-------|------|------|
-| `CozyTouchApp` | `app.js` | App entry point. Manages shared API instances, registers Flow cards. |
-| `CozyTouchAPI` | `lib/CozyTouchAPI.js` | HTTP client for the Atlantic API. Handles auth, device discovery, reading capabilities, and writing commands. |
-| `CozyTouchDevice` | `lib/CozyTouchDevice.js` | Base device class. Handles polling loop, auth retry, and capability sync. |
-| `CozyTouchDriver` | `lib/CozyTouchDriver.js` | Base driver class. Handles the pairing flow (login + device list). |
-| `HeaterDevice` | `drivers/heater/device.js` | Maps boiler/towel rack capabilities to Homey. |
-| `WaterHeaterDevice` | `drivers/water_heater/device.js` | Maps water heater capabilities to Homey, including away mode. |
-| `ClimateDevice` | `drivers/climate/device.js` | Maps heat pump/AC capabilities including HVAC modes, fan, and swing. |
+| `CozyTouchApp` | `app.js` | App entry point. Manages dual API instances, credential persistence, Flow cards. |
+| `CozyTouchAPI` | `lib/CozyTouchAPI.js` | HTTP client for the Magellan API (newer devices). |
+| `OverkizAPI` | `lib/OverkizAPI.js` | HTTP client for the Overkiz API (older devices). 3-step auth. |
+| `CozyTouchDevice` | `lib/CozyTouchDevice.js` | Base device class. Protocol-aware polling and command routing. |
+| `CozyTouchDriver` | `lib/CozyTouchDriver.js` | Base driver class. Combined discovery from both APIs. |
+| `HeaterDevice` | `drivers/heater/device.js` | Boiler/towel rack with dual-protocol state/command mapping. |
+| `WaterHeaterDevice` | `drivers/water_heater/device.js` | Water heater with Overkiz DHW commands and away mode. |
+| `ClimateDevice` | `drivers/climate/device.js` | Heat pump/AC with HVAC modes, fan, and swing. |
+| API routes | `api.js` | Settings page backend: status, test connection, credential management. |
+
+---
+
+## App Configuration Page
+
+The app provides a settings page accessible from **Homey Settings > Apps > Atlantic Cozytouch**.
+
+### API Endpoints (Settings Backend)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/status` | Returns current auth status for both protocols |
+| `POST` | `/api/test-connection` | Tests credentials against both APIs, returns device lists |
+| `POST` | `/api/save-credentials` | Saves credentials to Homey settings storage |
+| `DELETE` | `/api/clear-credentials` | Removes saved credentials |
+
+### Features
+
+- **Credential management**: Save, update, and clear Cozytouch credentials
+- **Connection testing**: Test both CozyTouch and Overkiz protocols with a single click
+- **Status monitoring**: Real-time green/red/gray indicators for each protocol
+- **Device discovery**: View all devices found on each protocol after a connection test
+- **Auto-restore**: Credentials persist across app restarts; sessions are automatically re-established
+
+### Settings Storage
+
+Credentials are stored using `homey.settings` (encrypted local storage on the Homey Pro). The key is `credentials` with the structure `{ username, password }`.
 
 ---
 
@@ -242,6 +291,83 @@ Content-Type: application/json
 
 ---
 
+## Overkiz API Reference
+
+The Overkiz API is used for older Atlantic/Thermor/Sauter devices. It is the same platform used by Somfy TaHoma.
+
+### Base URL
+
+```
+https://ha110-1.overkiz.com/enduser-mobile-web/enduserAPI
+```
+
+### Authentication (3-step)
+
+**Step 1: Get Atlantic access token** (same as CozyTouch)
+
+```http
+POST https://apis.groupe-atlantic.com/users/token
+Authorization: Basic Q3RfMUpWeVRtSUxYOEllZkE3YVVOQmpGblpVYToyRWNORHpfZHkzNDJVSnFvMlo3cFNKTnZVdjBh
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&scope=openid&username=GA-PRIVATEPERSON/user@email.com&password=yourpassword
+```
+
+**Step 2: Exchange for JWT**
+
+```http
+GET https://apis.groupe-atlantic.com/magellan/accounts/jwt
+Authorization: Bearer {access_token_from_step_1}
+```
+
+Returns a JWT token.
+
+**Step 3: Login to Overkiz**
+
+```http
+POST /login
+Content-Type: application/json
+
+{"jwt": "eyJhbGciOiJSUzI1NiIs..."}
+```
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/setup` | Full setup with all devices, gateways, zones |
+| `GET` | `/setup/devices` | Device list only |
+| `GET` | `/setup/devices/{url}/states` | Current states for a device |
+| `POST` | `/setup/devices/states/refresh` | Force state refresh |
+| `POST` | `/exec/apply` | Execute a command |
+| `GET` | `/exec/current/{id}` | Get execution status |
+| `POST` | `/events/register` | Register event listener |
+| `POST` | `/events/{id}/fetch` | Fetch state change events |
+
+### Key DHW (Water Heater) States
+
+| State Name | Description |
+|------------|-------------|
+| `core:TargetDHWTemperatureState` | Target water temperature |
+| `core:DHWTemperatureState` | Current water temperature |
+| `io:DHWModeState` | DHW operating mode |
+| `io:DHWBoostModeState` | Boost mode status |
+| `io:DHWAbsenceModeState` | Away/absence mode status |
+| `core:MiddleWaterTemperatureState` | Mid-tank temperature |
+
+### Key DHW Commands
+
+| Command | Parameters | Description |
+|---------|-----------|-------------|
+| `setTargetDHWTemperature` | `[temperature]` | Set target temperature |
+| `setDHWMode` | `["manualEcoActive"]` | Set operating mode |
+| `setDHWOnOffState` | `["on"]` | Turn on/off |
+| `setAbsenceMode` | `["on"]` | Enable away mode |
+| `cancelAbsence` | `[]` | Disable away mode |
+| `setBoostMode` | `["on"]` | Enable boost |
+
+---
+
 ## Compatible Devices
 
 ### Heater / Boiler Driver
@@ -294,14 +420,19 @@ Handles gas boilers, towel racks, and thermostats.
 
 ```
 homey-cozytouch/
-├── app.js                          # App entry point
+├── app.js                          # App entry point + credential restore
 ├── app.json                        # Homey manifest (drivers, capabilities, flows)
+├── api.js                          # Settings page API routes
 ├── package.json
 │
 ├── lib/
-│   ├── CozyTouchAPI.js             # Atlantic REST API client
-│   ├── CozyTouchDevice.js          # Base device (polling, auth retry)
-│   └── CozyTouchDriver.js          # Base driver (pairing flow)
+│   ├── CozyTouchAPI.js             # CozyTouch/Magellan REST API client
+│   ├── OverkizAPI.js               # Overkiz REST API client (3-step auth)
+│   ├── CozyTouchDevice.js          # Base device (dual-protocol polling)
+│   └── CozyTouchDriver.js          # Base driver (combined discovery)
+│
+├── settings/
+│   └── index.html                  # App configuration page (credentials, status)
 │
 ├── drivers/
 │   ├── heater/

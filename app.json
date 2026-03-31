@@ -35,9 +35,21 @@
   "homeyCommunityTopicId": 0,
   "permissions": [],
   "api": {
-    "getDevices": {
+    "getStatus": {
       "method": "GET",
-      "path": "/devices"
+      "path": "/status"
+    },
+    "testConnection": {
+      "method": "POST",
+      "path": "/test-connection"
+    },
+    "saveCredentials": {
+      "method": "POST",
+      "path": "/save-credentials"
+    },
+    "clearCredentials": {
+      "method": "DELETE",
+      "path": "/clear-credentials"
     }
   },
   "drivers": [
