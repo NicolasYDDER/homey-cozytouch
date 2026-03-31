@@ -441,6 +441,10 @@
           "en": "Set heating mode",
           "fr": "Définir le mode de chauffage"
         },
+        "titleFormatted": {
+          "en": "Set heating mode to [[mode]]",
+          "fr": "Définir le mode de chauffage sur [[mode]]"
+        },
         "args": [
           {
             "type": "device",
@@ -468,6 +472,10 @@
         "title": {
           "en": "Set HVAC mode",
           "fr": "Définir le mode CVC"
+        },
+        "titleFormatted": {
+          "en": "Set HVAC mode to [[mode]]",
+          "fr": "Définir le mode CVC sur [[mode]]"
         },
         "args": [
           {
@@ -500,6 +508,10 @@
         "title": {
           "en": "Heating mode !{{is|is not}} ...",
           "fr": "Le mode de chauffage !{{est|n'est pas}} ..."
+        },
+        "titleFormatted": {
+          "en": "Heating mode !{{is|is not}} [[mode]]",
+          "fr": "Le mode de chauffage !{{est|n'est pas}} [[mode]]"
         },
         "args": [
           {
