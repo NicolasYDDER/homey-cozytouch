@@ -3,21 +3,21 @@
 /**
  * CozyTouch handler for towel racks (Kelud, Asama via Magellan).
  *
- * Uses a spy mode: watches ALL capabilities for changes between polls
- * to discover which IDs actually control the device.
+ * Cap 7 is the HVAC mode: 0=off, 4=heat (same as other Atlantic HVAC devices).
+ * Cap 184 selects the preset within heat mode: 0=manual, 1=prog.
+ * The Cozytouch app uses this same pattern.
  */
 
-// Best-guess mapping (to be refined once spy mode reveals the real IDs)
 const CAP = {
-  SYS_MODE: 7,
-  TARGET_TEMP: 40,
-  CURRENT_TEMP: 117,
-  MIN_TEMP: 160,
-  MAX_TEMP: 161,
-  MODE_STATUS: 164,
+  HVAC_MODE: 7,        // Write: 0=off, 4=heat
+  TARGET_TEMP: 40,     // Write: numeric temperature
+  CURRENT_TEMP: 117,   // Read: current room temperature
+  MIN_TEMP: 160,       // Read: min setpoint
+  MAX_TEMP: 161,       // Read: max setpoint
+  MODE_STATUS: 164,    // Read: 0=off, 1=manual, 2=prog
   BOOST: 165,
   ECO_TEMP: 172,
-  PROG_MODE: 184,
+  PROG_MODE: 184,      // Write: 0=manual, 1=prog
 };
 
 const API_TO_MODE = { 0: 'off', 1: 'manual', 2: 'prog' };
@@ -26,7 +26,7 @@ class TowelRackCozytouchHandler {
 
   constructor(ctx) {
     this.ctx = ctx;
-    this._previousValues = {};  // Spy mode: track all values
+    this._previousValues = {};
     this._pollCount = 0;
   }
 
@@ -36,11 +36,11 @@ class TowelRackCozytouchHandler {
 
   async setOnOff(value) {
     if (value) {
-      await this.ctx.setCapValue(CAP.SYS_MODE, '1');
+      await this.ctx.setCapValue(CAP.HVAC_MODE, '4');
       await this.ctx.setCapValue(CAP.PROG_MODE, '0');
       this.ctx.setCapability('cozytouch_heating_mode', 'manual');
     } else {
-      await this.ctx.setCapValue(CAP.SYS_MODE, '0');
+      await this.ctx.setCapValue(CAP.HVAC_MODE, '0');
       this.ctx.setCapability('cozytouch_heating_mode', 'off');
     }
   }
@@ -48,19 +48,19 @@ class TowelRackCozytouchHandler {
   async setMode(mode) {
     switch (mode) {
       case 'off':
-        await this.ctx.setCapValue(CAP.SYS_MODE, '0');
+        await this.ctx.setCapValue(CAP.HVAC_MODE, '0');
         break;
       case 'manual':
-        await this.ctx.setCapValue(CAP.SYS_MODE, '1');
+        await this.ctx.setCapValue(CAP.HVAC_MODE, '4');
         await this.ctx.setCapValue(CAP.PROG_MODE, '0');
         break;
       case 'prog':
-        await this.ctx.setCapValue(CAP.SYS_MODE, '2');
+        await this.ctx.setCapValue(CAP.HVAC_MODE, '4');
         await this.ctx.setCapValue(CAP.PROG_MODE, '1');
         break;
       case 'eco_plus':
-        this.ctx.log('eco_plus not available, using manual');
-        await this.ctx.setCapValue(CAP.SYS_MODE, '1');
+        this.ctx.log('eco_plus not available for towel rack, using manual');
+        await this.ctx.setCapValue(CAP.HVAC_MODE, '4');
         await this.ctx.setCapValue(CAP.PROG_MODE, '0');
         mode = 'manual';
         break;
@@ -75,19 +75,17 @@ class TowelRackCozytouchHandler {
     const caps = await this.ctx.getCapabilities();
     this._pollCount++;
 
-    // ── SPY MODE: detect changes across ALL capabilities ──────
+    // ── Spy mode: detect changes across ALL capabilities ─────
     const currentValues = {};
     for (const cap of caps) {
       currentValues[cap.capabilityId] = String(cap.value);
     }
 
     if (this._pollCount === 1) {
-      // First poll: snapshot all values
-      this.ctx.log('=== SPY MODE ACTIVE: Change mode via Cozytouch app to reveal capability IDs ===');
+      this.ctx.log('=== SPY MODE ACTIVE ===');
       this.ctx.log(`Tracking ${Object.keys(currentValues).length} capabilities`);
     }
 
-    // Compare with previous values and log ANY changes
     if (Object.keys(this._previousValues).length > 0) {
       for (const [id, value] of Object.entries(currentValues)) {
         const prev = this._previousValues[id];
@@ -99,7 +97,7 @@ class TowelRackCozytouchHandler {
 
     this._previousValues = currentValues;
 
-    // ── Normal state updates ──────────────────────────────────
+    // ── Normal state updates ─────────────────────────────────
     const currentTemp = this.ctx.getCapValue(caps, CAP.CURRENT_TEMP);
     if (currentTemp !== null) {
       this.ctx.setCapability('measure_temperature', parseFloat(currentTemp));
