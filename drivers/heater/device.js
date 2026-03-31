@@ -14,20 +14,14 @@ class HeaterDevice extends CozyTouchDevice {
   }
 
   _registerCapabilityListeners() {
-    this.registerCapabilityListener('target_temperature', async (value) => {
-      this.log(`Setting target temperature to ${value}`);
-      await this._handler.setTargetTemperature(value);
-    });
+    this._registerCapability('target_temperature', (value) =>
+      this._handler.setTargetTemperature(value));
 
-    this.registerCapabilityListener('onoff', async (value) => {
-      this.log(`Setting power to ${value ? 'ON' : 'OFF'}`);
-      await this._handler.setOnOff(value);
-    });
+    this._registerCapability('onoff', (value) =>
+      this._handler.setOnOff(value));
 
-    this.registerCapabilityListener('cozytouch_heating_mode', async (value) => {
-      this.log(`Setting heating mode to ${value}`);
-      await this._handler.setMode(value);
-    });
+    this._registerCapability('cozytouch_heating_mode', (value) =>
+      this._handler.setMode(value));
   }
 
   async setHeatingMode(mode) {

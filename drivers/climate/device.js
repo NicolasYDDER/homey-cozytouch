@@ -14,33 +14,23 @@ class ClimateDevice extends CozyTouchDevice {
   }
 
   _registerCapabilityListeners() {
-    this.registerCapabilityListener('target_temperature', async (value) => {
-      this.log(`Setting target temperature to ${value}`);
-      await this._handler.setTargetTemperature(value);
-    });
+    this._registerCapability('target_temperature', (value) =>
+      this._handler.setTargetTemperature(value));
 
-    this.registerCapabilityListener('onoff', async (value) => {
-      this.log(`Setting power to ${value ? 'ON' : 'OFF'}`);
-      await this._handler.setOnOff(value);
-    });
+    this._registerCapability('onoff', (value) =>
+      this._handler.setOnOff(value));
 
-    this.registerCapabilityListener('cozytouch_hvac_mode', async (value) => {
-      this.log(`Setting HVAC mode to ${value}`);
-      await this._handler.setMode(value);
-    });
+    this._registerCapability('cozytouch_hvac_mode', (value) =>
+      this._handler.setMode(value));
 
     if (this.hasCapability('cozytouch_fan_mode')) {
-      this.registerCapabilityListener('cozytouch_fan_mode', async (value) => {
-        this.log(`Setting fan mode to ${value}`);
-        await this._handler.setFanMode(value);
-      });
+      this._registerCapability('cozytouch_fan_mode', (value) =>
+        this._handler.setFanMode(value));
     }
 
     if (this.hasCapability('cozytouch_swing_mode')) {
-      this.registerCapabilityListener('cozytouch_swing_mode', async (value) => {
-        this.log(`Setting swing mode to ${value}`);
-        await this._handler.setSwingMode(value);
-      });
+      this._registerCapability('cozytouch_swing_mode', (value) =>
+        this._handler.setSwingMode(value));
     }
   }
 
