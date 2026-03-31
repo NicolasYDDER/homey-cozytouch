@@ -1,193 +1,103 @@
 'use strict';
 
 /**
- * CozyTouch handler for towel racks.
+ * CozyTouch handler for towel racks (Kelud, Asama via Magellan).
  *
- * Towel rack capability IDs vary by model/product. Instead of hardcoding IDs,
- * this handler discovers them dynamically from the first poll response by
- * matching capability names and types.
+ * The CozyTouch API returns NO metadata (name/type/category) for these devices,
+ * only raw capabilityId + value. IDs are mapped from value analysis:
+ *
+ *   [40]  = target/comfort temperature (e.g. 21.0)
+ *   [117] = current room temperature (e.g. 15.11)
+ *   [160] = min temperature bound (e.g. 7.0)
+ *   [161] = max temperature bound (e.g. 28.0)
+ *   [164] = operating mode: 0=standby, 1=basic/manual, 2=internal prog
+ *   [172] = eco temperature setpoint
+ *   [7]   = derogation/override flag
  */
+
+const CAP = {
+  TARGET_TEMP: 40,
+  CURRENT_TEMP: 117,
+  MODE: 164,
+  DEROGATION: 7,
+  ECO_TEMP: 172,
+  MIN_TEMP: 160,
+  MAX_TEMP: 161,
+};
+
+// Mode values for cap 164
+const MODE_TO_API = { off: '0', manual: '1', prog: '2' };
+const API_TO_MODE = { 0: 'off', 1: 'manual', 2: 'prog' };
+
 class TowelRackCozytouchHandler {
 
   constructor(ctx) {
     this.ctx = ctx;
-    this._capMap = null; // Populated on first poll
+    this._logged = false;
   }
 
-  // ── Commands (guarded: only write if cap was discovered) ──────
-
   async setTargetTemperature(value) {
-    const capId = this._findCap('target_temperature', 'temperature');
-    if (capId !== null) {
-      await this.ctx.setCapValue(capId, value);
-    } else {
-      this.ctx.log('No target temperature capability found for this device');
-    }
+    await this.ctx.setCapValue(CAP.TARGET_TEMP, value);
   }
 
   async setOnOff(value) {
-    // Try dedicated on/off first, fall back to mode
-    const onOffCap = this._findCap('on_off', 'switch');
-    if (onOffCap !== null) {
-      await this.ctx.setCapValue(onOffCap, value ? '1' : '0');
-    } else {
-      // No on/off cap - use mode: find the mode-like capability
-      await this.setMode(value ? 'manual' : 'off');
-      return;
-    }
+    // On = manual mode (1), Off = standby mode (0)
+    await this.ctx.setCapValue(CAP.MODE, value ? '1' : '0');
     this.ctx.setCapability('cozytouch_heating_mode', value ? 'manual' : 'off');
   }
 
   async setMode(mode) {
-    const modeCap = this._findCap('mode', 'heating_mode');
-    if (modeCap !== null) {
-      // Try standard mode values
-      const modeMap = { off: '0', manual: '1', eco_plus: '3', prog: '4' };
-      const apiValue = modeMap[mode];
-      if (apiValue !== undefined) {
-        await this.ctx.setCapValue(modeCap, apiValue);
-      }
+    const apiValue = MODE_TO_API[mode];
+    if (apiValue !== undefined) {
+      await this.ctx.setCapValue(CAP.MODE, apiValue);
     } else {
-      this.ctx.log('No mode capability found for this device');
+      // eco_plus not directly available, use manual as fallback
+      this.ctx.log(`Mode "${mode}" not supported, falling back to manual`);
+      await this.ctx.setCapValue(CAP.MODE, '1');
     }
     this.ctx.setCapability('cozytouch_heating_mode', mode);
     this.ctx.setCapability('onoff', mode !== 'off');
   }
 
-  // ── Polling ───────────────────────────────────────────────────
-
   async updateState() {
     const caps = await this.ctx.getCapabilities();
 
-    // First poll: discover and log all capabilities
-    if (!this._capMap) {
-      this._discoverCapabilities(caps);
+    // Log raw capabilities once for debugging
+    if (!this._logged) {
+      this._logged = true;
+      this.ctx.log('Kelud capabilities (raw):', caps.map(
+        (c) => `[${c.capabilityId}]=${c.value}`,
+      ).join(', '));
     }
 
-    // Read values using discovered IDs
-    this._readTemperature(caps);
-    this._readTargetTemperature(caps);
-    this._readMode(caps);
-    this._readTempBounds(caps);
-  }
-
-  // ── Dynamic capability discovery ──────────────────────────────
-
-  _discoverCapabilities(caps) {
-    this._capMap = {};
-
-    this.ctx.log('=== CozyTouch Capability Discovery ===');
-    this.ctx.log(`Found ${caps.length} capabilities:`);
-
-    for (const cap of caps) {
-      const name = (cap.name || '').toLowerCase();
-      const type = (cap.type || '').toLowerCase();
-      const category = (cap.category || '').toLowerCase();
-
-      this.ctx.log(`  [${cap.capabilityId}] "${cap.name}" type=${cap.type} category=${cap.category} value=${cap.value}`);
-
-      // Temperature sensors
-      if (type === 'temperature' && category === 'sensor') {
-        if (!this._capMap.current_temperature) {
-          this._capMap.current_temperature = cap.capabilityId;
-        }
-      }
-
-      // Target temperature (settable temperature)
-      if (type === 'temperature' && category !== 'sensor') {
-        this._capMap.target_temperature = cap.capabilityId;
-      }
-      if (name.includes('target') && type === 'temperature') {
-        this._capMap.target_temperature = cap.capabilityId;
-      }
-      if (name.includes('consigne') || name.includes('setpoint')) {
-        this._capMap.target_temperature = cap.capabilityId;
-      }
-
-      // On/Off switch
-      if (type === 'switch' || type === 'binary') {
-        if (name.includes('on') || name.includes('off') || name.includes('power')) {
-          this._capMap.on_off = cap.capabilityId;
-        }
-      }
-
-      // Heating mode
-      if (name.includes('mode') || name.includes('heating')) {
-        if (type === 'string' || type === 'int' || type === 'select') {
-          this._capMap.heating_mode = cap.capabilityId;
-        }
-      }
-
-      // Min/Max temperature bounds
-      if (name.includes('min') && type === 'temperature') {
-        this._capMap.min_temp = cap.capabilityId;
-      }
-      if (name.includes('max') && type === 'temperature') {
-        this._capMap.max_temp = cap.capabilityId;
-      }
+    // Current temperature
+    const currentTemp = this.ctx.getCapValue(caps, CAP.CURRENT_TEMP);
+    if (currentTemp !== null) {
+      this.ctx.setCapability('measure_temperature', parseFloat(currentTemp));
     }
 
-    this.ctx.log('Discovered capability map:', JSON.stringify(this._capMap));
-    this.ctx.log('=== End Discovery ===');
-  }
-
-  _findCap(key, fallbackKey) {
-    if (!this._capMap) return null;
-    return this._capMap[key] || this._capMap[fallbackKey] || null;
-  }
-
-  // ── State readers ─────────────────────────────────────────────
-
-  _readTemperature(caps) {
-    const capId = this._capMap.current_temperature;
-    if (capId === undefined) return;
-    const val = this.ctx.getCapValue(caps, capId);
-    if (val !== null) this.ctx.setCapability('measure_temperature', parseFloat(val));
-  }
-
-  _readTargetTemperature(caps) {
-    const capId = this._capMap.target_temperature;
-    if (capId === undefined) return;
-    const val = this.ctx.getCapValue(caps, capId);
-    if (val !== null) this.ctx.setCapability('target_temperature', parseFloat(val));
-  }
-
-  _readMode(caps) {
-    // Try heating mode first, then on/off
-    const modeCap = this._capMap.heating_mode;
-    const onOffCap = this._capMap.on_off;
-
-    if (modeCap !== undefined) {
-      const val = this.ctx.getCapValue(caps, modeCap);
-      if (val !== null) {
-        const modeInt = parseInt(val, 10);
-        const modeMap = { 0: 'off', 1: 'manual', 3: 'eco_plus', 4: 'prog' };
-        const modeStr = modeMap[modeInt] || 'manual';
-        this.ctx.setCapability('cozytouch_heating_mode', modeStr);
-        this.ctx.setCapability('onoff', modeStr !== 'off');
-        return;
-      }
+    // Target temperature
+    const targetTemp = this.ctx.getCapValue(caps, CAP.TARGET_TEMP);
+    if (targetTemp !== null) {
+      this.ctx.setCapability('target_temperature', parseFloat(targetTemp));
     }
 
-    if (onOffCap !== undefined) {
-      const val = this.ctx.getCapValue(caps, onOffCap);
-      if (val !== null) {
-        const isOn = val === '1' || val === 1 || val === true;
-        this.ctx.setCapability('onoff', isOn);
-        this.ctx.setCapability('cozytouch_heating_mode', isOn ? 'manual' : 'off');
-      }
+    // Operating mode → on/off + heating mode
+    const mode = this.ctx.getCapValue(caps, CAP.MODE);
+    if (mode !== null) {
+      const modeInt = parseInt(mode, 10);
+      const modeStr = API_TO_MODE[modeInt] || 'off';
+      this.ctx.setCapability('cozytouch_heating_mode', modeStr);
+      this.ctx.setCapability('onoff', modeStr !== 'off');
     }
-  }
 
-  _readTempBounds(caps) {
-    const minCap = this._capMap.min_temp;
-    const maxCap = this._capMap.max_temp;
-    if (minCap === undefined || maxCap === undefined) return;
-    const minVal = this.ctx.getCapValue(caps, minCap);
-    const maxVal = this.ctx.getCapValue(caps, maxCap);
-    if (minVal !== null && maxVal !== null) {
+    // Temperature bounds
+    const minTemp = this.ctx.getCapValue(caps, CAP.MIN_TEMP);
+    const maxTemp = this.ctx.getCapValue(caps, CAP.MAX_TEMP);
+    if (minTemp !== null && maxTemp !== null) {
       this.ctx.setCapabilityOptions('target_temperature', {
-        min: parseFloat(minVal), max: parseFloat(maxVal),
+        min: parseFloat(minTemp),
+        max: parseFloat(maxTemp),
       });
     }
   }
