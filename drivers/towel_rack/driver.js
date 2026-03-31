@@ -10,7 +10,9 @@ class TowelRackDriver extends CozyTouchDriver {
     return allDevices.filter((dev) => {
       if (dev._protocol === 'overkiz') {
         const overkizApi = new OverkizAPI({});
-        return overkizApi.getDeviceType(dev) === 'TOWEL_RACK';
+        const type = overkizApi.getDeviceType(dev);
+        // Overkiz reports some towel racks as HeatingSystem instead of TowelDryer
+        return type === 'TOWEL_RACK' || type === 'HEATER';
       }
       const cozyApi = new CozyTouchAPI({});
       return cozyApi.getDeviceType(dev.modelId) === 'TOWEL_RACK';
