@@ -3,35 +3,21 @@
 /**
  * CozyTouch handler for towel racks (Kelud, Asama via Magellan).
  *
- * Capability mapping from setup analysis + reference project:
- *   [7]   = system operating mode (enum): 0=standby, 1=basic, 2=internal
- *   [40]  = target/comfort temperature (writable)
- *   [117] = current room temperature (read-only)
- *   [153] = heating element active (binary, read-only)
- *   [160] = min temperature bound
- *   [161] = max temperature bound
- *   [164] = current mode status (read-only)
- *   [165] = boost mode (switch: 0=off, 1=on)
- *   [172] = eco temperature setpoint
- *   [184] = program mode switch (0=manual, 1=program)
- *
- * Mode control uses COMBINATION of cap 7 + cap 184:
- *   OFF:    cap 7 = '0' (standby)
- *   MANUAL: cap 7 = '1' (basic) + cap 184 = '0' (prog off)
- *   PROG:   cap 7 = '2' (internal) + cap 184 = '1' (prog on)
+ * Uses a spy mode: watches ALL capabilities for changes between polls
+ * to discover which IDs actually control the device.
  */
 
+// Best-guess mapping (to be refined once spy mode reveals the real IDs)
 const CAP = {
-  SYS_MODE: 7,          // System operating mode enum (writable)
-  TARGET_TEMP: 40,       // Comfort target temperature (writable)
-  CURRENT_TEMP: 117,     // Current measured temp (read-only)
-  RESISTANCE: 153,       // Heating element status (read-only)
+  SYS_MODE: 7,
+  TARGET_TEMP: 40,
+  CURRENT_TEMP: 117,
   MIN_TEMP: 160,
   MAX_TEMP: 161,
-  MODE_STATUS: 164,      // Current mode readback (read-only)
-  BOOST: 165,            // Boost mode switch (writable)
-  ECO_TEMP: 172,         // Eco temperature
-  PROG_MODE: 184,        // Program mode switch (writable)
+  MODE_STATUS: 164,
+  BOOST: 165,
+  ECO_TEMP: 172,
+  PROG_MODE: 184,
 };
 
 const API_TO_MODE = { 0: 'off', 1: 'manual', 2: 'prog' };
@@ -40,7 +26,8 @@ class TowelRackCozytouchHandler {
 
   constructor(ctx) {
     this.ctx = ctx;
-    this._logged = false;
+    this._previousValues = {};  // Spy mode: track all values
+    this._pollCount = 0;
   }
 
   async setTargetTemperature(value) {
@@ -49,12 +36,10 @@ class TowelRackCozytouchHandler {
 
   async setOnOff(value) {
     if (value) {
-      // Turn on: set to basic mode + manual
       await this.ctx.setCapValue(CAP.SYS_MODE, '1');
       await this.ctx.setCapValue(CAP.PROG_MODE, '0');
       this.ctx.setCapability('cozytouch_heating_mode', 'manual');
     } else {
-      // Turn off: set to standby
       await this.ctx.setCapValue(CAP.SYS_MODE, '0');
       this.ctx.setCapability('cozytouch_heating_mode', 'off');
     }
@@ -74,14 +59,12 @@ class TowelRackCozytouchHandler {
         await this.ctx.setCapValue(CAP.PROG_MODE, '1');
         break;
       case 'eco_plus':
-        // No native eco mode; use manual as fallback
         this.ctx.log('eco_plus not available, using manual');
         await this.ctx.setCapValue(CAP.SYS_MODE, '1');
         await this.ctx.setCapValue(CAP.PROG_MODE, '0');
         mode = 'manual';
         break;
       default:
-        this.ctx.log(`Unknown mode "${mode}", ignoring`);
         return;
     }
     this.ctx.setCapability('cozytouch_heating_mode', mode);
@@ -90,30 +73,43 @@ class TowelRackCozytouchHandler {
 
   async updateState() {
     const caps = await this.ctx.getCapabilities();
+    this._pollCount++;
 
-    if (!this._logged) {
-      this._logged = true;
-      const debugIds = [7, 40, 117, 153, 164, 165, 172, 184];
-      this.ctx.log('Key capabilities:',
-        caps.filter((c) => debugIds.includes(c.capabilityId))
-          .map((c) => `[${c.capabilityId}]=${c.value}`)
-          .join(', '),
-      );
+    // ── SPY MODE: detect changes across ALL capabilities ──────
+    const currentValues = {};
+    for (const cap of caps) {
+      currentValues[cap.capabilityId] = String(cap.value);
     }
 
-    // Current temperature
+    if (this._pollCount === 1) {
+      // First poll: snapshot all values
+      this.ctx.log('=== SPY MODE ACTIVE: Change mode via Cozytouch app to reveal capability IDs ===');
+      this.ctx.log(`Tracking ${Object.keys(currentValues).length} capabilities`);
+    }
+
+    // Compare with previous values and log ANY changes
+    if (Object.keys(this._previousValues).length > 0) {
+      for (const [id, value] of Object.entries(currentValues)) {
+        const prev = this._previousValues[id];
+        if (prev !== undefined && prev !== value) {
+          this.ctx.log(`>>> CHANGED: Cap [${id}] ${prev} → ${value}`);
+        }
+      }
+    }
+
+    this._previousValues = currentValues;
+
+    // ── Normal state updates ──────────────────────────────────
     const currentTemp = this.ctx.getCapValue(caps, CAP.CURRENT_TEMP);
     if (currentTemp !== null) {
       this.ctx.setCapability('measure_temperature', parseFloat(currentTemp));
     }
 
-    // Target temperature
     const targetTemp = this.ctx.getCapValue(caps, CAP.TARGET_TEMP);
     if (targetTemp !== null) {
       this.ctx.setCapability('target_temperature', parseFloat(targetTemp));
     }
 
-    // Mode: read from cap 164 (status readback)
     const modeStatus = this.ctx.getCapValue(caps, CAP.MODE_STATUS);
     if (modeStatus !== null) {
       const modeInt = parseInt(modeStatus, 10);
@@ -122,7 +118,6 @@ class TowelRackCozytouchHandler {
       this.ctx.setCapability('onoff', modeStr !== 'off');
     }
 
-    // Temperature bounds
     const minTemp = this.ctx.getCapValue(caps, CAP.MIN_TEMP);
     const maxTemp = this.ctx.getCapValue(caps, CAP.MAX_TEMP);
     if (minTemp !== null && maxTemp !== null) {
