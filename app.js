@@ -51,7 +51,15 @@ class CozyTouchApp extends Homey.App {
     }
 
     await api.getSetup();
-    return api.getDevices();
+    const devices = api.getDevices();
+
+    // Debug: log all discovered devices with their modelId
+    this.log(`Discovered ${devices.length} device(s) from Cozytouch API:`);
+    devices.forEach((dev) => {
+      this.log(`  - "${dev.name}" | deviceId=${dev.deviceId} | modelId=${dev.modelId} | productId=${dev.productId} | type=${api.getDeviceType(dev.modelId)}`);
+    });
+
+    return devices;
   }
 
   _registerFlowCards() {
