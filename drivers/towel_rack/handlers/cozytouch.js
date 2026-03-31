@@ -3,30 +3,37 @@
 /**
  * CozyTouch handler for towel racks (Kelud, Asama via Magellan).
  *
- * Capability IDs mapped from device analysis:
- *   [7]   = mode CONTROL (writable): 0=standby, 1=basic/manual, 2=prog
+ * Capability mapping from setup analysis + reference project:
+ *   [7]   = system operating mode (enum): 0=standby, 1=basic, 2=internal
  *   [40]  = target/comfort temperature (writable)
  *   [117] = current room temperature (read-only)
- *   [160] = min temperature bound (read-only)
- *   [161] = max temperature bound (read-only)
- *   [164] = mode STATUS (read-only readback)
+ *   [153] = heating element active (binary, read-only)
+ *   [160] = min temperature bound
+ *   [161] = max temperature bound
+ *   [164] = current mode status (read-only)
+ *   [165] = boost mode (switch: 0=off, 1=on)
  *   [172] = eco temperature setpoint
+ *   [184] = program mode switch (0=manual, 1=program)
+ *
+ * Mode control uses COMBINATION of cap 7 + cap 184:
+ *   OFF:    cap 7 = '0' (standby)
+ *   MANUAL: cap 7 = '1' (basic) + cap 184 = '0' (prog off)
+ *   PROG:   cap 7 = '2' (internal) + cap 184 = '1' (prog on)
  */
 
 const CAP = {
-  MODE_CONTROL: 7,      // Writable mode
-  TARGET_TEMP: 40,      // Writable comfort setpoint
-  CURRENT_TEMP: 117,    // Read-only measured temp
-  MIN_TEMP: 160,        // Read-only min bound
-  MAX_TEMP: 161,        // Read-only max bound
-  MODE_STATUS: 164,     // Read-only mode readback
-  ECO_TEMP: 172,        // Eco setpoint
+  SYS_MODE: 7,          // System operating mode enum (writable)
+  TARGET_TEMP: 40,       // Comfort target temperature (writable)
+  CURRENT_TEMP: 117,     // Current measured temp (read-only)
+  RESISTANCE: 153,       // Heating element status (read-only)
+  MIN_TEMP: 160,
+  MAX_TEMP: 161,
+  MODE_STATUS: 164,      // Current mode readback (read-only)
+  BOOST: 165,            // Boost mode switch (writable)
+  ECO_TEMP: 172,         // Eco temperature
+  PROG_MODE: 184,        // Program mode switch (writable)
 };
 
-// Writing cap 7: ENUM SystemOperatingMode as integer index string
-const MODE_TO_API = { off: '0', manual: '1', prog: '2' };
-
-// Reading cap 164: returns numeric status
 const API_TO_MODE = { 0: 'off', 1: 'manual', 2: 'prog' };
 
 class TowelRackCozytouchHandler {
@@ -41,21 +48,43 @@ class TowelRackCozytouchHandler {
   }
 
   async setOnOff(value) {
-    // On = 1 (basic/manual), Off = 0 (standby)
-    await this.ctx.setCapValue(CAP.MODE_CONTROL, value ? '1' : '0');
-    this.ctx.setCapability('cozytouch_heating_mode', value ? 'manual' : 'off');
+    if (value) {
+      // Turn on: set to basic mode + manual
+      await this.ctx.setCapValue(CAP.SYS_MODE, '1');
+      await this.ctx.setCapValue(CAP.PROG_MODE, '0');
+      this.ctx.setCapability('cozytouch_heating_mode', 'manual');
+    } else {
+      // Turn off: set to standby
+      await this.ctx.setCapValue(CAP.SYS_MODE, '0');
+      this.ctx.setCapability('cozytouch_heating_mode', 'off');
+    }
   }
 
   async setMode(mode) {
-    const apiValue = MODE_TO_API[mode];
-    if (apiValue !== undefined) {
-      await this.ctx.setCapValue(CAP.MODE_CONTROL, apiValue);
-    } else {
-      // eco_plus not natively available, use manual as fallback
-      this.ctx.log(`Mode "${mode}" not directly supported, using 1 (basic)`);
-      await this.ctx.setCapValue(CAP.MODE_CONTROL, '1');
+    switch (mode) {
+      case 'off':
+        await this.ctx.setCapValue(CAP.SYS_MODE, '0');
+        break;
+      case 'manual':
+        await this.ctx.setCapValue(CAP.SYS_MODE, '1');
+        await this.ctx.setCapValue(CAP.PROG_MODE, '0');
+        break;
+      case 'prog':
+        await this.ctx.setCapValue(CAP.SYS_MODE, '2');
+        await this.ctx.setCapValue(CAP.PROG_MODE, '1');
+        break;
+      case 'eco_plus':
+        // No native eco mode; use manual as fallback
+        this.ctx.log('eco_plus not available, using manual');
+        await this.ctx.setCapValue(CAP.SYS_MODE, '1');
+        await this.ctx.setCapValue(CAP.PROG_MODE, '0');
+        mode = 'manual';
+        break;
+      default:
+        this.ctx.log(`Unknown mode "${mode}", ignoring`);
+        return;
     }
-    this.ctx.setCapability('cozytouch_heating_mode', mode !== 'eco_plus' ? mode : 'manual');
+    this.ctx.setCapability('cozytouch_heating_mode', mode);
     this.ctx.setCapability('onoff', mode !== 'off');
   }
 
@@ -64,16 +93,15 @@ class TowelRackCozytouchHandler {
 
     if (!this._logged) {
       this._logged = true;
-      // Log full objects for key capabilities to see all metadata
-      const debugIds = [7, 40, 117, 152, 157, 159, 164, 172];
-      for (const cap of caps) {
-        if (debugIds.includes(cap.capabilityId)) {
-          this.ctx.log(`Cap [${cap.capabilityId}] FULL:`, JSON.stringify(cap));
-        }
-      }
+      const debugIds = [7, 40, 117, 153, 164, 165, 172, 184];
+      this.ctx.log('Key capabilities:',
+        caps.filter((c) => debugIds.includes(c.capabilityId))
+          .map((c) => `[${c.capabilityId}]=${c.value}`)
+          .join(', '),
+      );
     }
 
-    // Current temperature (read-only)
+    // Current temperature
     const currentTemp = this.ctx.getCapValue(caps, CAP.CURRENT_TEMP);
     if (currentTemp !== null) {
       this.ctx.setCapability('measure_temperature', parseFloat(currentTemp));
@@ -85,7 +113,7 @@ class TowelRackCozytouchHandler {
       this.ctx.setCapability('target_temperature', parseFloat(targetTemp));
     }
 
-    // Mode status (read from cap 164, the read-only readback)
+    // Mode: read from cap 164 (status readback)
     const modeStatus = this.ctx.getCapValue(caps, CAP.MODE_STATUS);
     if (modeStatus !== null) {
       const modeInt = parseInt(modeStatus, 10);
