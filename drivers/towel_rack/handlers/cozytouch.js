@@ -23,8 +23,10 @@ const CAP = {
   ECO_TEMP: 172,        // Eco setpoint
 };
 
-// Mode values (used for both writing to cap 7 and reading from cap 164)
-const MODE_TO_API = { off: '0', manual: '1', prog: '2' };
+// Writing cap 7: expects ENUM SystemOperatingMode strings
+const MODE_TO_API = { off: 'standby', manual: 'basic', prog: 'internal' };
+
+// Reading cap 164: returns numeric status
 const API_TO_MODE = { 0: 'off', 1: 'manual', 2: 'prog' };
 
 class TowelRackCozytouchHandler {
@@ -39,8 +41,8 @@ class TowelRackCozytouchHandler {
   }
 
   async setOnOff(value) {
-    // On = manual (1), Off = standby (0)
-    await this.ctx.setCapValue(CAP.MODE_CONTROL, value ? '1' : '0');
+    // On = basic (manual), Off = standby
+    await this.ctx.setCapValue(CAP.MODE_CONTROL, value ? 'basic' : 'standby');
     this.ctx.setCapability('cozytouch_heating_mode', value ? 'manual' : 'off');
   }
 
@@ -50,8 +52,8 @@ class TowelRackCozytouchHandler {
       await this.ctx.setCapValue(CAP.MODE_CONTROL, apiValue);
     } else {
       // eco_plus not natively available, use manual as fallback
-      this.ctx.log(`Mode "${mode}" not directly supported, using manual`);
-      await this.ctx.setCapValue(CAP.MODE_CONTROL, '1');
+      this.ctx.log(`Mode "${mode}" not directly supported, using basic`);
+      await this.ctx.setCapValue(CAP.MODE_CONTROL, 'basic');
     }
     this.ctx.setCapability('cozytouch_heating_mode', mode !== 'eco_plus' ? mode : 'manual');
     this.ctx.setCapability('onoff', mode !== 'off');
