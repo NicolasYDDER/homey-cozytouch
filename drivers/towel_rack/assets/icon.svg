@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <!-- Towel rack / heated towel rail icon -->
+  <rect x="18" y="8" width="44" height="64" rx="4" stroke="currentColor" stroke-width="3"/>
+  <!-- Horizontal heating bars -->
+  <line x1="26" y1="20" x2="54" y2="20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <line x1="26" y1="30" x2="54" y2="30" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <line x1="26" y1="40" x2="54" y2="40" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <line x1="26" y1="50" x2="54" y2="50" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <line x1="26" y1="60" x2="54" y2="60" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Wall mounts -->
+  <rect x="12" y="14" width="6" height="8" rx="2" fill="currentColor"/>
+  <rect x="12" y="58" width="6" height="8" rx="2" fill="currentColor"/>
+</svg>

@@ -259,6 +259,74 @@
           ]
         }
       ]
+    },
+    {
+      "id": "towel_rack",
+      "name": {
+        "en": "Towel Rack",
+        "fr": "Sèche-serviettes"
+      },
+      "class": "heater",
+      "capabilities": [
+        "target_temperature",
+        "measure_temperature",
+        "cozytouch_heating_mode",
+        "onoff"
+      ],
+      "capabilitiesOptions": {
+        "target_temperature": {
+          "min": 5,
+          "max": 30,
+          "step": 0.5
+        }
+      },
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "/drivers/towel_rack/assets/icon.svg"
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/towel_rack/assets/images/small.png",
+        "large": "/drivers/towel_rack/assets/images/large.png",
+        "xlarge": "/drivers/towel_rack/assets/images/xlarge.png"
+      },
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Device Settings",
+            "fr": "Paramètres de l'appareil"
+          },
+          "children": [
+            {
+              "id": "poll_interval",
+              "type": "number",
+              "label": {
+                "en": "Poll interval (seconds)",
+                "fr": "Intervalle de mise à jour (secondes)"
+              },
+              "value": 60,
+              "min": 10,
+              "max": 300
+            }
+          ]
+        }
+      ]
     }
   ],
   "capabilities": {
@@ -405,7 +473,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater|climate"
+            "filter": "driver_id=heater|water_heater|climate|towel_rack"
           }
         ],
         "tokens": [
@@ -430,7 +498,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater"
+            "filter": "driver_id=heater|water_heater|towel_rack"
           }
         ],
         "tokens": [
@@ -461,7 +529,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater"
+            "filter": "driver_id=heater|water_heater|towel_rack"
           },
           {
             "type": "dropdown",
@@ -529,7 +597,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater"
+            "filter": "driver_id=heater|water_heater|towel_rack"
           },
           {
             "type": "dropdown",

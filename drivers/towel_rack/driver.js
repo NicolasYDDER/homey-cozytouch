@@ -4,18 +4,16 @@ const CozyTouchDriver = require('../../lib/CozyTouchDriver');
 const CozyTouchAPI = require('../../lib/CozyTouchAPI');
 const OverkizAPI = require('../../lib/OverkizAPI');
 
-class HeaterDriver extends CozyTouchDriver {
+class TowelRackDriver extends CozyTouchDriver {
 
   _filterDevices(allDevices) {
     return allDevices.filter((dev) => {
       if (dev._protocol === 'overkiz') {
         const overkizApi = new OverkizAPI({});
-        const type = overkizApi.getDeviceType(dev);
-        return type === 'HEATER' || type === 'THERMOSTAT';
+        return overkizApi.getDeviceType(dev) === 'TOWEL_RACK';
       }
       const cozyApi = new CozyTouchAPI({});
-      const type = cozyApi.getDeviceType(dev.modelId);
-      return type === 'GAZ_BOILER' || type === 'THERMOSTAT';
+      return cozyApi.getDeviceType(dev.modelId) === 'TOWEL_RACK';
     });
   }
 
@@ -33,4 +31,4 @@ class HeaterDriver extends CozyTouchDriver {
 
 }
 
-module.exports = HeaterDriver;
+module.exports = TowelRackDriver;
