@@ -1,4 +1,8 @@
 {
+  "1.1.0": {
+    "en": "Dual-protocol support (CozyTouch + Overkiz), towel rack driver, app settings page, handler-based architecture.",
+    "fr": "Support double protocole (CozyTouch + Overkiz), driver sèche-serviettes, page de configuration, architecture basée sur les handlers."
+  },
   "1.0.0": {
     "en": "Initial release with support for heaters, water heaters, heat pumps, and air conditioning.",
     "fr": "Version initiale avec support pour chauffages, chauffe-eau, pompes à chaleur et climatisation."
