@@ -5,25 +5,31 @@ const OverkizAPI = require('../../lib/OverkizAPI');
 
 const { STATES, COMMANDS } = OverkizAPI;
 
-// CozyTouch (Magellan) capability IDs
+// CozyTouch (Magellan) capability IDs for towel racks
+// Note: Towel racks do NOT have a separate on/off (cap 3). On/off is
+// controlled through the heating mode (cap 1): value "off" turns it off.
 const CAP_IDS = {
+  HEATING_MODE: 1,
   TARGET_TEMP: 2,
   CURRENT_TEMP: 7,
-  HEATING_MODE: 1,
-  ON_OFF: 3,
   MIN_TEMP: 160,
   MAX_TEMP: 161,
 };
 
-const HEATING_MODE_TO_API = { off: null, manual: '0', eco_plus: '3', prog: '4' };
-const API_TO_HEATING_MODE = { 0: 'manual', 3: 'eco_plus', 4: 'prog' };
+// CozyTouch heating mode values - "off" is a valid mode value (not a separate capability)
+const HEATING_MODE_TO_API = { off: '0', manual: '1', eco_plus: '3', prog: '4' };
+const API_TO_HEATING_MODE = { 0: 'off', 1: 'manual', 3: 'eco_plus', 4: 'prog' };
 
-// Overkiz Atlantic towel dryers use setHeatingLevel only (no separate on/off)
-// Levels: "off", "comfort", "eco", "frostprotection"
+// Overkiz Atlantic towel dryers use setHeatingLevel only
 const MODE_TO_OVERKIZ_LEVEL = { off: 'off', manual: 'comfort', eco_plus: 'eco', prog: 'comfort' };
 const OVERKIZ_LEVEL_TO_MODE = { off: 'off', comfort: 'manual', eco: 'eco_plus', frostprotection: 'off' };
 
 class TowelRackDevice extends CozyTouchDevice {
+
+  async onInit() {
+    this._capabilitiesLogged = false;
+    await super.onInit();
+  }
 
   _registerCapabilityListeners() {
     this.registerCapabilityListener('target_temperature', async (value) => {
@@ -38,14 +44,14 @@ class TowelRackDevice extends CozyTouchDevice {
     this.registerCapabilityListener('onoff', async (value) => {
       this.log(`Setting power to ${value ? 'ON' : 'OFF'}`);
       if (this._protocol === 'overkiz') {
-        // Atlantic towel dryers: on/off is controlled via heating level
         const level = value ? 'comfort' : 'off';
         await this._executeOverkizCommand(COMMANDS.SET_HEATING_LEVEL, [level]);
       } else {
-        await this._setCapValue(CAP_IDS.ON_OFF, value ? '1' : '0');
+        // CozyTouch towel racks: on/off via heating mode
+        const modeValue = value ? '1' : '0'; // 1=manual, 0=off
+        await this._setCapValue(CAP_IDS.HEATING_MODE, modeValue);
       }
-      if (!value) this._safeSetCapability('cozytouch_heating_mode', 'off');
-      if (value) this._safeSetCapability('cozytouch_heating_mode', 'manual');
+      this._safeSetCapability('cozytouch_heating_mode', value ? 'manual' : 'off');
     });
 
     this.registerCapabilityListener('cozytouch_heating_mode', async (value) => {
@@ -56,45 +62,41 @@ class TowelRackDevice extends CozyTouchDevice {
 
   async setHeatingMode(mode) {
     if (this._protocol === 'overkiz') {
-      // Atlantic towel dryers: everything goes through setHeatingLevel
       const level = MODE_TO_OVERKIZ_LEVEL[mode] || 'off';
       await this._executeOverkizCommand(COMMANDS.SET_HEATING_LEVEL, [level]);
-      this._safeSetCapability('onoff', mode !== 'off');
     } else {
-      if (mode === 'off') {
-        await this._setCapValue(CAP_IDS.ON_OFF, '0');
-        this._safeSetCapability('onoff', false);
-      } else {
-        await this._setCapValue(CAP_IDS.ON_OFF, '1');
-        this._safeSetCapability('onoff', true);
-        const apiValue = HEATING_MODE_TO_API[mode];
-        if (apiValue !== null && apiValue !== undefined) {
-          await this._setCapValue(CAP_IDS.HEATING_MODE, apiValue);
-        }
+      // CozyTouch towel racks: all modes go through heating mode capability
+      const apiValue = HEATING_MODE_TO_API[mode];
+      if (apiValue !== undefined) {
+        await this._setCapValue(CAP_IDS.HEATING_MODE, apiValue);
       }
     }
     this._safeSetCapability('cozytouch_heating_mode', mode);
+    this._safeSetCapability('onoff', mode !== 'off');
   }
 
   _updateFromCozytouch(capabilities) {
+    // Log available capabilities once for debugging
+    if (!this._capabilitiesLogged) {
+      this._capabilitiesLogged = true;
+      this.log('Available CozyTouch capabilities:', JSON.stringify(
+        capabilities.map((c) => ({ id: c.capabilityId, name: c.name, value: c.value })),
+      ));
+    }
+
     const currentTemp = this._getCapValue(capabilities, CAP_IDS.CURRENT_TEMP);
     if (currentTemp !== null) this._safeSetCapability('measure_temperature', parseFloat(currentTemp));
 
     const targetTemp = this._getCapValue(capabilities, CAP_IDS.TARGET_TEMP);
     if (targetTemp !== null) this._safeSetCapability('target_temperature', parseFloat(targetTemp));
 
-    const onOff = this._getCapValue(capabilities, CAP_IDS.ON_OFF);
-    if (onOff !== null) {
-      this._safeSetCapability('onoff', onOff === '1' || onOff === 1 || onOff === true);
-    }
-
+    // Heating mode controls both mode and on/off for towel racks
     const mode = this._getCapValue(capabilities, CAP_IDS.HEATING_MODE);
     if (mode !== null) {
-      const modeStr = API_TO_HEATING_MODE[parseInt(mode, 10)];
-      if (modeStr) {
-        const isOn = onOff === '1' || onOff === 1 || onOff === true;
-        this._safeSetCapability('cozytouch_heating_mode', isOn ? modeStr : 'off');
-      }
+      const modeInt = parseInt(mode, 10);
+      const modeStr = API_TO_HEATING_MODE[modeInt] || 'off';
+      this._safeSetCapability('cozytouch_heating_mode', modeStr);
+      this._safeSetCapability('onoff', modeStr !== 'off');
     }
 
     const minTemp = this._getCapValue(capabilities, CAP_IDS.MIN_TEMP);
@@ -107,6 +109,14 @@ class TowelRackDevice extends CozyTouchDevice {
   }
 
   _updateFromOverkiz(states) {
+    // Log available states once for debugging
+    if (!this._capabilitiesLogged) {
+      this._capabilitiesLogged = true;
+      this.log('Available Overkiz states:', JSON.stringify(
+        (states || []).map((s) => ({ name: s.name, value: s.value })),
+      ));
+    }
+
     const temp = this._getStateValue(states, STATES.TEMPERATURE)
       || this._getStateValue(states, 'core:ComfortRoomTemperatureState');
     if (temp !== null) this._safeSetCapability('measure_temperature', parseFloat(temp));
@@ -115,14 +125,12 @@ class TowelRackDevice extends CozyTouchDevice {
       || this._getStateValue(states, STATES.COMFORT_HEATING_TEMP);
     if (targetTemp !== null) this._safeSetCapability('target_temperature', parseFloat(targetTemp));
 
-    // Atlantic towel dryers report state via TargetHeatingLevelState
     const level = this._getStateValue(states, STATES.TARGET_HEATING_LEVEL);
     if (level !== null) {
       const modeStr = OVERKIZ_LEVEL_TO_MODE[level] || 'manual';
       this._safeSetCapability('cozytouch_heating_mode', modeStr);
       this._safeSetCapability('onoff', modeStr !== 'off');
     } else {
-      // Fallback to OnOffState
       const onOff = this._getStateValue(states, STATES.ON_OFF);
       if (onOff !== null) {
         const isOn = onOff === 'on' || onOff === true || onOff === 1;
