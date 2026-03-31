@@ -127,8 +127,9 @@ You will see three device types to choose from:
 
 | Type | What to choose |
 |------|---------------|
-| **Heater / Boiler** | For gas boilers (Naema, Naia), towel racks (Kelud, Asama), and thermostats |
+| **Heater / Boiler** | For gas boilers (Naema, Naia) and thermostats |
 | **Water Heater** | For domestic hot water tanks (Zeneo, Calypso, Vizengo, Lineo) |
+| **Towel Rack** | For electric towel dryers (Kelud, Asama, Kaoli) |
 | **Heat Pump / AC** | For heat pumps (Loria) and air conditioning units (Takao) |
 
 Select the type that matches your device and tap **Next**.
@@ -174,13 +175,32 @@ Controls gas boilers and electric heaters. Available controls:
 
 ### Water Heater
 
-Controls domestic hot water tanks. Available controls:
+Controls domestic hot water tanks (Calypso, Zeneo, Vizengo, Lineo). Available controls:
 
-- **On/Off** - Turn the water heater on or off
+- **On/Off** - Turn the water heater on or off (simulated via away mode — the device is always running)
 - **Target Temperature** - Set the desired water temperature (typically 30-65 C)
 - **Current Temperature** - Displays the current water temperature
-- **Heating Mode** - Same modes as the heater (Off, Manual, Eco+, Program)
+- **Heating Mode** - Choose between:
+  - **Off** - Activates away mode (energy saving)
+  - **Manual** - Standard heat pump operation
+  - **Eco** - Energy-saving eco mode (reduced target temperature)
+  - **Auto** - Automatic optimization
+- **Boost** - Toggle to temporarily boost water heating (runs for 7 days then returns to normal)
 - **Away Mode** - Toggle vacation mode on or off. When enabled, the water heater reduces energy consumption while you're away
+
+### Towel Rack
+
+Controls electric towel dryers (Kelud, Asama, Kaoli). Available controls:
+
+- **On/Off** - Turn the towel rack on or off
+- **Target Temperature** - Set the desired temperature
+- **Current Temperature** - Displays the measured room temperature
+- **Heating Mode** - Choose between:
+  - **Off** - Device is turned off
+  - **Manual** - Maintain the target temperature you set
+  - **Program** - Follow the weekly schedule configured in the Cozytouch app
+
+> **Note**: Depending on your model, the towel rack may be connected via CozyTouch (Magellan) or Overkiz protocol. Both are supported and handled automatically.
 
 ### Heat Pump / AC
 

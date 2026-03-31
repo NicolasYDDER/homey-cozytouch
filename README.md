@@ -108,8 +108,9 @@ The app authenticates to **both** and discovers devices from each during pairing
 | `OverkizAPI` | `lib/OverkizAPI.js` | HTTP client for the Overkiz API (older devices). 3-step auth. |
 | `CozyTouchDevice` | `lib/CozyTouchDevice.js` | Base device class. Protocol-aware polling and command routing. |
 | `CozyTouchDriver` | `lib/CozyTouchDriver.js` | Base driver class. Combined discovery from both APIs. |
-| `HeaterDevice` | `drivers/heater/device.js` | Boiler/towel rack with dual-protocol state/command mapping. |
-| `WaterHeaterDevice` | `drivers/water_heater/device.js` | Water heater with Overkiz DHW commands and away mode. |
+| `HeaterDevice` | `drivers/heater/device.js` | Boiler with dual-protocol state/command mapping. |
+| `WaterHeaterDevice` | `drivers/water_heater/device.js` | Water heater with DHW mode, boost, and away mode. |
+| `TowelRackDevice` | `drivers/towel_rack/device.js` | Towel rack with dual-protocol support (Magellan + Overkiz). |
 | `ClimateDevice` | `drivers/climate/device.js` | Heat pump/AC with HVAC modes, fan, and swing. |
 | API routes | `api.js` | Settings page backend: status, test connection, credential management. |
 
@@ -344,51 +345,93 @@ Content-Type: application/json
 | `POST` | `/events/register` | Register event listener |
 | `POST` | `/events/{id}/fetch` | Fetch state change events |
 
-### Key DHW (Water Heater) States
+### Key DHW States (Water Heater - CETHI_V4)
 
 | State Name | Description |
 |------------|-------------|
-| `core:TargetDHWTemperatureState` | Target water temperature |
-| `core:DHWTemperatureState` | Current water temperature |
-| `io:DHWModeState` | DHW operating mode |
-| `io:DHWBoostModeState` | Boost mode status |
-| `io:DHWAbsenceModeState` | Away/absence mode status |
-| `core:MiddleWaterTemperatureState` | Mid-tank temperature |
+| `core:TargetTemperatureState` | Target water temperature |
+| `io:MiddleWaterTemperatureState` | Mid-tank water temperature |
+| `io:DHWModeState` | DHW operating mode (manualEcoInactive/manualEcoActive/autoMode) |
+| `core:BoostModeDurationState` | Boost duration in days (>0 = active) |
+| `io:AwayModeDurationState` | Away duration ("0" or "always" = away active) |
+| `core:MinimalTemperatureManualModeState` | Min allowed temperature |
+| `core:MaximalTemperatureManualModeState` | Max allowed temperature |
 
-### Key DHW Commands
+### Key DHW Commands (CETHI_V4)
 
 | Command | Parameters | Description |
 |---------|-----------|-------------|
-| `setTargetDHWTemperature` | `[temperature]` | Set target temperature |
-| `setDHWMode` | `["manualEcoActive"]` | Set operating mode |
-| `setDHWOnOffState` | `["on"]` | Turn on/off |
-| `setAbsenceMode` | `["on"]` | Enable away mode |
-| `cancelAbsence` | `[]` | Disable away mode |
-| `setBoostMode` | `["on"]` | Enable boost |
+| `setTargetTemperature` | `[temperature]` | Set target water temperature |
+| `setDHWMode` | `["manualEcoInactive"]` | Set DHW mode (manual/eco/auto) |
+| `setCurrentOperatingMode` | `[{relaunch, absence}]` | Control boost and away mode |
+| `setBoostModeDuration` | `[7]` | Set boost duration in days |
+| `refreshBoostModeDuration` | `[]` | Refresh boost state |
+
+### Key Towel Dryer Commands (IC3)
+
+| Command | Parameters | Description |
+|---------|-----------|-------------|
+| `setTowelDryerOperatingMode` | `["external"]` | Set mode (standby/external/internal) |
+| `setTargetTemperature` | `[temperature]` | Set target temperature |
+
+### Key Towel Dryer States (IC3)
+
+| State Name | Description |
+|------------|-------------|
+| `core:OperatingModeState` | Current mode (standby/external/internal/auto) |
+| `core:TargetTemperatureState` | Target temperature |
+| `core:TemperatureState` | Current room temperature |
 
 ---
 
 ## Compatible Devices
 
+### Tested Devices
+
+The following devices have been validated with real hardware:
+
+| Device | Reference | Protocol | Driver | Status |
+|--------|-----------|----------|--------|--------|
+| **Atlantic Kelud** 500W Anthracite Etroit | Towel rack | CozyTouch (Magellan) | `towel_rack` | Fully working (mode, temperature) |
+| **Sauter Asama** (I2G_Actuator) | Towel dryer | Overkiz | `towel_rack` | Fully working (mode, temperature) |
+| **Atlantic Calypso** (Ballon Thermodynamique) | Thermodynamic water heater | Overkiz | `water_heater` | Fully working (mode, temperature, boost, away) |
+
 ### Heater / Boiler Driver
 
-Handles gas boilers, towel racks, and thermostats.
+Handles gas boilers and thermostats.
 
 | Device Type | Model IDs | Known Products |
 |-------------|-----------|----------------|
 | Gas Boiler | 56, 61, 65, 1444 | Naema 2 Micro, Naema 2 Duo, Naia 2 Micro, Naia 2 Duo |
 | Thermostat | 235, 418 | Atlantic thermostats |
-| Towel Rack | 1381, 1382, 1388, 1543, 1546, 1547, 1551, 1622 | Kelud, Sauter Asama |
 
 **Capabilities**: target temperature, current temperature, heating mode (off/manual/eco+/program), on/off
 
+### Towel Rack Driver
+
+Handles electric towel dryers via both protocols.
+
+| Device Type | Model IDs (Magellan) | Overkiz controllableName | Known Products |
+|-------------|---------------------|--------------------------|----------------|
+| Towel Rack | 1381, 1382, 1386, 1388, 1543, 1546, 1547, 1551, 1622 | `io:AtlanticElectricalTowelDryer_IC3_IOComponent` | Kelud, Sauter Asama, Kaoli |
+
+**Magellan commands**: Cap 7 (HVAC mode: 0=off, 4=heat), Cap 184 (preset: 0=manual, 1=prog), Cap 40 (target temperature)
+
+**Overkiz commands**: `setTowelDryerOperatingMode` (standby/external/internal), `setTargetTemperature`
+
+**Capabilities**: target temperature, current temperature, heating mode (off/manual/program), on/off
+
 ### Water Heater Driver
 
-| Device Type | Model IDs | Known Products |
-|-------------|-----------|----------------|
-| Water Heater | 236, 389, 390, 1369, 1371, 1372, 1376, 1642, 1644, 1645, 1656, 1657, 1966 | Atlantic Zeneo, Calypso, Vizengo, Lineo |
+| Device Type | Model IDs (Magellan) | Overkiz controllableName | Known Products |
+|-------------|---------------------|--------------------------|----------------|
+| Water Heater | 236, 389, 390, 1369, 1371, 1372, 1376, 1642, 1644, 1645, 1656, 1657, 1966 | `io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent` | Atlantic Calypso, Zeneo, Vizengo, Lineo |
 
-**Capabilities**: target temperature (30-65C), current temperature, heating mode (off/manual/eco+/program), away mode, on/off
+**Overkiz commands**: `setDHWMode` (manualEcoInactive/manualEcoActive/autoMode), `setTargetTemperature`, `setCurrentOperatingMode` (away/boost), `setBoostModeDuration`
+
+**Capabilities**: target temperature (30-65C), current temperature, heating mode (off/manual/eco/auto), boost toggle, away mode, on/off
+
+> **Note**: The CETHI_V4 water heater has no real on/off command. "Off" is simulated via away mode. Shower count is only controllable from the Cozytouch phone app.
 
 ### Climate Driver (Heat Pump / AC)
 
@@ -469,8 +512,8 @@ homey-cozytouch/
 │       ├── device.js                   # Thin shell: delegates to handler
 │       ├── driver.js                   # Filters for towel rack models
 │       ├── handlers/
-│       │   ├── cozytouch.js            # No ON_OFF cap, mode controls power
-│       │   └── overkiz.js              # setHeatingLevel only, no on/off command
+│       │   ├── cozytouch.js            # HVAC mode (0/4) + prog preset (cap 184)
+│       │   └── overkiz.js              # setTowelDryerOperatingMode command
 │       ├── assets/icon.svg
 │       └── pair/login_credentials.html
 │
