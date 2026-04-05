@@ -3,14 +3,21 @@
 const CozyTouchDevice = require('../../lib/CozyTouchDevice');
 const TowelRackCozytouchHandler = require('./handlers/cozytouch');
 const TowelRackOverkizHandler = require('./handlers/overkiz');
+const HeaterOverkizHandler = require('../heater/handlers/overkiz');
 
 class TowelRackDevice extends CozyTouchDevice {
 
   _createHandler(store, data) {
     const ctx = this._buildHandlerContext(store, data);
-    return this._protocol === 'overkiz'
-      ? new TowelRackOverkizHandler(ctx)
-      : new TowelRackCozytouchHandler(ctx);
+    if (this._protocol === 'overkiz') {
+      // HeatingSystem devices (e.g. Serenis Premium) use heater-style commands,
+      // while TowelDryer devices use setTowelDryerOperatingMode.
+      if (store.uiClass === 'HeatingSystem') {
+        return new HeaterOverkizHandler(ctx);
+      }
+      return new TowelRackOverkizHandler(ctx);
+    }
+    return new TowelRackCozytouchHandler(ctx);
   }
 
   _registerCapabilityListeners() {
