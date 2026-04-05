@@ -1,4 +1,8 @@
 {
+  "1.2.1": {
+    "en": "Fixed settings page infinite loading loop. Fixed Serenis Premium identification (HeatingSystem devices now use correct handler).",
+    "fr": "Correction du chargement infini de la page de paramètres. Correction de l'identification du Serenis Premium (les appareils HeatingSystem utilisent maintenant le bon handler)."
+  },
   "1.2.0": {
     "en": "Towel rack dual-protocol support (Kelud + Asama), water heater CETHI_V4 commands, boost mode, Auto mode, tested on real hardware.",
     "fr": "Support double protocole sèche-serviettes (Kelud + Asama), commandes chauffe-eau CETHI_V4, mode boost, mode Auto, testé sur matériel réel."

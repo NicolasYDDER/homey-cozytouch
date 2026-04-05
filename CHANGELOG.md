@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-04-05
+
+### Fixed
+- **Settings page infinite loop**: Fixed `Homey.ready(callback)` pattern that prevented the settings page from signaling readiness to Homey, causing the app configuration page to reload indefinitely. Now uses the correct `onHomeyReady` SDK v3 pattern.
+- **Serenis Premium identification**: Towel rack driver now detects Overkiz `HeatingSystem` devices (e.g. Serenis Premium) and routes them to the heater handler instead of the towel dryer handler, which uses incompatible commands.
+
 ## [1.2.0] - 2026-03-31
 
 ### Added

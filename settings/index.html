@@ -436,11 +436,11 @@
 
   // ── Init ─────────────────────────────────────────────────────
 
-  document.addEventListener('DOMContentLoaded', function() {
-    Homey.ready(function() {
-      loadStatus();
-    });
-  });
+  function onHomeyReady(Homey) {
+    window.Homey = Homey;
+    Homey.ready();
+    loadStatus();
+  }
 </script>
 
 </body>
