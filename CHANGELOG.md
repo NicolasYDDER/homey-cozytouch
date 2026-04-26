@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.3] - 2026-04-26
+
+### Fixed
+- **Settings page endless loading on web/desktop Homey**: The settings HTML was missing the `/homey.js` bridge script. Homey Pro auto-injects it, but the web/desktop Homey client does not — so `onHomeyReady` was never called and the page spun indefinitely. Added the script tag explicitly so the settings page works on all Homey clients.
+
+## [1.2.2] - 2026-04-05
+
+### Changed
+- Replaced placeholder driver images with Pexels stock photos for a cleaner store listing.
+
 ## [1.2.1] - 2026-04-05
 
 ### Fixed

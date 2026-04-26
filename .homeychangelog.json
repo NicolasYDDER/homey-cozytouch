@@ -1,4 +1,12 @@
 {
+  "1.2.3": {
+    "en": "Fixed settings page endless loading on web/desktop Homey clients (missing /homey.js bridge script).",
+    "fr": "Correction du chargement infini de la page de paramètres sur Homey web/desktop (script /homey.js manquant)."
+  },
+  "1.2.2": {
+    "en": "Replaced placeholder driver images with Pexels stock photos.",
+    "fr": "Remplacement des images placeholder des drivers par des photos Pexels."
+  },
   "1.2.1": {
     "en": "Fixed settings page infinite loading loop. Fixed Serenis Premium identification (HeatingSystem devices now use correct handler).",
     "fr": "Correction du chargement infini de la page de paramètres. Correction de l'identification du Serenis Premium (les appareils HeatingSystem utilisent maintenant le bon handler)."
