@@ -3,8 +3,18 @@
 const CozyTouchDevice = require('../../lib/CozyTouchDevice');
 const WaterHeaterCozytouchHandler = require('./handlers/cozytouch');
 const WaterHeaterOverkizHandler = require('./handlers/overkiz');
+const WaterHeaterOverkizMblHandler = require('./handlers/overkiz-mbl');
 
 const POST_COMMAND_REFRESH_DELAY_MS = 3000;
+
+function isMblWidget(store) {
+  const url = store.deviceURL || '';
+  const widget = store.widget || '';
+  const controllable = store.controllableName || '';
+  return url.startsWith('modbuslink://')
+    || widget === 'AtlanticDomesticHotWaterProductionMBLComponent'
+    || controllable.includes('AtlanticDomesticHotWaterProductionMBLComponent');
+}
 
 class WaterHeaterDevice extends CozyTouchDevice {
 
@@ -22,24 +32,29 @@ class WaterHeaterDevice extends CozyTouchDevice {
       await this.removeCapability('onoff');
     }
 
-    // Water heater only uses off/manual/eco_plus/auto (no prog)
-    await this.setCapabilityOptions('cozytouch_heating_mode', {
-      values: [
-        { id: 'off', title: { en: 'Off', fr: 'Arrêt' } },
-        { id: 'manual', title: { en: 'Manual', fr: 'Manuel' } },
-        { id: 'eco_plus', title: { en: 'Eco', fr: 'Éco' } },
-        { id: 'auto', title: { en: 'Auto', fr: 'Auto' } },
-      ],
-    });
+    // Water heater mode picker. MBL devices (Atlantic Égéo) have no auto mode
+    // on the device side — autoMode is how their "eco" is represented.
+    const modeValues = [
+      { id: 'off', title: { en: 'Off', fr: 'Arrêt' } },
+      { id: 'manual', title: { en: 'Manual', fr: 'Manuel' } },
+      { id: 'eco_plus', title: { en: 'Eco', fr: 'Éco' } },
+    ];
+    if (!isMblWidget(this.getStore())) {
+      modeValues.push({ id: 'auto', title: { en: 'Auto', fr: 'Auto' } });
+    }
+    await this.setCapabilityOptions('cozytouch_heating_mode', { values: modeValues });
 
     await super.onInit();
   }
 
   _createHandler(store, data) {
     const ctx = this._buildHandlerContext(store, data);
-    return this._protocol === 'overkiz'
-      ? new WaterHeaterOverkizHandler(ctx)
-      : new WaterHeaterCozytouchHandler(ctx);
+    if (this._protocol !== 'overkiz') {
+      return new WaterHeaterCozytouchHandler(ctx);
+    }
+    return isMblWidget(store)
+      ? new WaterHeaterOverkizMblHandler(ctx)
+      : new WaterHeaterOverkizHandler(ctx);
   }
 
   _registerCapabilityListeners() {
