@@ -30,22 +30,11 @@ class WaterHeaterOverkizHandler {
     await this.ctx.executeCommand(CMD.SET_TARGET_TEMP, [value]);
   }
 
-  async setOnOff(value) {
-    // No real on/off — simulate via away mode
-    await this.ctx.executeCommand(CMD.SET_OPERATING_MODE, [
-      { relaunch: 'off', absence: value ? 'off' : 'on' },
-    ]);
-    if (!value) {
-      this.ctx.setCapability('cozytouch_heating_mode', 'off');
-    }
-  }
-
   async setMode(mode) {
     if (mode === 'off') {
       await this.ctx.executeCommand(CMD.SET_OPERATING_MODE, [
         { relaunch: 'off', absence: 'on' },
       ]);
-      this.ctx.setCapability('onoff', false);
     } else {
       // Ensure away and boost are off before changing mode
       await this.ctx.executeCommand(CMD.SET_OPERATING_MODE, [
@@ -55,7 +44,6 @@ class WaterHeaterOverkizHandler {
       if (dhwMode) {
         await this.ctx.executeCommand(CMD.SET_DHW_MODE, [dhwMode]);
       }
-      this.ctx.setCapability('onoff', true);
       this.ctx.setCapability('cozytouch_boost', false);
     }
     this.ctx.setCapability('cozytouch_heating_mode', mode);
@@ -107,7 +95,6 @@ class WaterHeaterOverkizHandler {
     // Mode
     if (isAway) {
       this.ctx.setCapability('cozytouch_heating_mode', 'off');
-      this.ctx.setCapability('onoff', false);
       this.ctx.setCapability('cozytouch_away_mode', true);
     } else {
       const dhwMode = getStateValue(states, STATES.DHW_MODE);
@@ -115,7 +102,6 @@ class WaterHeaterOverkizHandler {
         const modeStr = OVERKIZ_DHW_TO_MODE[dhwMode] || 'manual';
         this.ctx.setCapability('cozytouch_heating_mode', modeStr);
       }
-      this.ctx.setCapability('onoff', true);
       this.ctx.setCapability('cozytouch_away_mode', false);
     }
   }

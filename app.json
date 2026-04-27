@@ -1,6 +1,6 @@
 {
   "id": "com.nicolasydder.cozytouch",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": ["local"],
@@ -126,8 +126,7 @@
         "measure_temperature",
         "cozytouch_heating_mode",
         "cozytouch_boost",
-        "cozytouch_away_mode",
-        "onoff"
+        "cozytouch_away_mode"
       ],
       "capabilitiesOptions": {
         "target_temperature": {

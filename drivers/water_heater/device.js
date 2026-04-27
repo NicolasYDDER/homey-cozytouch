@@ -4,6 +4,8 @@ const CozyTouchDevice = require('../../lib/CozyTouchDevice');
 const WaterHeaterCozytouchHandler = require('./handlers/cozytouch');
 const WaterHeaterOverkizHandler = require('./handlers/overkiz');
 
+const POST_COMMAND_REFRESH_DELAY_MS = 3000;
+
 class WaterHeaterDevice extends CozyTouchDevice {
 
   async onInit() {
@@ -13,6 +15,11 @@ class WaterHeaterDevice extends CozyTouchDevice {
     }
     if (this.hasCapability('cozytouch_shower_count')) {
       await this.removeCapability('cozytouch_shower_count');
+    }
+    // A water heater is always-on by design; the onoff toggle was confusing
+    // users into putting it in complete standby. Mode picker is the only control now.
+    if (this.hasCapability('onoff')) {
+      await this.removeCapability('onoff');
     }
 
     // Water heater only uses off/manual/eco_plus/auto (no prog)
@@ -36,27 +43,48 @@ class WaterHeaterDevice extends CozyTouchDevice {
   }
 
   _registerCapabilityListeners() {
-    this._registerCapability('target_temperature', (value) =>
-      this._handler.setTargetTemperature(value));
+    const withRefresh = (fn) => async (value) => {
+      await fn(value);
+      this._schedulePostCommandRefresh();
+    };
 
-    this._registerCapability('onoff', (value) =>
-      this._handler.setOnOff(value));
+    this._registerCapability('target_temperature', withRefresh((value) =>
+      this._handler.setTargetTemperature(value)));
 
-    this._registerCapability('cozytouch_heating_mode', (value) =>
-      this._handler.setMode(value));
+    this._registerCapability('cozytouch_heating_mode', withRefresh((value) =>
+      this._handler.setMode(value)));
 
-    this._registerCapability('cozytouch_away_mode', (value) =>
-      this._handler.setAwayMode(value));
+    this._registerCapability('cozytouch_away_mode', withRefresh((value) =>
+      this._handler.setAwayMode(value)));
 
     if (this.hasCapability('cozytouch_boost')) {
-      this._registerCapability('cozytouch_boost', (value) =>
-        this._handler.setBoost(value));
+      this._registerCapability('cozytouch_boost', withRefresh((value) =>
+        this._handler.setBoost(value)));
     }
+  }
 
+  // After a user command, the Cozytouch API needs a moment to reflect the new
+  // state. Re-poll shortly after so the UI doesn't wait for the next interval tick.
+  _schedulePostCommandRefresh() {
+    if (this._postCommandTimeout) {
+      this.homey.clearTimeout(this._postCommandTimeout);
+    }
+    this._postCommandTimeout = this.homey.setTimeout(() => {
+      this._postCommandTimeout = null;
+      this._poll().catch(this.error);
+    }, POST_COMMAND_REFRESH_DELAY_MS);
+  }
+
+  async onDeleted() {
+    if (this._postCommandTimeout) {
+      this.homey.clearTimeout(this._postCommandTimeout);
+    }
+    await super.onDeleted();
   }
 
   async setHeatingMode(mode) {
     await this._handler.setMode(mode);
+    this._schedulePostCommandRefresh();
   }
 
 }

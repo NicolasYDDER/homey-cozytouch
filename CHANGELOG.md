@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.4] - 2026-04-27
+
+### Changed
+- **Water heater UX**: removed the on/off toggle from the water heater widget. A water heater is designed to run continuously, and the toggle was confusing users into putting it into complete standby. The heating mode picker (Off / Manual / Eco / Auto) is now the single control — selecting "Off" still reaches full standby for users who want it. Existing paired devices have the `onoff` capability removed automatically on first load.
+- **Faster feedback after commands**: the water heater now triggers an extra state refresh a few seconds after any command, so the UI reflects the new value without waiting for the next poll interval. This only affects commands sent from Homey — changes made directly from the Cozytouch app still depend on the configured poll interval.
+
 ## [1.2.3] - 2026-04-26
 
 ### Fixed

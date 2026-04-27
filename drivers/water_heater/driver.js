@@ -19,13 +19,13 @@ class WaterHeaterDriver extends CozyTouchDriver {
 
   _mapCozyTouchDevice(dev, username, password) {
     const base = super._mapCozyTouchDevice(dev, username, password);
-    base.capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_heating_mode', 'cozytouch_away_mode', 'onoff'];
+    base.capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_heating_mode', 'cozytouch_away_mode'];
     return base;
   }
 
   _mapOverkizDevice(dev, username, password) {
     const base = super._mapOverkizDevice(dev, username, password);
-    base.capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_heating_mode', 'cozytouch_away_mode', 'onoff'];
+    base.capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_heating_mode', 'cozytouch_away_mode'];
     return base;
   }
 
