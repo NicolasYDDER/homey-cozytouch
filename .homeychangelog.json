@@ -1,4 +1,8 @@
 {
+  "1.2.5": {
+    "en": "Added support for Atlantic Égéo water heaters (AtlanticDomesticHotWaterProductionMBLComponent / modbuslink). Mode, boost, away and target temperature commands now work on these devices.",
+    "fr": "Ajout du support des chauffe-eau Atlantic Égéo (AtlanticDomesticHotWaterProductionMBLComponent / modbuslink). Les commandes de mode, boost, absence et température de consigne fonctionnent désormais sur ces appareils."
+  },
   "1.2.3": {
     "en": "Fixed settings page endless loading on web/desktop Homey clients (missing /homey.js bridge script).",
     "fr": "Correction du chargement infini de la page de paramètres sur Homey web/desktop (script /homey.js manquant)."

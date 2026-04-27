@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.5] - 2026-04-27
+
+### Fixed
+- **Atlantic Égéo water heater control**: Égéo devices (widget `AtlanticDomesticHotWaterProductionMBLComponent`, `modbuslink://` protocol) previously returned `UNSUPPORTED_OPERATION: No such command : setCurrentOperatingMode` on any mode/boost/away change, leaving users able to read temperature but not issue any command. Added a dedicated MBL handler using `setDHWMode`, `setBoostMode`, `setTargetDHWTemperature`, and the multi-step absence sequence (`setDateTime` → `setAbsenceStartDate` → `setAbsenceEndDate` → `setAbsenceMode prog`), plus reads from `modbuslink:*` states. The mode picker also drops Auto for these devices since the widget has no dedicated auto mode (Eco already maps to `autoMode`).
+
 ## [1.2.4] - 2026-04-27
 
 ### Changed
