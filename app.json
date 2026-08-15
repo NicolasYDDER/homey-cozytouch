@@ -454,8 +454,8 @@
     "cozytouch_pass_level": {
       "type": "enum",
       "title": {
-        "en": "Pass Level",
-        "fr": "Niveau Pass"
+        "en": "Pass Mode",
+        "fr": "Mode Pass"
       },
       "values": [
         {
@@ -644,7 +644,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater|climate|towel_rack|zone_control"
+            "filter": "capabilities=measure_temperature"
           }
         ],
         "tokens": [
@@ -687,8 +687,8 @@
       {
         "id": "pass_cozytouch_level_changed",
         "title": {
-          "en": "Pass Cozytouch level changed",
-          "fr": "Niveau Pass Cozytouch changé"
+          "en": "Pass Cozytouch mode changed",
+          "fr": "Mode Pass Cozytouch changé"
         },
         "args": [
           {
@@ -702,10 +702,35 @@
             "name": "level",
             "type": "string",
             "title": {
-              "en": "Level",
-              "fr": "Niveau"
+              "en": "Mode",
+              "fr": "Mode"
             },
             "example": "comfort"
+          }
+        ]
+      },
+      {
+        "id": "zone_control_hvac_mode_changed",
+        "title": {
+          "en": "Zone Control HVAC mode changed",
+          "fr": "Mode CVC Zone Control changé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=zone_control&capabilities=cozytouch_hvac_mode"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "mode",
+            "type": "string",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "example": "heat"
           }
         ]
       }
@@ -845,12 +870,12 @@
       {
         "id": "set_pass_cozytouch_level",
         "title": {
-          "en": "Set Pass Cozytouch level",
-          "fr": "Définir le niveau Pass Cozytouch"
+          "en": "Set Pass Cozytouch mode",
+          "fr": "Définir le mode Pass Cozytouch"
         },
         "titleFormatted": {
-          "en": "Set Pass Cozytouch level to [[level]]",
-          "fr": "Définir le niveau Pass Cozytouch sur [[level]]"
+          "en": "Set Pass Cozytouch mode to [[level]]",
+          "fr": "Définir le mode Pass Cozytouch sur [[level]]"
         },
         "args": [
           {
@@ -862,8 +887,8 @@
             "type": "dropdown",
             "name": "level",
             "title": {
-              "en": "Level",
-              "fr": "Niveau"
+              "en": "Mode",
+              "fr": "Mode"
             },
             "values": [
               { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
@@ -907,6 +932,39 @@
               { "id": "eco_plus", "label": { "en": "Eco+", "fr": "Eco+" } },
               { "id": "prog", "label": { "en": "Program", "fr": "Programme" } },
               { "id": "auto", "label": { "en": "Auto", "fr": "Auto" } }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "is_zone_control_hvac_mode",
+        "title": {
+          "en": "Zone Control HVAC mode !{{is|is not}} ...",
+          "fr": "Le mode CVC Zone Control !{{est|n'est pas}} ..."
+        },
+        "titleFormatted": {
+          "en": "Zone Control HVAC mode !{{is|is not}} [[mode]]",
+          "fr": "Le mode CVC Zone Control !{{est|n'est pas}} [[mode]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=zone_control&capabilities=cozytouch_hvac_mode"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
+              { "id": "heat", "label": { "en": "Heat", "fr": "Chauffage" } },
+              { "id": "cool", "label": { "en": "Cool", "fr": "Rafraîchissement" } },
+              { "id": "dry", "label": { "en": "Dry", "fr": "Déshumidification" } },
+              { "id": "auto", "label": { "en": "Auto", "fr": "Automatique" } }
             ]
           }
         ]
