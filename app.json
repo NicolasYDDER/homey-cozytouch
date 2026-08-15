@@ -49,8 +49,8 @@
     {
       "id": "heater",
       "name": {
-        "en": "Heater / Boiler",
-        "fr": "Chauffage / Chaudière"
+        "en": "Radiator / Heating",
+        "fr": "Radiateur / Chauffage"
       },
       "class": "heater",
       "capabilities": [
