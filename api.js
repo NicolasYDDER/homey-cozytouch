@@ -22,6 +22,9 @@ module.exports = {
     return {
       hasCredentials: !!settings.username,
       username: settings.username || null,
+      syncInterval: homey.app.getSyncIntervalSeconds(),
+      syncIntervalMin: 30,
+      syncIntervalMax: 300,
       cozytouch: {
         authenticated: cozyInstance ? cozyInstance.isAuthenticated() : false,
         baseUrl: CozyTouchAPI.BASE_URL,
@@ -31,6 +34,17 @@ module.exports = {
         baseUrl: OverkizAPI.OVERKIZ_API,
       },
     };
+  },
+
+  /**
+   * POST /api/save-sync-interval
+   * Saves the global sync interval (seconds) and restarts the timer.
+   * One interval for the full cycle: Overkiz refresh + poll of all devices.
+   */
+  async saveSyncInterval({ homey, body }) {
+    const seconds = body && body.seconds;
+    const clamped = homey.app.setSyncIntervalSeconds(seconds);
+    return { success: true, syncInterval: clamped };
   },
 
   /**

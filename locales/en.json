@@ -13,6 +13,6 @@
     "no_protocol": "No devices found on Cozytouch or Overkiz protocols."
   },
   "settings": {
-    "poll_interval": "Update interval (seconds)"
+    "sync_interval": "Update interval (seconds)"
   }
 }

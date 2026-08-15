@@ -3,7 +3,9 @@
   "version": "1.2.5",
   "compatibility": ">=5.0.0",
   "sdk": 3,
-  "platforms": ["local"],
+  "platforms": [
+    "local"
+  ],
   "name": {
     "en": "Atlantic Cozytouch",
     "fr": "Atlantic Cozytouch"
@@ -12,7 +14,9 @@
     "en": "Control your Atlantic heating devices via Cozytouch",
     "fr": "Contrôlez vos appareils Atlantic via Cozytouch"
   },
-  "category": ["climate"],
+  "category": [
+    "climate"
+  ],
   "brandColor": "#E3001B",
   "images": {
     "small": "/assets/images/small.png",
@@ -43,6 +47,10 @@
     "clearCredentials": {
       "method": "DELETE",
       "path": "/clear-credentials"
+    },
+    "saveSyncInterval": {
+      "method": "POST",
+      "path": "/save-sync-interval"
     }
   },
   "drivers": [
@@ -90,29 +98,7 @@
         "small": "/drivers/heater/assets/images/small.png",
         "large": "/drivers/heater/assets/images/large.png",
         "xlarge": "/drivers/heater/assets/images/xlarge.png"
-      },
-      "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "Device Settings",
-            "fr": "Paramètres de l'appareil"
-          },
-          "children": [
-            {
-              "id": "poll_interval",
-              "type": "number",
-              "label": {
-                "en": "Poll interval (seconds)",
-                "fr": "Intervalle de mise à jour (secondes)"
-              },
-              "value": 60,
-              "min": 10,
-              "max": 300
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "id": "water_heater",
@@ -159,29 +145,7 @@
         "small": "/drivers/water_heater/assets/images/small.png",
         "large": "/drivers/water_heater/assets/images/large.png",
         "xlarge": "/drivers/water_heater/assets/images/xlarge.png"
-      },
-      "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "Device Settings",
-            "fr": "Paramètres de l'appareil"
-          },
-          "children": [
-            {
-              "id": "poll_interval",
-              "type": "number",
-              "label": {
-                "en": "Poll interval (seconds)",
-                "fr": "Intervalle de mise à jour (secondes)"
-              },
-              "value": 60,
-              "min": 10,
-              "max": 300
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "id": "climate",
@@ -229,29 +193,7 @@
         "small": "/drivers/climate/assets/images/small.png",
         "large": "/drivers/climate/assets/images/large.png",
         "xlarge": "/drivers/climate/assets/images/xlarge.png"
-      },
-      "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "Device Settings",
-            "fr": "Paramètres de l'appareil"
-          },
-          "children": [
-            {
-              "id": "poll_interval",
-              "type": "number",
-              "label": {
-                "en": "Poll interval (seconds)",
-                "fr": "Intervalle de mise à jour (secondes)"
-              },
-              "value": 60,
-              "min": 10,
-              "max": 300
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "id": "towel_rack",
@@ -297,29 +239,7 @@
         "small": "/drivers/towel_rack/assets/images/small.png",
         "large": "/drivers/towel_rack/assets/images/large.png",
         "xlarge": "/drivers/towel_rack/assets/images/xlarge.png"
-      },
-      "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "Device Settings",
-            "fr": "Paramètres de l'appareil"
-          },
-          "children": [
-            {
-              "id": "poll_interval",
-              "type": "number",
-              "label": {
-                "en": "Poll interval (seconds)",
-                "fr": "Intervalle de mise à jour (secondes)"
-              },
-              "value": 60,
-              "min": 10,
-              "max": 300
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "id": "pass_cozytouch",
@@ -356,29 +276,7 @@
         "small": "/drivers/pass_cozytouch/assets/images/small.png",
         "large": "/drivers/pass_cozytouch/assets/images/large.png",
         "xlarge": "/drivers/pass_cozytouch/assets/images/xlarge.png"
-      },
-      "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "Device Settings",
-            "fr": "Paramètres de l'appareil"
-          },
-          "children": [
-            {
-              "id": "poll_interval",
-              "type": "number",
-              "label": {
-                "en": "Poll interval (seconds)",
-                "fr": "Intervalle de mise à jour (secondes)"
-              },
-              "value": 60,
-              "min": 10,
-              "max": 300
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "id": "zone_control",
@@ -425,29 +323,7 @@
         "small": "/drivers/zone_control/assets/images/small.png",
         "large": "/drivers/zone_control/assets/images/large.png",
         "xlarge": "/drivers/zone_control/assets/images/xlarge.png"
-      },
-      "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "Device Settings",
-            "fr": "Paramètres de l'appareil"
-          },
-          "children": [
-            {
-              "id": "poll_interval",
-              "type": "number",
-              "label": {
-                "en": "Poll interval (seconds)",
-                "fr": "Intervalle de mise à jour (secondes)"
-              },
-              "value": 60,
-              "min": 10,
-              "max": 300
-            }
-          ]
-        }
-      ]
+      }
     }
   ],
   "capabilities": {
@@ -460,27 +336,45 @@
       "values": [
         {
           "id": "off",
-          "title": { "en": "Off", "fr": "Arrêt" }
+          "title": {
+            "en": "Off",
+            "fr": "Arrêt"
+          }
         },
         {
           "id": "frostprotection",
-          "title": { "en": "Frost Protection", "fr": "Hors-gel" }
+          "title": {
+            "en": "Frost Protection",
+            "fr": "Hors-gel"
+          }
         },
         {
           "id": "eco",
-          "title": { "en": "Eco", "fr": "Eco" }
+          "title": {
+            "en": "Eco",
+            "fr": "Eco"
+          }
         },
         {
           "id": "comfort-2",
-          "title": { "en": "Comfort -2", "fr": "Confort -2" }
+          "title": {
+            "en": "Comfort -2",
+            "fr": "Confort -2"
+          }
         },
         {
           "id": "comfort-1",
-          "title": { "en": "Comfort -1", "fr": "Confort -1" }
+          "title": {
+            "en": "Comfort -1",
+            "fr": "Confort -1"
+          }
         },
         {
           "id": "comfort",
-          "title": { "en": "Comfort", "fr": "Confort" }
+          "title": {
+            "en": "Comfort",
+            "fr": "Confort"
+          }
         }
       ],
       "getable": true,
@@ -496,23 +390,38 @@
       "values": [
         {
           "id": "off",
-          "title": { "en": "Off", "fr": "Arrêt" }
+          "title": {
+            "en": "Off",
+            "fr": "Arrêt"
+          }
         },
         {
           "id": "manual",
-          "title": { "en": "Manual", "fr": "Manuel" }
+          "title": {
+            "en": "Manual",
+            "fr": "Manuel"
+          }
         },
         {
           "id": "eco_plus",
-          "title": { "en": "Eco+", "fr": "Eco+" }
+          "title": {
+            "en": "Eco+",
+            "fr": "Eco+"
+          }
         },
         {
           "id": "prog",
-          "title": { "en": "Program", "fr": "Programme" }
+          "title": {
+            "en": "Program",
+            "fr": "Programme"
+          }
         },
         {
           "id": "auto",
-          "title": { "en": "Auto", "fr": "Auto" }
+          "title": {
+            "en": "Auto",
+            "fr": "Auto"
+          }
         }
       ],
       "getable": true,
@@ -528,27 +437,45 @@
       "values": [
         {
           "id": "off",
-          "title": { "en": "Off", "fr": "Arrêt" }
+          "title": {
+            "en": "Off",
+            "fr": "Arrêt"
+          }
         },
         {
           "id": "heat",
-          "title": { "en": "Heat", "fr": "Chauffage" }
+          "title": {
+            "en": "Heat",
+            "fr": "Chauffage"
+          }
         },
         {
           "id": "cool",
-          "title": { "en": "Cool", "fr": "Refroidissement" }
+          "title": {
+            "en": "Cool",
+            "fr": "Refroidissement"
+          }
         },
         {
           "id": "auto",
-          "title": { "en": "Auto", "fr": "Automatique" }
+          "title": {
+            "en": "Auto",
+            "fr": "Automatique"
+          }
         },
         {
           "id": "dry",
-          "title": { "en": "Dry", "fr": "Séchage" }
+          "title": {
+            "en": "Dry",
+            "fr": "Séchage"
+          }
         },
         {
           "id": "fan_only",
-          "title": { "en": "Fan Only", "fr": "Ventilation" }
+          "title": {
+            "en": "Fan Only",
+            "fr": "Ventilation"
+          }
         }
       ],
       "getable": true,
@@ -564,19 +491,31 @@
       "values": [
         {
           "id": "auto",
-          "title": { "en": "Auto", "fr": "Automatique" }
+          "title": {
+            "en": "Auto",
+            "fr": "Automatique"
+          }
         },
         {
           "id": "low",
-          "title": { "en": "Low", "fr": "Faible" }
+          "title": {
+            "en": "Low",
+            "fr": "Faible"
+          }
         },
         {
           "id": "medium",
-          "title": { "en": "Medium", "fr": "Moyen" }
+          "title": {
+            "en": "Medium",
+            "fr": "Moyen"
+          }
         },
         {
           "id": "high",
-          "title": { "en": "High", "fr": "Fort" }
+          "title": {
+            "en": "High",
+            "fr": "Fort"
+          }
         }
       ],
       "getable": true,
@@ -592,19 +531,31 @@
       "values": [
         {
           "id": "up",
-          "title": { "en": "Up", "fr": "Haut" }
+          "title": {
+            "en": "Up",
+            "fr": "Haut"
+          }
         },
         {
           "id": "middle_up",
-          "title": { "en": "Middle Up", "fr": "Mi-haut" }
+          "title": {
+            "en": "Middle Up",
+            "fr": "Mi-haut"
+          }
         },
         {
           "id": "middle_down",
-          "title": { "en": "Middle Down", "fr": "Mi-bas" }
+          "title": {
+            "en": "Middle Down",
+            "fr": "Mi-bas"
+          }
         },
         {
           "id": "down",
-          "title": { "en": "Down", "fr": "Bas" }
+          "title": {
+            "en": "Down",
+            "fr": "Bas"
+          }
         }
       ],
       "getable": true,
@@ -760,11 +711,41 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
-              { "id": "eco_plus", "label": { "en": "Eco+", "fr": "Eco+" } },
-              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } },
-              { "id": "auto", "label": { "en": "Auto", "fr": "Auto" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "manual",
+                "label": {
+                  "en": "Manual",
+                  "fr": "Manuel"
+                }
+              },
+              {
+                "id": "eco_plus",
+                "label": {
+                  "en": "Eco+",
+                  "fr": "Eco+"
+                }
+              },
+              {
+                "id": "prog",
+                "label": {
+                  "en": "Program",
+                  "fr": "Programme"
+                }
+              },
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Auto",
+                  "fr": "Auto"
+                }
+              }
             ]
           }
         ]
@@ -793,12 +774,48 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "heat", "label": { "en": "Heat", "fr": "Chauffage" } },
-              { "id": "cool", "label": { "en": "Cool", "fr": "Refroidissement" } },
-              { "id": "auto", "label": { "en": "Auto", "fr": "Automatique" } },
-              { "id": "dry", "label": { "en": "Dry", "fr": "Séchage" } },
-              { "id": "fan_only", "label": { "en": "Fan Only", "fr": "Ventilation" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "heat",
+                "label": {
+                  "en": "Heat",
+                  "fr": "Chauffage"
+                }
+              },
+              {
+                "id": "cool",
+                "label": {
+                  "en": "Cool",
+                  "fr": "Refroidissement"
+                }
+              },
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Auto",
+                  "fr": "Automatique"
+                }
+              },
+              {
+                "id": "dry",
+                "label": {
+                  "en": "Dry",
+                  "fr": "Séchage"
+                }
+              },
+              {
+                "id": "fan_only",
+                "label": {
+                  "en": "Fan Only",
+                  "fr": "Ventilation"
+                }
+              }
             ]
           }
         ]
@@ -827,11 +844,41 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "heat", "label": { "en": "Heat", "fr": "Chauffage" } },
-              { "id": "cool", "label": { "en": "Cool", "fr": "Rafraîchissement" } },
-              { "id": "dry", "label": { "en": "Dry", "fr": "Déshumidification" } },
-              { "id": "auto", "label": { "en": "Auto", "fr": "Automatique" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "heat",
+                "label": {
+                  "en": "Heat",
+                  "fr": "Chauffage"
+                }
+              },
+              {
+                "id": "cool",
+                "label": {
+                  "en": "Cool",
+                  "fr": "Rafraîchissement"
+                }
+              },
+              {
+                "id": "dry",
+                "label": {
+                  "en": "Dry",
+                  "fr": "Déshumidification"
+                }
+              },
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Auto",
+                  "fr": "Automatique"
+                }
+              }
             ]
           }
         ]
@@ -860,9 +907,27 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
-              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "manual",
+                "label": {
+                  "en": "Manual",
+                  "fr": "Manuel"
+                }
+              },
+              {
+                "id": "prog",
+                "label": {
+                  "en": "Program",
+                  "fr": "Programme"
+                }
+              }
             ]
           }
         ]
@@ -891,12 +956,48 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "frostprotection", "label": { "en": "Frost Protection", "fr": "Hors-gel" } },
-              { "id": "eco", "label": { "en": "Eco", "fr": "Eco" } },
-              { "id": "comfort-2", "label": { "en": "Comfort -2", "fr": "Confort -2" } },
-              { "id": "comfort-1", "label": { "en": "Comfort -1", "fr": "Confort -1" } },
-              { "id": "comfort", "label": { "en": "Comfort", "fr": "Confort" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "frostprotection",
+                "label": {
+                  "en": "Frost Protection",
+                  "fr": "Hors-gel"
+                }
+              },
+              {
+                "id": "eco",
+                "label": {
+                  "en": "Eco",
+                  "fr": "Eco"
+                }
+              },
+              {
+                "id": "comfort-2",
+                "label": {
+                  "en": "Comfort -2",
+                  "fr": "Confort -2"
+                }
+              },
+              {
+                "id": "comfort-1",
+                "label": {
+                  "en": "Comfort -1",
+                  "fr": "Confort -1"
+                }
+              },
+              {
+                "id": "comfort",
+                "label": {
+                  "en": "Comfort",
+                  "fr": "Confort"
+                }
+              }
             ]
           }
         ]
@@ -927,11 +1028,41 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
-              { "id": "eco_plus", "label": { "en": "Eco+", "fr": "Eco+" } },
-              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } },
-              { "id": "auto", "label": { "en": "Auto", "fr": "Auto" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "manual",
+                "label": {
+                  "en": "Manual",
+                  "fr": "Manuel"
+                }
+              },
+              {
+                "id": "eco_plus",
+                "label": {
+                  "en": "Eco+",
+                  "fr": "Eco+"
+                }
+              },
+              {
+                "id": "prog",
+                "label": {
+                  "en": "Program",
+                  "fr": "Programme"
+                }
+              },
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Auto",
+                  "fr": "Auto"
+                }
+              }
             ]
           }
         ]
@@ -960,11 +1091,41 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "heat", "label": { "en": "Heat", "fr": "Chauffage" } },
-              { "id": "cool", "label": { "en": "Cool", "fr": "Rafraîchissement" } },
-              { "id": "dry", "label": { "en": "Dry", "fr": "Déshumidification" } },
-              { "id": "auto", "label": { "en": "Auto", "fr": "Automatique" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "heat",
+                "label": {
+                  "en": "Heat",
+                  "fr": "Chauffage"
+                }
+              },
+              {
+                "id": "cool",
+                "label": {
+                  "en": "Cool",
+                  "fr": "Rafraîchissement"
+                }
+              },
+              {
+                "id": "dry",
+                "label": {
+                  "en": "Dry",
+                  "fr": "Déshumidification"
+                }
+              },
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Auto",
+                  "fr": "Automatique"
+                }
+              }
             ]
           }
         ]
@@ -993,9 +1154,27 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
-              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "manual",
+                "label": {
+                  "en": "Manual",
+                  "fr": "Manuel"
+                }
+              },
+              {
+                "id": "prog",
+                "label": {
+                  "en": "Program",
+                  "fr": "Programme"
+                }
+              }
             ]
           }
         ]

@@ -4,6 +4,13 @@ const Homey = require('homey');
 const CozyTouchAPI = require('./lib/CozyTouchAPI');
 const OverkizAPI = require('./lib/OverkizAPI');
 
+// One app setting: delay between each sync cycle for every device.
+// Cycle = Overkiz refreshStates (if any) → poll all devices.
+const SYNC_INTERVAL_KEY = 'sync_interval';
+const SYNC_INTERVAL_DEFAULT = 60;
+const SYNC_INTERVAL_MIN = 30;
+const SYNC_INTERVAL_MAX = 300;
+
 class CozyTouchApp extends Homey.App {
 
   async onInit() {
@@ -12,6 +19,9 @@ class CozyTouchApp extends Homey.App {
     // Store API instances per account (keyed by username + protocol)
     this._cozyInstances = {};
     this._overkizInstances = {};
+    this._syncedDevices = new Set();
+    this._syncInFlight = false;
+    this._syncIntervalHandle = null;
 
     // Restore saved credentials and pre-authenticate
     await this._restoreCredentials();
@@ -19,7 +29,95 @@ class CozyTouchApp extends Homey.App {
     // Register Flow action cards
     this._registerFlowCards();
 
+    // Global sync: Overkiz refresh → poll all devices (Overkiz + Magellan)
+    this._startSyncTimer();
+    this.homey.setTimeout(() => {
+      this._runSyncCycle().catch((err) => this.error('Sync cycle failed:', err.message));
+    }, 5000);
+
     this.log('Atlantic Cozytouch has been initialized');
+  }
+
+  // ── Global sync (one interval for every device) ────────────────
+
+  registerSyncedDevice(device) {
+    this._syncedDevices.add(device);
+  }
+
+  unregisterSyncedDevice(device) {
+    this._syncedDevices.delete(device);
+  }
+
+  getSyncIntervalSeconds() {
+    const raw = this.homey.settings.get(SYNC_INTERVAL_KEY);
+    const n = parseInt(raw, 10);
+    if (Number.isNaN(n)) return SYNC_INTERVAL_DEFAULT;
+    return Math.min(SYNC_INTERVAL_MAX, Math.max(SYNC_INTERVAL_MIN, n));
+  }
+
+  setSyncIntervalSeconds(seconds) {
+    const n = parseInt(seconds, 10);
+    if (Number.isNaN(n)) {
+      throw new Error(`Invalid sync interval: ${seconds}`);
+    }
+    const clamped = Math.min(SYNC_INTERVAL_MAX, Math.max(SYNC_INTERVAL_MIN, n));
+    this.homey.settings.set(SYNC_INTERVAL_KEY, clamped);
+    this._startSyncTimer();
+    return clamped;
+  }
+
+  _startSyncTimer() {
+    if (this._syncIntervalHandle) {
+      this.homey.clearInterval(this._syncIntervalHandle);
+      this._syncIntervalHandle = null;
+    }
+
+    const seconds = this.getSyncIntervalSeconds();
+    this.log(`Sync interval: ${seconds}s (refresh + poll)`);
+    this._syncIntervalHandle = this.homey.setInterval(
+      () => this._runSyncCycle().catch((err) => this.error('Sync cycle failed:', err.message)),
+      seconds * 1000,
+    );
+  }
+
+  async _runSyncCycle() {
+    if (this._syncInFlight) {
+      this.log('Sync skipped (previous cycle still running)');
+      return;
+    }
+
+    const devices = [...this._syncedDevices];
+    if (devices.length === 0) return;
+
+    this._syncInFlight = true;
+    try {
+      const overkizApis = new Set();
+      for (const device of devices) {
+        const api = device.getOverkizApi && device.getOverkizApi();
+        if (api) overkizApis.add(api);
+      }
+
+      for (const api of overkizApis) {
+        try {
+          if (!api.isAuthenticated()) {
+            await api.authenticate();
+          }
+          await api.refreshStates();
+        } catch (err) {
+          this.error(`Overkiz refreshStates failed: ${err.message}`);
+        }
+      }
+
+      for (const device of devices) {
+        try {
+          await device.pollFromApp();
+        } catch (err) {
+          this.error(`Poll failed for ${device.getName()}: ${err.message}`);
+        }
+      }
+    } finally {
+      this._syncInFlight = false;
+    }
   }
 
   /**
