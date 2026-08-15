@@ -2,3 +2,4 @@ node_modules/
 .homeybuild/
 env.json
 *.tgz
+__TEST__/

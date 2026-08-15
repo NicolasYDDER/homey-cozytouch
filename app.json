@@ -320,9 +320,104 @@
           ]
         }
       ]
+    },
+    {
+      "id": "pass_cozytouch",
+      "name": {
+        "en": "Pass Cozytouch",
+        "fr": "Pass Cozytouch"
+      },
+      "class": "heater",
+      "capabilities": [
+        "cozytouch_pass_level",
+        "onoff"
+      ],
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "/drivers/pass_cozytouch/assets/icon.svg"
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/pass_cozytouch/assets/images/small.png",
+        "large": "/drivers/pass_cozytouch/assets/images/large.png",
+        "xlarge": "/drivers/pass_cozytouch/assets/images/xlarge.png"
+      },
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Device Settings",
+            "fr": "Paramètres de l'appareil"
+          },
+          "children": [
+            {
+              "id": "poll_interval",
+              "type": "number",
+              "label": {
+                "en": "Poll interval (seconds)",
+                "fr": "Intervalle de mise à jour (secondes)"
+              },
+              "value": 60,
+              "min": 10,
+              "max": 300
+            }
+          ]
+        }
+      ]
     }
   ],
   "capabilities": {
+    "cozytouch_pass_level": {
+      "type": "enum",
+      "title": {
+        "en": "Pass Level",
+        "fr": "Niveau Pass"
+      },
+      "values": [
+        {
+          "id": "off",
+          "title": { "en": "Off", "fr": "Arrêt" }
+        },
+        {
+          "id": "frostprotection",
+          "title": { "en": "Frost Protection", "fr": "Hors-gel" }
+        },
+        {
+          "id": "eco",
+          "title": { "en": "Eco", "fr": "Eco" }
+        },
+        {
+          "id": "comfort-2",
+          "title": { "en": "Comfort -2", "fr": "Confort -2" }
+        },
+        {
+          "id": "comfort-1",
+          "title": { "en": "Comfort -1", "fr": "Confort -1" }
+        },
+        {
+          "id": "comfort",
+          "title": { "en": "Comfort", "fr": "Confort" }
+        }
+      ],
+      "getable": true,
+      "setable": true,
+      "uiComponent": "picker"
+    },
     "cozytouch_heating_mode": {
       "type": "enum",
       "title": {
@@ -505,7 +600,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater|towel_rack"
+            "filter": "driver_id=heater|water_heater|towel_rack|climate"
           }
         ],
         "tokens": [
@@ -517,6 +612,31 @@
               "fr": "Mode"
             },
             "example": "manual"
+          }
+        ]
+      },
+      {
+        "id": "pass_cozytouch_level_changed",
+        "title": {
+          "en": "Pass Cozytouch level changed",
+          "fr": "Niveau Pass Cozytouch changé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=pass_cozytouch"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "level",
+            "type": "string",
+            "title": {
+              "en": "Level",
+              "fr": "Niveau"
+            },
+            "example": "comfort"
           }
         ]
       }
@@ -536,7 +656,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater|towel_rack"
+            "filter": "driver_id=heater|water_heater|towel_rack|climate"
           },
           {
             "type": "dropdown",
@@ -588,6 +708,40 @@
             ]
           }
         ]
+      },
+      {
+        "id": "set_pass_cozytouch_level",
+        "title": {
+          "en": "Set Pass Cozytouch level",
+          "fr": "Définir le niveau Pass Cozytouch"
+        },
+        "titleFormatted": {
+          "en": "Set Pass Cozytouch level to [[level]]",
+          "fr": "Définir le niveau Pass Cozytouch sur [[level]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=pass_cozytouch"
+          },
+          {
+            "type": "dropdown",
+            "name": "level",
+            "title": {
+              "en": "Level",
+              "fr": "Niveau"
+            },
+            "values": [
+              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
+              { "id": "frostprotection", "label": { "en": "Frost Protection", "fr": "Hors-gel" } },
+              { "id": "eco", "label": { "en": "Eco", "fr": "Eco" } },
+              { "id": "comfort-2", "label": { "en": "Comfort -2", "fr": "Confort -2" } },
+              { "id": "comfort-1", "label": { "en": "Comfort -1", "fr": "Confort -1" } },
+              { "id": "comfort", "label": { "en": "Comfort", "fr": "Confort" } }
+            ]
+          }
+        ]
       }
     ],
     "conditions": [
@@ -605,7 +759,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater|towel_rack"
+            "filter": "driver_id=heater|water_heater|towel_rack|climate"
           },
           {
             "type": "dropdown",
