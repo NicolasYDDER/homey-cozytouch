@@ -379,6 +379,75 @@
           ]
         }
       ]
+    },
+    {
+      "id": "zone_control",
+      "name": {
+        "en": "Shogun Zone Control",
+        "fr": "Shogun Zone Control"
+      },
+      "class": "thermostat",
+      "capabilities": [
+        "target_temperature",
+        "measure_temperature",
+        "cozytouch_hvac_mode",
+        "cozytouch_heating_mode",
+        "onoff"
+      ],
+      "capabilitiesOptions": {
+        "target_temperature": {
+          "min": 16,
+          "max": 30,
+          "step": 0.5
+        }
+      },
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "/drivers/zone_control/assets/icon.svg"
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/zone_control/assets/images/small.png",
+        "large": "/drivers/zone_control/assets/images/large.png",
+        "xlarge": "/drivers/zone_control/assets/images/xlarge.png"
+      },
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Device Settings",
+            "fr": "Paramètres de l'appareil"
+          },
+          "children": [
+            {
+              "id": "poll_interval",
+              "type": "number",
+              "label": {
+                "en": "Poll interval (seconds)",
+                "fr": "Intervalle de mise à jour (secondes)"
+              },
+              "value": 60,
+              "min": 10,
+              "max": 300
+            }
+          ]
+        }
+      ]
     }
   ],
   "capabilities": {
@@ -575,7 +644,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater|climate|towel_rack"
+            "filter": "driver_id=heater|water_heater|climate|towel_rack|zone_control"
           }
         ],
         "tokens": [
@@ -600,7 +669,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater|towel_rack|climate"
+            "filter": "driver_id=heater|water_heater|towel_rack"
           }
         ],
         "tokens": [
@@ -656,7 +725,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater|towel_rack|climate"
+            "filter": "driver_id=heater|water_heater|towel_rack"
           },
           {
             "type": "dropdown",
@@ -705,6 +774,70 @@
               { "id": "auto", "label": { "en": "Auto", "fr": "Automatique" } },
               { "id": "dry", "label": { "en": "Dry", "fr": "Séchage" } },
               { "id": "fan_only", "label": { "en": "Fan Only", "fr": "Ventilation" } }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set_zone_control_hvac_mode",
+        "title": {
+          "en": "Set Zone Control HVAC mode",
+          "fr": "Définir le mode CVC Zone Control"
+        },
+        "titleFormatted": {
+          "en": "Set Zone Control HVAC mode to [[mode]]",
+          "fr": "Définir le mode CVC Zone Control sur [[mode]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=zone_control&capabilities=cozytouch_hvac_mode"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
+              { "id": "heat", "label": { "en": "Heat", "fr": "Chauffage" } },
+              { "id": "cool", "label": { "en": "Cool", "fr": "Rafraîchissement" } },
+              { "id": "dry", "label": { "en": "Dry", "fr": "Déshumidification" } },
+              { "id": "auto", "label": { "en": "Auto", "fr": "Automatique" } }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set_zone_control_zone_mode",
+        "title": {
+          "en": "Set Zone Control zone mode",
+          "fr": "Définir le mode de zone Zone Control"
+        },
+        "titleFormatted": {
+          "en": "Set Zone Control zone mode to [[mode]]",
+          "fr": "Définir le mode de zone sur [[mode]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=zone_control&capabilities=cozytouch_heating_mode"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
+              { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
+              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } }
             ]
           }
         ]
@@ -759,7 +892,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater|towel_rack|climate"
+            "filter": "driver_id=heater|water_heater|towel_rack"
           },
           {
             "type": "dropdown",
@@ -774,6 +907,37 @@
               { "id": "eco_plus", "label": { "en": "Eco+", "fr": "Eco+" } },
               { "id": "prog", "label": { "en": "Program", "fr": "Programme" } },
               { "id": "auto", "label": { "en": "Auto", "fr": "Auto" } }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "is_zone_control_zone_mode",
+        "title": {
+          "en": "Zone mode !{{is|is not}} ...",
+          "fr": "Le mode de zone !{{est|n'est pas}} ..."
+        },
+        "titleFormatted": {
+          "en": "Zone mode !{{is|is not}} [[mode]]",
+          "fr": "Le mode de zone !{{est|n'est pas}} [[mode]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=zone_control&capabilities=cozytouch_heating_mode"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
+              { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
+              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } }
             ]
           }
         ]

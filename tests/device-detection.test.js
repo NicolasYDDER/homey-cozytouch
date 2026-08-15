@@ -50,7 +50,7 @@ const FIXTURES = {
     deviceURL: 'io://0000-0000-0000/3333333#2',
   },
   zoneSensor: {
-    label: 'IO',
+    label: 'Zone 1 Sensor',
     controllableName: 'io:AtlanticPassAPCZoneTemperatureSensor',
     widget: 'TemperatureSensor',
     deviceURL: 'io://0000-0000-0000/3333333#3',
@@ -74,6 +74,8 @@ describe('overkiz-device helpers', () => {
     assert.equal(isPassAPCHeatingAndCoolingZone(FIXTURES.zone), true);
     assert.equal(isPassAPCZoneTemperatureSensor(FIXTURES.zoneSensor), true);
     assert.equal(isPassAPCDevice(FIXTURES.zoneControl), true);
+    assert.equal(isPassAPCDevice(FIXTURES.zone), true);
+    assert.equal(isPassAPCDevice(FIXTURES.zoneSensor), true);
     assert.equal(isPassAPCDevice(FIXTURES.passCozytouch), false);
   });
 
@@ -89,6 +91,63 @@ describe('overkiz-device helpers', () => {
     assert.equal(
       getAdjustableSetpointTemperatureSensorUrl(FIXTURES.ipala.deviceURL),
       'io://0000-0000-0000/2222222#2',
+    );
+  });
+});
+
+/**
+ * Mirrors drivers/zone_control/driver.js#_filterDevices without loading Homey.
+ */
+function filterZoneControlDevices(allDevices) {
+  return allDevices.filter((dev) => {
+    if (dev._protocol !== 'overkiz') return false;
+    if (isPassAPCZoneTemperatureSensor(dev)) return false;
+    return isPassAPCZoneControlMain(dev) || isPassAPCHeatingAndCoolingZone(dev);
+  });
+}
+
+describe('zone_control pairing rules', () => {
+  const overkizStack = [
+    { ...FIXTURES.passCozytouch, _protocol: 'overkiz' },
+    { ...FIXTURES.ipala, _protocol: 'overkiz' },
+    { ...FIXTURES.zoneControl, _protocol: 'overkiz' },
+    { ...FIXTURES.zone, _protocol: 'overkiz' },
+    { ...FIXTURES.zoneSensor, _protocol: 'overkiz' },
+  ];
+
+  it('pairs only the controller and heating/cooling zones', () => {
+    const paired = filterZoneControlDevices(overkizStack);
+    assert.deepEqual(
+      paired.map((dev) => dev.label),
+      ['Zone Control', 'Zone 1'],
+    );
+  });
+
+  it('skips temperature sensors and unrelated Overkiz devices', () => {
+    const paired = filterZoneControlDevices(overkizStack);
+    assert.equal(paired.some((dev) => isPassAPCZoneTemperatureSensor(dev)), false);
+    assert.equal(paired.some((dev) => isPassCozytouch(dev)), false);
+    assert.equal(paired.some((dev) => isAdjustableSetpointElectricalHeater(dev)), false);
+  });
+
+  it('keeps Pass APC stack out of climate (defensive exclusion)', () => {
+    // climate/driver.js rejects any isPassAPCDevice before uiClass checks
+    assert.deepEqual(
+      overkizStack.filter((dev) => isPassAPCDevice(dev)).map((dev) => dev.label).sort(),
+      ['Zone 1', 'Zone 1 Sensor', 'Zone Control'],
+    );
+  });
+
+  it('maps controller vs zone roles and linked URLs', () => {
+    assert.equal(isPassAPCZoneControlMain(FIXTURES.zoneControl), true);
+    assert.equal(isPassAPCHeatingAndCoolingZone(FIXTURES.zone), true);
+    assert.equal(
+      getPassAPCMainDeviceURL(FIXTURES.zone.deviceURL),
+      FIXTURES.zoneControl.deviceURL,
+    );
+    assert.equal(
+      getPassAPCZoneTemperatureSensorUrl(FIXTURES.zone.deviceURL),
+      FIXTURES.zoneSensor.deviceURL,
     );
   });
 });
