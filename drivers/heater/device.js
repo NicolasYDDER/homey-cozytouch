@@ -11,6 +11,7 @@ class HeaterDevice extends CozyTouchDevice {
   _createHandler(store, data) {
     const ctx = this._buildHandlerContext(store, data);
     if (this._protocol === 'overkiz') {
+      // Ipala / adjustable-setpoint radiators — not the generic heater dialect
       if (isAdjustableSetpointElectricalHeater(store)) {
         return new AdjustableSetpointOverkizHandler(ctx);
       }

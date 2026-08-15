@@ -10,11 +10,15 @@ const {
 const { getAdjustableSetpointTemperatureSensorUrl } = require('../../../lib/helpers/overkiz-device');
 
 /**
- * Overkiz handler for connected radiators with adjustable temperature setpoint
- * (AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint — e.g. Sauter Ipala).
+ * Overkiz handler for Atlantic electrical heaters with adjustable temperature
+ * setpoint (controllable: AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint).
  *
- * Write modes use IO-accepted params: standby / basic / internal
- * (not manual/off/prog — rejected by the IO driver on this hardware).
+ * Known product: Sauter/Thermor Ipala — kept under the heater driver because it is
+ * still a radiator (temp + heating mode + onoff), unlike Pass Cozytouch / Zone Control.
+ *
+ * Writes use IO-accepted operating params: standby / basic / internal
+ * (Homey maps them to off / manual / prog). Room temperature is read from linked
+ * sensor endpoint #2, not from the main actuator.
  */
 class AdjustableSetpointOverkizHandler {
 
