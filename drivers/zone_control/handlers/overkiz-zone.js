@@ -1,35 +1,37 @@
 'use strict';
 
 const {
-  PASS_APC_STATES,
-  PASS_APC_COMMANDS,
-  PASS_APC_ZONE_MODE_TO_OVERKIZ,
-  PASS_APC_OVERKIZ_TO_ZONE_MODE,
+  ZONE_CONTROL_STATES,
+  ZONE_CONTROL_COMMANDS,
+  ZONE_CONTROL_ZONE_MODE_TO_OVERKIZ,
+  ZONE_CONTROL_OVERKIZ_TO_ZONE_MODE,
   STATES,
   getStateValue,
 } = require('../../../lib/constants/overkiz-mappings');
-const { getPassAPCZoneTemperatureSensorUrl } = require('../../../lib/helpers/overkiz-device');
+const { getZoneControlZoneTemperatureSensorUrl } = require('../../../lib/helpers/overkiz-device');
 
 /**
- * Overkiz handler for Atlantic Pass APC heating/cooling zones
- * (AtlanticPassAPCHeatingAndCoolingZone — Shogun Zone Control 2.0 room circuits).
+ * Overkiz handler for Shogun Zone Control heating/cooling zones
+ * (AtlanticPassAPCHeatingAndCoolingZone — room circuits).
  *
  * Zone modes: off / manual / prog (Homey cozytouch_heating_mode).
  * Heat vs cool follows the global controller operating mode.
  * Homey capabilities follow Overkiz state on each poll — no cross-device commands.
  */
-class PassAPCZoneOverkizHandler {
+class ZoneOverkizHandler {
 
   constructor(ctx) { this.ctx = ctx; }
 
   _mainDeviceURL() {
-    return this.ctx.store.passApcMainDeviceURL
+    return this.ctx.store.zoneControlMainDeviceURL
+      || this.ctx.store.passApcMainDeviceURL
       || this.ctx.store.passApcMainDeviceUrl;
   }
 
   _sensorDeviceURL() {
-    return this.ctx.store.passApcTemperatureSensorURL
-      || getPassAPCZoneTemperatureSensorUrl(this.ctx.deviceURL);
+    return this.ctx.store.zoneControlTemperatureSensorURL
+      || this.ctx.store.passApcTemperatureSensorURL
+      || getZoneControlZoneTemperatureSensorUrl(this.ctx.deviceURL);
   }
 
   async _getSystemOperatingMode() {
@@ -38,9 +40,9 @@ class PassAPCZoneOverkizHandler {
 
     try {
       const states = await this.ctx.api.getDeviceState(mainUrl);
-      return getStateValue(states, PASS_APC_STATES.OPERATING_MODE) || 'heating';
+      return getStateValue(states, ZONE_CONTROL_STATES.OPERATING_MODE) || 'heating';
     } catch (err) {
-      this.ctx.log(`Pass APC main controller unavailable: ${err.message}`);
+      this.ctx.log(`Zone Control main controller unavailable: ${err.message}`);
       return 'heating';
     }
   }
@@ -52,11 +54,11 @@ class PassAPCZoneOverkizHandler {
   async setTargetTemperature(value) {
     const systemMode = await this._getSystemOperatingMode();
     const command = this._isCooling(systemMode)
-      ? PASS_APC_COMMANDS.SET_COOLING_TARGET_TEMP
-      : PASS_APC_COMMANDS.SET_HEATING_TARGET_TEMP;
+      ? ZONE_CONTROL_COMMANDS.SET_COOLING_TARGET_TEMP
+      : ZONE_CONTROL_COMMANDS.SET_HEATING_TARGET_TEMP;
 
     await this.ctx.executeCommand(command, [value]);
-    await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_DEROGATION_ON_OFF, ['on']);
+    await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_DEROGATION_ON_OFF, ['on']);
     this.ctx.setCapability('target_temperature', value);
   }
 
@@ -65,7 +67,7 @@ class PassAPCZoneOverkizHandler {
   }
 
   async setMode(mode) {
-    const overkizMode = PASS_APC_ZONE_MODE_TO_OVERKIZ[mode];
+    const overkizMode = ZONE_CONTROL_ZONE_MODE_TO_OVERKIZ[mode];
     if (!overkizMode) {
       throw new Error(`Unsupported zone mode: ${mode}`);
     }
@@ -75,18 +77,18 @@ class PassAPCZoneOverkizHandler {
 
     if (mode === 'off') {
       if (isCooling) {
-        await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_COOLING_ON_OFF, ['off']);
-        await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_COOLING_MODE, ['stop']);
+        await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_COOLING_ON_OFF, ['off']);
+        await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_COOLING_MODE, ['stop']);
       } else {
-        await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_HEATING_ON_OFF, ['off']);
-        await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_HEATING_MODE, ['stop']);
+        await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_HEATING_ON_OFF, ['off']);
+        await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_HEATING_MODE, ['stop']);
       }
     } else if (isCooling) {
-      await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_COOLING_ON_OFF, ['on']);
-      await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_COOLING_MODE, [overkizMode]);
+      await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_COOLING_ON_OFF, ['on']);
+      await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_COOLING_MODE, [overkizMode]);
     } else {
-      await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_HEATING_ON_OFF, ['on']);
-      await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_HEATING_MODE, [overkizMode]);
+      await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_HEATING_ON_OFF, ['on']);
+      await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_HEATING_MODE, [overkizMode]);
     }
 
     this.ctx.setCapability('cozytouch_heating_mode', mode);
@@ -108,37 +110,37 @@ class PassAPCZoneOverkizHandler {
 
   _readZoneMode(states, systemMode) {
     if (this._isCooling(systemMode)) {
-      const coolingOnOff = getStateValue(states, PASS_APC_STATES.COOLING_ON_OFF);
-      const coolingMode = getStateValue(states, PASS_APC_STATES.COOLING_MODE);
+      const coolingOnOff = getStateValue(states, ZONE_CONTROL_STATES.COOLING_ON_OFF);
+      const coolingMode = getStateValue(states, ZONE_CONTROL_STATES.COOLING_MODE);
       if (coolingOnOff === 'off' || coolingMode === 'stop') return 'off';
-      return PASS_APC_OVERKIZ_TO_ZONE_MODE[coolingMode] || 'manual';
+      return ZONE_CONTROL_OVERKIZ_TO_ZONE_MODE[coolingMode] || 'manual';
     }
 
-    const heatingOnOff = getStateValue(states, PASS_APC_STATES.HEATING_ON_OFF);
-    const heatingMode = getStateValue(states, PASS_APC_STATES.HEATING_MODE);
+    const heatingOnOff = getStateValue(states, ZONE_CONTROL_STATES.HEATING_ON_OFF);
+    const heatingMode = getStateValue(states, ZONE_CONTROL_STATES.HEATING_MODE);
     if (heatingOnOff === 'off' || heatingMode === 'stop') return 'off';
-    return PASS_APC_OVERKIZ_TO_ZONE_MODE[heatingMode] || 'manual';
+    return ZONE_CONTROL_OVERKIZ_TO_ZONE_MODE[heatingMode] || 'manual';
   }
 
   _readTargetTemperature(states, systemMode) {
     if (this._isCooling(systemMode)) {
-      return getStateValue(states, PASS_APC_STATES.COOLING_TARGET_TEMP)
-        || getStateValue(states, PASS_APC_STATES.TARGET_TEMP);
+      return getStateValue(states, ZONE_CONTROL_STATES.COOLING_TARGET_TEMP)
+        || getStateValue(states, ZONE_CONTROL_STATES.TARGET_TEMP);
     }
-    return getStateValue(states, PASS_APC_STATES.HEATING_TARGET_TEMP)
-      || getStateValue(states, PASS_APC_STATES.TARGET_TEMP);
+    return getStateValue(states, ZONE_CONTROL_STATES.HEATING_TARGET_TEMP)
+      || getStateValue(states, ZONE_CONTROL_STATES.TARGET_TEMP);
   }
 
   _readTargetLimits(states, systemMode) {
     if (this._isCooling(systemMode)) {
       return {
-        min: getStateValue(states, PASS_APC_STATES.MIN_COOLING_TARGET_TEMP),
-        max: getStateValue(states, PASS_APC_STATES.MAX_COOLING_TARGET_TEMP),
+        min: getStateValue(states, ZONE_CONTROL_STATES.MIN_COOLING_TARGET_TEMP),
+        max: getStateValue(states, ZONE_CONTROL_STATES.MAX_COOLING_TARGET_TEMP),
       };
     }
     return {
-      min: getStateValue(states, PASS_APC_STATES.MIN_HEATING_TARGET_TEMP),
-      max: getStateValue(states, PASS_APC_STATES.MAX_HEATING_TARGET_TEMP),
+      min: getStateValue(states, ZONE_CONTROL_STATES.MIN_HEATING_TARGET_TEMP),
+      max: getStateValue(states, ZONE_CONTROL_STATES.MAX_HEATING_TARGET_TEMP),
     };
   }
 
@@ -173,4 +175,4 @@ class PassAPCZoneOverkizHandler {
 
 }
 
-module.exports = PassAPCZoneOverkizHandler;
+module.exports = ZoneOverkizHandler;

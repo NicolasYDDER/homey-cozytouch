@@ -5,7 +5,7 @@ const CozyTouchAPI = require('../../lib/CozyTouchAPI');
 const OverkizAPI = require('../../lib/OverkizAPI');
 const {
   isPassCozytouch,
-  isPassAPCDevice,
+  isZoneControlDevice,
   isAdjustableSetpointElectricalHeater,
 } = require('../../lib/helpers/overkiz-device');
 
@@ -14,7 +14,7 @@ class HeaterDriver extends CozyTouchDriver {
   _filterDevices(allDevices) {
     return allDevices.filter((dev) => {
       if (dev._protocol === 'overkiz') {
-        if (isPassCozytouch(dev) || isPassAPCDevice(dev)) return false;
+        if (isPassCozytouch(dev) || isZoneControlDevice(dev)) return false;
         const overkizApi = new OverkizAPI({});
         const type = overkizApi.getDeviceType(dev);
         return type === 'HEATER' || type === 'THERMOSTAT';

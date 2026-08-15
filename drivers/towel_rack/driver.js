@@ -6,7 +6,7 @@ const OverkizAPI = require('../../lib/OverkizAPI');
 const {
   isPassCozytouch,
   isAdjustableSetpointElectricalHeater,
-  isPassAPCDevice,
+  isZoneControlDevice,
 } = require('../../lib/helpers/overkiz-device');
 
 class TowelRackDriver extends CozyTouchDriver {
@@ -17,7 +17,7 @@ class TowelRackDriver extends CozyTouchDriver {
         if (
           isPassCozytouch(dev)
           || isAdjustableSetpointElectricalHeater(dev)
-          || isPassAPCDevice(dev)
+          || isZoneControlDevice(dev)
         ) {
           return false;
         }

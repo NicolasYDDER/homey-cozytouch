@@ -1,22 +1,22 @@
 'use strict';
 
 const {
-  PASS_APC_STATES,
-  PASS_APC_COMMANDS,
-  PASS_APC_OPERATING_TO_HVAC,
-  HVAC_TO_PASS_APC_OPERATING,
+  ZONE_CONTROL_STATES,
+  ZONE_CONTROL_COMMANDS,
+  ZONE_CONTROL_OPERATING_TO_HVAC,
+  HVAC_TO_ZONE_CONTROL_OPERATING,
   getStateValue,
 } = require('../../../lib/constants/overkiz-mappings');
 
 /**
- * Overkiz handler for Atlantic Pass APC global zone controller
- * (AtlanticPassAPCZoneControlMainComponent — Shogun Zone Control 2.0).
+ * Overkiz handler for Shogun Zone Control global controller
+ * (AtlanticPassAPCZoneControlMainComponent).
  *
  * Auto is exposed in the same HVAC picker as heat/cool/dry/off:
  * - auto → setHeatingCoolingAutoSwitch('on')
  * - other → auto switch off + setPassAPCOperatingMode(...)
  */
-class PassAPCZoneControlOverkizHandler {
+class ZoneControlOverkizHandler {
 
   constructor(ctx) { this.ctx = ctx; }
 
@@ -27,10 +27,10 @@ class PassAPCZoneControlOverkizHandler {
     }
 
     const states = await this.ctx.getDeviceState();
-    const lastMode = getStateValue(states, PASS_APC_STATES.LAST_OPERATING_MODE)
-      || getStateValue(states, PASS_APC_STATES.OPERATING_MODE)
+    const lastMode = getStateValue(states, ZONE_CONTROL_STATES.LAST_OPERATING_MODE)
+      || getStateValue(states, ZONE_CONTROL_STATES.OPERATING_MODE)
       || 'heating';
-    const hvacMode = PASS_APC_OPERATING_TO_HVAC[lastMode] || 'heat';
+    const hvacMode = ZONE_CONTROL_OPERATING_TO_HVAC[lastMode] || 'heat';
     if (hvacMode === 'off') {
       await this.setMode('heat');
       return;
@@ -40,22 +40,22 @@ class PassAPCZoneControlOverkizHandler {
 
   async setMode(mode) {
     if (mode === 'auto') {
-      await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_AUTO_SWITCH, ['on']);
+      await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_AUTO_SWITCH, ['on']);
       this.ctx.setCapability('cozytouch_hvac_mode', 'auto');
       this.ctx.setCapability('onoff', true);
       return;
     }
 
-    await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_AUTO_SWITCH, ['off']);
+    await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_AUTO_SWITCH, ['off']);
 
     if (mode === 'off') {
-      await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_OPERATING_MODE, ['stop']);
+      await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_OPERATING_MODE, ['stop']);
     } else {
-      const overkizMode = HVAC_TO_PASS_APC_OPERATING[mode];
+      const overkizMode = HVAC_TO_ZONE_CONTROL_OPERATING[mode];
       if (!overkizMode) {
         throw new Error(`Unsupported HVAC mode: ${mode}`);
       }
-      await this.ctx.executeCommand(PASS_APC_COMMANDS.SET_OPERATING_MODE, [overkizMode]);
+      await this.ctx.executeCommand(ZONE_CONTROL_COMMANDS.SET_OPERATING_MODE, [overkizMode]);
     }
 
     this.ctx.setCapability('cozytouch_hvac_mode', mode);
@@ -65,16 +65,16 @@ class PassAPCZoneControlOverkizHandler {
   async updateState() {
     const states = await this.ctx.getDeviceState();
 
-    const autoSwitch = getStateValue(states, PASS_APC_STATES.AUTO_SWITCH);
+    const autoSwitch = getStateValue(states, ZONE_CONTROL_STATES.AUTO_SWITCH);
     if (autoSwitch === 'on') {
       this.ctx.setCapability('cozytouch_hvac_mode', 'auto');
       this.ctx.setCapability('onoff', true);
       return;
     }
 
-    const operatingMode = getStateValue(states, PASS_APC_STATES.OPERATING_MODE);
+    const operatingMode = getStateValue(states, ZONE_CONTROL_STATES.OPERATING_MODE);
     if (operatingMode !== null) {
-      const hvacMode = PASS_APC_OPERATING_TO_HVAC[operatingMode] || 'off';
+      const hvacMode = ZONE_CONTROL_OPERATING_TO_HVAC[operatingMode] || 'off';
       this.ctx.setCapability('cozytouch_hvac_mode', hvacMode);
       this.ctx.setCapability('onoff', hvacMode !== 'off');
     }
@@ -82,4 +82,4 @@ class PassAPCZoneControlOverkizHandler {
 
 }
 
-module.exports = PassAPCZoneControlOverkizHandler;
+module.exports = ZoneControlOverkizHandler;

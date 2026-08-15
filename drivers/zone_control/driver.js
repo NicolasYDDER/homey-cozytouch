@@ -2,15 +2,15 @@
 
 const CozyTouchDriver = require('../../lib/CozyTouchDriver');
 const {
-  isPassAPCZoneControlMain,
-  isPassAPCHeatingAndCoolingZone,
-  isPassAPCZoneTemperatureSensor,
-  getPassAPCMainDeviceURL,
-  getPassAPCZoneTemperatureSensorUrl,
+  isZoneControlMain,
+  isZoneControlHeatingAndCoolingZone,
+  isZoneControlZoneTemperatureSensor,
+  getZoneControlMainDeviceURL,
+  getZoneControlZoneTemperatureSensorUrl,
 } = require('../../lib/helpers/overkiz-device');
 
 /**
- * Atlantic Shogun Zone Control 2.0 (Pass APC Zone Control stack).
+ * Atlantic Shogun Zone Control (Pass APC Zone Control stack).
  * Pairs the global controller + heating/cooling zones (not temperature sensors).
  */
 class ZoneControlDriver extends CozyTouchDriver {
@@ -18,16 +18,16 @@ class ZoneControlDriver extends CozyTouchDriver {
   _filterDevices(allDevices) {
     return allDevices.filter((dev) => {
       if (dev._protocol !== 'overkiz') return false;
-      if (isPassAPCZoneTemperatureSensor(dev)) return false;
-      return isPassAPCZoneControlMain(dev) || isPassAPCHeatingAndCoolingZone(dev);
+      if (isZoneControlZoneTemperatureSensor(dev)) return false;
+      return isZoneControlMain(dev) || isZoneControlHeatingAndCoolingZone(dev);
     });
   }
 
   _mapOverkizDevice(dev, username, password) {
     const base = super._mapOverkizDevice(dev, username, password);
 
-    if (isPassAPCZoneControlMain(dev)) {
-      base.store.passApcRole = 'controller';
+    if (isZoneControlMain(dev)) {
+      base.store.zoneControlRole = 'controller';
       base.capabilities = ['cozytouch_hvac_mode', 'onoff'];
       base.capabilitiesOptions = {
         cozytouch_hvac_mode: {
@@ -44,9 +44,9 @@ class ZoneControlDriver extends CozyTouchDriver {
     }
 
     // Heating/cooling zone
-    base.store.passApcRole = 'zone';
-    base.store.passApcMainDeviceURL = getPassAPCMainDeviceURL(dev.deviceURL);
-    base.store.passApcTemperatureSensorURL = getPassAPCZoneTemperatureSensorUrl(dev.deviceURL);
+    base.store.zoneControlRole = 'zone';
+    base.store.zoneControlMainDeviceURL = getZoneControlMainDeviceURL(dev.deviceURL);
+    base.store.zoneControlTemperatureSensorURL = getZoneControlZoneTemperatureSensorUrl(dev.deviceURL);
     base.capabilities = [
       'target_temperature',
       'measure_temperature',

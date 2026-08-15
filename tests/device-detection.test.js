@@ -6,21 +6,21 @@ const assert = require('node:assert/strict');
 const {
   isPassCozytouch,
   isAdjustableSetpointElectricalHeater,
-  isPassAPCZoneControlMain,
-  isPassAPCHeatingAndCoolingZone,
-  isPassAPCZoneTemperatureSensor,
-  isPassAPCDevice,
-  getPassAPCMainDeviceURL,
-  getPassAPCZoneTemperatureSensorUrl,
+  isZoneControlMain,
+  isZoneControlHeatingAndCoolingZone,
+  isZoneControlZoneTemperatureSensor,
+  isZoneControlDevice,
+  getZoneControlMainDeviceURL,
+  getZoneControlZoneTemperatureSensorUrl,
   getAdjustableSetpointTemperatureSensorUrl,
 } = require('../lib/helpers/overkiz-device');
 
 const {
   PASS_COZYTOUCH_LEVELS,
-  PASS_APC_OPERATING_TO_HVAC,
-  HVAC_TO_PASS_APC_OPERATING,
-  PASS_APC_ZONE_MODE_TO_OVERKIZ,
-  PASS_APC_OVERKIZ_TO_ZONE_MODE,
+  ZONE_CONTROL_OPERATING_TO_HVAC,
+  HVAC_TO_ZONE_CONTROL_OPERATING,
+  ZONE_CONTROL_ZONE_MODE_TO_OVERKIZ,
+  ZONE_CONTROL_OVERKIZ_TO_ZONE_MODE,
   MODE_TO_ADJUSTABLE_SETPOINT,
 } = require('../lib/constants/overkiz-mappings');
 
@@ -69,23 +69,23 @@ describe('overkiz-device helpers', () => {
     assert.equal(isAdjustableSetpointElectricalHeater(FIXTURES.passCozytouch), false);
   });
 
-  it('detects Pass APC roles', () => {
-    assert.equal(isPassAPCZoneControlMain(FIXTURES.zoneControl), true);
-    assert.equal(isPassAPCHeatingAndCoolingZone(FIXTURES.zone), true);
-    assert.equal(isPassAPCZoneTemperatureSensor(FIXTURES.zoneSensor), true);
-    assert.equal(isPassAPCDevice(FIXTURES.zoneControl), true);
-    assert.equal(isPassAPCDevice(FIXTURES.zone), true);
-    assert.equal(isPassAPCDevice(FIXTURES.zoneSensor), true);
-    assert.equal(isPassAPCDevice(FIXTURES.passCozytouch), false);
+  it('detects Zone Control roles', () => {
+    assert.equal(isZoneControlMain(FIXTURES.zoneControl), true);
+    assert.equal(isZoneControlHeatingAndCoolingZone(FIXTURES.zone), true);
+    assert.equal(isZoneControlZoneTemperatureSensor(FIXTURES.zoneSensor), true);
+    assert.equal(isZoneControlDevice(FIXTURES.zoneControl), true);
+    assert.equal(isZoneControlDevice(FIXTURES.zone), true);
+    assert.equal(isZoneControlDevice(FIXTURES.zoneSensor), true);
+    assert.equal(isZoneControlDevice(FIXTURES.passCozytouch), false);
   });
 
-  it('builds Pass APC related URLs', () => {
+  it('builds Zone Control related URLs', () => {
     assert.equal(
-      getPassAPCMainDeviceURL(FIXTURES.zone.deviceURL),
+      getZoneControlMainDeviceURL(FIXTURES.zone.deviceURL),
       'io://0000-0000-0000/3333333#1',
     );
     assert.equal(
-      getPassAPCZoneTemperatureSensorUrl(FIXTURES.zone.deviceURL),
+      getZoneControlZoneTemperatureSensorUrl(FIXTURES.zone.deviceURL),
       'io://0000-0000-0000/3333333#3',
     );
     assert.equal(
@@ -101,8 +101,8 @@ describe('overkiz-device helpers', () => {
 function filterZoneControlDevices(allDevices) {
   return allDevices.filter((dev) => {
     if (dev._protocol !== 'overkiz') return false;
-    if (isPassAPCZoneTemperatureSensor(dev)) return false;
-    return isPassAPCZoneControlMain(dev) || isPassAPCHeatingAndCoolingZone(dev);
+    if (isZoneControlZoneTemperatureSensor(dev)) return false;
+    return isZoneControlMain(dev) || isZoneControlHeatingAndCoolingZone(dev);
   });
 }
 
@@ -125,28 +125,28 @@ describe('zone_control pairing rules', () => {
 
   it('skips temperature sensors and unrelated Overkiz devices', () => {
     const paired = filterZoneControlDevices(overkizStack);
-    assert.equal(paired.some((dev) => isPassAPCZoneTemperatureSensor(dev)), false);
+    assert.equal(paired.some((dev) => isZoneControlZoneTemperatureSensor(dev)), false);
     assert.equal(paired.some((dev) => isPassCozytouch(dev)), false);
     assert.equal(paired.some((dev) => isAdjustableSetpointElectricalHeater(dev)), false);
   });
 
-  it('keeps Pass APC stack out of climate (defensive exclusion)', () => {
-    // climate/driver.js rejects any isPassAPCDevice before uiClass checks
+  it('keeps Zone Control stack out of climate (defensive exclusion)', () => {
+    // climate/driver.js rejects any isZoneControlDevice before uiClass checks
     assert.deepEqual(
-      overkizStack.filter((dev) => isPassAPCDevice(dev)).map((dev) => dev.label).sort(),
+      overkizStack.filter((dev) => isZoneControlDevice(dev)).map((dev) => dev.label).sort(),
       ['Zone 1', 'Zone 1 Sensor', 'Zone Control'],
     );
   });
 
   it('maps controller vs zone roles and linked URLs', () => {
-    assert.equal(isPassAPCZoneControlMain(FIXTURES.zoneControl), true);
-    assert.equal(isPassAPCHeatingAndCoolingZone(FIXTURES.zone), true);
+    assert.equal(isZoneControlMain(FIXTURES.zoneControl), true);
+    assert.equal(isZoneControlHeatingAndCoolingZone(FIXTURES.zone), true);
     assert.equal(
-      getPassAPCMainDeviceURL(FIXTURES.zone.deviceURL),
+      getZoneControlMainDeviceURL(FIXTURES.zone.deviceURL),
       FIXTURES.zoneControl.deviceURL,
     );
     assert.equal(
-      getPassAPCZoneTemperatureSensorUrl(FIXTURES.zone.deviceURL),
+      getZoneControlZoneTemperatureSensorUrl(FIXTURES.zone.deviceURL),
       FIXTURES.zoneSensor.deviceURL,
     );
   });
@@ -164,21 +164,21 @@ describe('overkiz mappings', () => {
     ]);
   });
 
-  it('maps Pass APC operating modes including round-trip HVAC', () => {
-    assert.equal(PASS_APC_OPERATING_TO_HVAC.heating, 'heat');
-    assert.equal(PASS_APC_OPERATING_TO_HVAC.cooling, 'cool');
-    assert.equal(PASS_APC_OPERATING_TO_HVAC.drying, 'dry');
-    assert.equal(PASS_APC_OPERATING_TO_HVAC.stop, 'off');
-    assert.equal(HVAC_TO_PASS_APC_OPERATING.heat, 'heating');
-    assert.equal(HVAC_TO_PASS_APC_OPERATING.auto, undefined);
+  it('maps Zone Control operating modes including round-trip HVAC', () => {
+    assert.equal(ZONE_CONTROL_OPERATING_TO_HVAC.heating, 'heat');
+    assert.equal(ZONE_CONTROL_OPERATING_TO_HVAC.cooling, 'cool');
+    assert.equal(ZONE_CONTROL_OPERATING_TO_HVAC.drying, 'dry');
+    assert.equal(ZONE_CONTROL_OPERATING_TO_HVAC.stop, 'off');
+    assert.equal(HVAC_TO_ZONE_CONTROL_OPERATING.heat, 'heating');
+    assert.equal(HVAC_TO_ZONE_CONTROL_OPERATING.auto, undefined);
   });
 
   it('maps zone modes off/manual/prog', () => {
-    assert.equal(PASS_APC_ZONE_MODE_TO_OVERKIZ.off, 'stop');
-    assert.equal(PASS_APC_ZONE_MODE_TO_OVERKIZ.manual, 'manu');
-    assert.equal(PASS_APC_ZONE_MODE_TO_OVERKIZ.prog, 'internalScheduling');
-    assert.equal(PASS_APC_OVERKIZ_TO_ZONE_MODE.manu, 'manual');
-    assert.equal(PASS_APC_OVERKIZ_TO_ZONE_MODE.internalScheduling, 'prog');
+    assert.equal(ZONE_CONTROL_ZONE_MODE_TO_OVERKIZ.off, 'stop');
+    assert.equal(ZONE_CONTROL_ZONE_MODE_TO_OVERKIZ.manual, 'manu');
+    assert.equal(ZONE_CONTROL_ZONE_MODE_TO_OVERKIZ.prog, 'internalScheduling');
+    assert.equal(ZONE_CONTROL_OVERKIZ_TO_ZONE_MODE.manu, 'manual');
+    assert.equal(ZONE_CONTROL_OVERKIZ_TO_ZONE_MODE.internalScheduling, 'prog');
   });
 
   it('maps Ipala modes to dump-backed commands', () => {

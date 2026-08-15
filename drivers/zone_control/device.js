@@ -11,13 +11,14 @@ class ZoneControlDevice extends CozyTouchDevice {
     if (this._protocol !== 'overkiz') {
       throw new Error('Shogun Zone Control only supports Overkiz devices');
     }
-    if (store.passApcRole === 'controller') {
+    const role = store.zoneControlRole || store.passApcRole;
+    if (role === 'controller') {
       return new ZoneControlOverkizHandler(ctx);
     }
-    if (store.passApcRole === 'zone') {
+    if (role === 'zone') {
       return new ZoneOverkizHandler(ctx);
     }
-    throw new Error(`Unknown Zone Control role: ${store.passApcRole}`);
+    throw new Error(`Unknown Zone Control role: ${role}`);
   }
 
   _registerCapabilityListeners() {
