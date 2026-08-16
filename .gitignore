@@ -1,6 +1,7 @@
 *.tgz
 .homeybuild/
-.tmp-homey-vectors/
-__TEST__/
 env.json
 node_modules/
+
+# Local debug / log workspace — not for Homey
+_debug/

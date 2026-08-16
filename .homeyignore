@@ -11,3 +11,4 @@ CHANGELOG.md
 LICENSE
 .eslintrc.json
 .vscode/
+tests/
