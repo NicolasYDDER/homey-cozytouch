@@ -401,6 +401,9 @@ The following devices have been validated with real hardware:
 | **Atlantic Kelud** 500W Anthracite Etroit | Towel rack | CozyTouch (Magellan) | `towel_rack` | Fully working (mode, temperature) |
 | **Sauter Asama** (I2G_Actuator) | Towel dryer | Overkiz | `towel_rack` | Fully working (mode, temperature) |
 | **Atlantic Calypso** (Ballon Thermodynamique) | Thermodynamic water heater | Overkiz | `water_heater` | Fully working (mode, temperature, boost, away) |
+| **Atlantic Pass Cozytouch** (ref. 602251) | Wall module | Overkiz | `pass_cozytouch` | Fully working (heating level, on/off) |
+| **Shogun Zone Control** | Main unit + heating/cooling zones | Overkiz | `zone_control` | Fully working (HVAC mode, zone temps/modes, on/off, tile heat/cool) |
+| **Sauter / Thermor Ipala** | Adjustable-setpoint radiator | Overkiz | `heater` | Fully working (mode, temperature, on/off) |
 
 ### Heater / Boiler Driver
 
