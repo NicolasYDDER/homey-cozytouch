@@ -2,6 +2,10 @@
 
 const CozyTouchDriver = require('../../lib/CozyTouchDriver');
 const {
+  ZONE_CONTROL_HVAC_MODE_VALUES,
+  ZONE_CONTROL_ZONE_HEATING_MODE_OPTIONS,
+} = require('./constants');
+const {
   isZoneControlMain,
   isZoneControlHeatingAndCoolingZone,
   isZoneControlZoneTemperatureSensor,
@@ -31,13 +35,7 @@ class ZoneControlDriver extends CozyTouchDriver {
       base.capabilities = ['cozytouch_hvac_mode', 'onoff'];
       base.capabilitiesOptions = {
         cozytouch_hvac_mode: {
-          values: [
-            { id: 'off', title: { en: 'Off', fr: 'Arrêt' } },
-            { id: 'heat', title: { en: 'Heat', fr: 'Chauffage' } },
-            { id: 'cool', title: { en: 'Cool', fr: 'Rafraîchissement' } },
-            { id: 'dry', title: { en: 'Dry', fr: 'Déshumidification' } },
-            { id: 'auto', title: { en: 'Auto', fr: 'Automatique' } },
-          ],
+          values: ZONE_CONTROL_HVAC_MODE_VALUES,
         },
       };
       return base;
@@ -51,6 +49,7 @@ class ZoneControlDriver extends CozyTouchDriver {
       'target_temperature',
       'measure_temperature',
       'cozytouch_heating_mode',
+      'thermostat_mode',
       'onoff',
     ];
     base.capabilitiesOptions = {
@@ -59,13 +58,8 @@ class ZoneControlDriver extends CozyTouchDriver {
         max: 30,
         step: 0.5,
       },
-      cozytouch_heating_mode: {
-        values: [
-          { id: 'off', title: { en: 'Off', fr: 'Arrêt' } },
-          { id: 'manual', title: { en: 'Manual', fr: 'Manuel' } },
-          { id: 'prog', title: { en: 'Program', fr: 'Programme' } },
-        ],
-      },
+      // thermostat_mode: Homey native defaults (tile colors; read-only via listener)
+      cozytouch_heating_mode: ZONE_CONTROL_ZONE_HEATING_MODE_OPTIONS,
     };
     return base;
   }

@@ -5,6 +5,7 @@ const {
   ZONE_CONTROL_COMMANDS,
   ZONE_CONTROL_ZONE_MODE_TO_OVERKIZ,
   ZONE_CONTROL_OVERKIZ_TO_ZONE_MODE,
+  ZONE_CONTROL_OPERATING_TO_HVAC,
   STATES,
   getStateValue,
 } = require('../../../lib/constants/overkiz-mappings');
@@ -15,8 +16,10 @@ const { getZoneControlZoneTemperatureSensorUrl } = require('../../../lib/helpers
  * (AtlanticPassAPCHeatingAndCoolingZone — room circuits).
  *
  * Zone modes: off / manual / prog (Homey cozytouch_heating_mode).
- * Heat vs cool follows the global controller operating mode.
- * Homey capabilities follow Overkiz state on each poll — no cross-device commands.
+ * Heat vs cool follows the global controller, mirrored to native
+ * thermostat_mode (Homey defaults) so tiles use cool (blue) vs heat (orange).
+ * `dry` is exposed as `cool` for tile colors. Homey capabilities follow Overkiz
+ * state on each poll — no cross-device commands except reading the controller.
  */
 class ZoneOverkizHandler {
 
@@ -34,17 +37,35 @@ class ZoneOverkizHandler {
       || getZoneControlZoneTemperatureSensorUrl(this.ctx.deviceURL);
   }
 
-  async _getSystemOperatingMode() {
+  async _getMainStates() {
     const mainUrl = this._mainDeviceURL();
-    if (!mainUrl) return 'heating';
-
+    if (!mainUrl) return null;
     try {
-      const states = await this.ctx.api.getDeviceState(mainUrl);
-      return getStateValue(states, ZONE_CONTROL_STATES.OPERATING_MODE) || 'heating';
+      return await this.ctx.api.getDeviceState(mainUrl);
     } catch (err) {
       this.ctx.log(`Zone Control main controller unavailable: ${err.message}`);
-      return 'heating';
+      return null;
     }
+  }
+
+  async _getSystemOperatingMode() {
+    const states = await this._getMainStates();
+    if (!states) return 'heating';
+    return getStateValue(states, ZONE_CONTROL_STATES.OPERATING_MODE) || 'heating';
+  }
+
+  /**
+   * Map controller state → Homey thermostat_mode (heat|cool|auto|off).
+   * `dry` is exposed as `cool` so the tile uses cooling colors.
+   */
+  _thermostatModeFromMainStates(states) {
+    if (!states) return 'heat';
+    const autoSwitch = getStateValue(states, ZONE_CONTROL_STATES.AUTO_SWITCH);
+    if (autoSwitch === 'on') return 'auto';
+    const operatingMode = getStateValue(states, ZONE_CONTROL_STATES.OPERATING_MODE);
+    const hvac = ZONE_CONTROL_OPERATING_TO_HVAC[operatingMode] || 'off';
+    if (hvac === 'dry') return 'cool';
+    return hvac;
   }
 
   _isCooling(systemMode) {
@@ -93,6 +114,17 @@ class ZoneOverkizHandler {
 
     this.ctx.setCapability('cozytouch_heating_mode', mode);
     this.ctx.setCapability('onoff', mode !== 'off');
+    if (this.ctx.hasCapability('thermostat_mode')) {
+      if (mode === 'off') {
+        this.ctx.setCapability('thermostat_mode', 'off');
+      } else {
+        const mainStates = await this._getMainStates();
+        this.ctx.setCapability(
+          'thermostat_mode',
+          this._thermostatModeFromMainStates(mainStates),
+        );
+      }
+    }
   }
 
   async _readLinkedTemperature() {
@@ -146,11 +178,21 @@ class ZoneOverkizHandler {
 
   async updateState() {
     const states = await this.ctx.getDeviceState();
-    const systemMode = await this._getSystemOperatingMode();
+    const mainStates = await this._getMainStates();
+    const systemMode = getStateValue(mainStates, ZONE_CONTROL_STATES.OPERATING_MODE) || 'heating';
 
     const zoneMode = this._readZoneMode(states, systemMode);
     this.ctx.setCapability('cozytouch_heating_mode', zoneMode);
     this.ctx.setCapability('onoff', zoneMode !== 'off');
+
+    // Tile heat/cool colors: follow controller, but zone off → thermostat off (no blue/orange active)
+    if (this.ctx.hasCapability('thermostat_mode')) {
+      const systemThermostat = this._thermostatModeFromMainStates(mainStates);
+      this.ctx.setCapability(
+        'thermostat_mode',
+        zoneMode === 'off' ? 'off' : systemThermostat,
+      );
+    }
 
     const targetTemp = this._readTargetTemperature(states, systemMode);
     if (targetTemp !== null) {

@@ -10,7 +10,8 @@
     "auth_failed": "Authentification échouée. Veuillez vérifier vos identifiants.",
     "connection_failed": "Impossible de se connecter à Cozytouch. Vérifiez votre connexion internet.",
     "command_failed": "Échec de l'envoi de la commande à l'appareil.",
-    "no_protocol": "Aucun appareil trouvé sur les protocoles Cozytouch et Overkiz."
+    "no_protocol": "Aucun appareil trouvé sur les protocoles Cozytouch et Overkiz.",
+    "zone_thermostat_mode_readonly": "Shogun Zone Control : cet affichage reprend le mode global du Shogun (toutes les zones). Pour le changer, utilisez l’unité principale."
   },
   "settings": {
     "sync_interval": "Intervalle de mise à jour (secondes)"

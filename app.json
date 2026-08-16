@@ -288,8 +288,9 @@
       "capabilities": [
         "target_temperature",
         "measure_temperature",
-        "cozytouch_hvac_mode",
         "cozytouch_heating_mode",
+        "thermostat_mode",
+        "cozytouch_hvac_mode",
         "onoff"
       ],
       "capabilitiesOptions": {
@@ -297,6 +298,12 @@
           "min": 16,
           "max": 30,
           "step": 0.5
+        },
+        "cozytouch_heating_mode": {
+          "title": {
+            "en": "Zone Mode",
+            "fr": "Mode de zone"
+          }
         }
       },
       "pair": [
@@ -848,34 +855,34 @@
                 "id": "off",
                 "label": {
                   "en": "Off",
-                  "fr": "Arrêt"
+                  "fr": "Désactivé"
                 }
               },
               {
                 "id": "heat",
                 "label": {
                   "en": "Heat",
-                  "fr": "Chauffage"
+                  "fr": "Chauffer"
                 }
               },
               {
                 "id": "cool",
                 "label": {
                   "en": "Cool",
-                  "fr": "Rafraîchissement"
+                  "fr": "Refroidir"
                 }
               },
               {
                 "id": "dry",
                 "label": {
-                  "en": "Dry",
-                  "fr": "Déshumidification"
+                  "en": "Dehumidify",
+                  "fr": "Déshumidifier"
                 }
               },
               {
                 "id": "auto",
                 "label": {
-                  "en": "Auto",
+                  "en": "Automatic",
                   "fr": "Automatique"
                 }
               }
@@ -1095,34 +1102,34 @@
                 "id": "off",
                 "label": {
                   "en": "Off",
-                  "fr": "Arrêt"
+                  "fr": "Désactivé"
                 }
               },
               {
                 "id": "heat",
                 "label": {
                   "en": "Heat",
-                  "fr": "Chauffage"
+                  "fr": "Chauffer"
                 }
               },
               {
                 "id": "cool",
                 "label": {
                   "en": "Cool",
-                  "fr": "Rafraîchissement"
+                  "fr": "Refroidir"
                 }
               },
               {
                 "id": "dry",
                 "label": {
-                  "en": "Dry",
-                  "fr": "Déshumidification"
+                  "en": "Dehumidify",
+                  "fr": "Déshumidifier"
                 }
               },
               {
                 "id": "auto",
                 "label": {
-                  "en": "Auto",
+                  "en": "Automatic",
                   "fr": "Automatique"
                 }
               }
