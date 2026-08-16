@@ -451,14 +451,39 @@ Handles electric towel dryers via both protocols.
 
 ### Pass Cozytouch Driver
 
-Wall modules (io-homecontrol) under driver `pass_cozytouch` (comfort / eco / frost / off style modes).
+Wall modules (io-homecontrol) under driver `pass_cozytouch`.
+
+| Device Type | Overkiz controllableName | Known Products |
+|-------------|--------------------------|----------------|
+| Pass Cozytouch | `io:AtlanticElectricalHeaterIOComponent` | Atlantic Pass Cozytouch (ref. 602251) |
+
+**Overkiz commands**: `setHeatingLevel` (comfort / eco / frost / off style levels) — no temperature setpoint on the module itself.
+
+**Capabilities**: heating level / mode, on/off
 
 ### Shogun Zone Control Driver
 
-Dedicated driver `zone_control`:
+Dedicated driver `zone_control` (Overkiz Pass APC Zone Control stack).
 
-- **Main unit**: global HVAC mode (`cozytouch_hvac_mode`) + on/off  
-- **Zones**: target/measure temperature, zone mode (off/manual/prog), on/off, and a **read-only** native `thermostat_mode` mirrored from the main unit so Homey tiles show heat vs cool correctly
+| Role | Overkiz controllableName / widget | What it controls |
+|------|-----------------------------------|------------------|
+| Main unit | `AtlanticPassAPCZoneControlMainComponent` / `AtlanticPassAPCZoneControl` | Global HVAC for the system |
+| Heating/cooling zone | `AtlanticPassAPCZoneControlZoneComponent` / `AtlanticPassAPCHeatingAndCoolingZone` | Per-room circuit |
+| Zone temperature sensor | `AtlanticPassAPCZoneTemperatureSensor` | Linked to zone — not paired as a Homey device |
+
+**Capabilities (main)**: `cozytouch_hvac_mode`, on/off
+
+**Capabilities (zones)**: target temperature, measure temperature, zone mode (`cozytouch_heating_mode`: off/manual/prog), on/off, read-only `thermostat_mode` mirrored from the main unit (Homey tile heat/cool colors)
+
+### Ipala (heater driver)
+
+Adjustable-setpoint radiators stay on the `heater` driver (no dedicated driver).
+
+| Device Type | Overkiz controllableName | Known Products |
+|-------------|--------------------------|----------------|
+| Adjustable setpoint heater | `io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent` | Sauter / Thermor Ipala |
+
+**Capabilities**: target temperature, measure temperature, heating mode, on/off
 
 ### Hub/Gateway (Not Directly Controlled)
 
