@@ -15,11 +15,12 @@ Control your Atlantic heating, hot water, and air conditioning devices through t
 5. [Atlantic Cozytouch API Reference](#atlantic-cozytouch-api-reference)
 6. [Overkiz API Reference](#overkiz-api-reference)
 7. [Compatible Devices](#compatible-devices)
-6. [Architecture Overview](#architecture-overview)
-7. [Capability ID Reference](#capability-id-reference)
-8. [Homey Flow Integration](#homey-flow-integration)
-9. [Troubleshooting](#troubleshooting)
-10. [Adding Support for New Devices](#adding-support-for-new-devices)
+8. [Architecture Overview](#architecture-overview)
+9. [Capability ID Reference](#capability-id-reference)
+10. [Homey Flow Integration](#homey-flow-integration)
+11. [Known Limitations](#known-limitations)
+12. [Troubleshooting](#troubleshooting)
+13. [Adding Support for New Devices](#adding-support-for-new-devices)
 
 ---
 
@@ -95,7 +96,9 @@ The app authenticates to **both** and discovers devices from each during pairing
 
 2. **Pairing**: User enters credentials. The app queries both CozyTouch and Overkiz APIs to discover devices. Each device is tagged with its protocol.
 
-3. **Polling**: Each device polls its respective API at a configurable interval (default: 60 seconds). CozyTouch devices read numeric capabilities, Overkiz devices read named states.
+3. **Sync (global)**: One app setting `sync_interval` (default **60 s**, range 30–300). Each cycle:
+   1. For each Overkiz account: `POST /setup/devices/states/refresh` (`refreshStates`) — asks the gateway/cloud to refresh device states (same family of call official apps use when opened).
+   2. Then poll **all** paired devices (Overkiz + Magellan) and update Homey capabilities.
 
 4. **Commands**: When the user changes a setting, the app routes the command to the correct API. CozyTouch uses `writecapability`, Overkiz uses `exec/apply`.
 
@@ -103,15 +106,17 @@ The app authenticates to **both** and discovers devices from each during pairing
 
 | Class | File | Role |
 |-------|------|------|
-| `CozyTouchApp` | `app.js` | App entry point. Manages dual API instances, credential persistence, Flow cards. |
+| `CozyTouchApp` | `app.js` | App entry point. Dual API instances, credentials, Flow cards, **global sync timer**. |
 | `CozyTouchAPI` | `lib/CozyTouchAPI.js` | HTTP client for the Magellan API (newer devices). |
-| `OverkizAPI` | `lib/OverkizAPI.js` | HTTP client for the Overkiz API (older devices). 3-step auth. |
+| `OverkizAPI` | `lib/OverkizAPI.js` | HTTP client for the Overkiz API (older / io devices). 3-step auth. |
 | `CozyTouchDevice` | `lib/CozyTouchDevice.js` | Base device class. Protocol-aware polling and command routing. |
 | `CozyTouchDriver` | `lib/CozyTouchDriver.js` | Base driver class. Combined discovery from both APIs. |
-| `HeaterDevice` | `drivers/heater/device.js` | Boiler with dual-protocol state/command mapping. |
+| `HeaterDevice` | `drivers/heater/device.js` | Radiators / boilers (incl. Ipala adjustable setpoint). |
 | `WaterHeaterDevice` | `drivers/water_heater/device.js` | Water heater with DHW mode, boost, and away mode. |
 | `TowelRackDevice` | `drivers/towel_rack/device.js` | Towel rack with dual-protocol support (Magellan + Overkiz). |
 | `ClimateDevice` | `drivers/climate/device.js` | Heat pump/AC with HVAC modes, fan, and swing. |
+| `PassCozytouchDevice` | `drivers/pass_cozytouch/device.js` | Atlantic Pass Cozytouch wall modules. |
+| `ZoneControlDevice` | `drivers/zone_control/device.js` | Shogun Zone Control (main unit + heating/cooling zones). |
 | API routes | `api.js` | Settings page backend: status, test connection, credential management. |
 
 ---
@@ -136,6 +141,7 @@ The app provides a settings page accessible from **Homey Settings > Apps > Atlan
 - **Status monitoring**: Real-time green/red/gray indicators for each protocol
 - **Device discovery**: View all devices found on each protocol after a connection test
 - **Auto-restore**: Credentials persist across app restarts; sessions are automatically re-established
+- **Sync interval**: App setting `sync_interval` (30–300 s, default 60) — Overkiz `refreshStates` then poll all devices
 
 ### Settings Storage
 
@@ -443,6 +449,17 @@ Handles electric towel dryers via both protocols.
 
 **Capabilities**: target temperature (with separate heat/cool setpoints), current temperature, HVAC mode, fan speed (AC only: auto/low/medium/high), swing position (AC only: up/middle-up/middle-down/down), on/off
 
+### Pass Cozytouch Driver
+
+Wall modules (io-homecontrol) under driver `pass_cozytouch` (comfort / eco / frost / off style modes).
+
+### Shogun Zone Control Driver
+
+Dedicated driver `zone_control`:
+
+- **Main unit**: global HVAC mode (`cozytouch_hvac_mode`) + on/off  
+- **Zones**: target/measure temperature, zone mode (off/manual/prog), on/off, and a **read-only** native `thermostat_mode` mirrored from the main unit so Homey tiles show heat vs cool correctly
+
 ### Hub/Gateway (Not Directly Controlled)
 
 | Model IDs | Notes |
@@ -679,6 +696,28 @@ Varies by model. Below are the known mappings:
 
 ---
 
+## Known Limitations
+
+### Physical remote / local changes vs cloud (Overkiz)
+
+Some Overkiz / Cozytouch devices **do not always push** state changes to the cloud when you use a **wall remote** or local control. The official Cozytouch app often forces a status refresh when opened; Homey reads the **same cloud API** and runs `refreshStates` on each sync cycle, but:
+
+- If the gateway has not reported the new setpoint yet, Homey (and Cozytouch until refresh) stay outdated.
+- Opening Cozytouch can make the value appear after a few seconds even when Homey’s previous polls looked stale — that is expected platform behaviour, not Homey using a different backend.
+
+This is a known Overkiz limitation (also documented for Home Assistant):
+
+- [Home Assistant – Overkiz · API limits · “Device state changes are not broadcasted for all devices”](https://www.home-assistant.io/integrations/overkiz/#overkiz-api-limits)
+- Community note (Atlantic Cozytouch): values may update rarely, or after a hard refresh when opening the vendor app — [HA community thread](https://community.home-assistant.io/t/overkiz-by-somfy-integration-polling-interval-for-atlantic-cozytouch/413164/5)
+
+**Is `refreshStates` still useful?** Yes: it is the right cloud call to *request* a gateway refresh (same family as the official apps). It helps when the bridge responds, and keeps Homey aligned once the cloud has the truth. It cannot invent updates the gateway never sent.
+
+### Device shows as unavailable / rate limits
+
+Calling Overkiz too aggressively can hit quotas (`QUOTA_EXCEEDED`). Prefer a moderate `sync_interval` (e.g. 60–120 s).
+
+---
+
 ## Troubleshooting
 
 ### "Authentication failed"
@@ -691,8 +730,12 @@ Varies by model. Below are the known mappings:
 - The Atlantic API (`apis.groupe-atlantic.com`) may be temporarily down.
 - Tokens expire; the app auto-refreshes on HTTP 401, but a restart may help.
 
+### Homey setpoint/mode wrong after using the wall remote
+- Check the Cozytouch app **without** changing anything: if it is also wrong until you wait/refresh, the cloud is behind — see [Known Limitations](#known-limitations).
+- After Cozytouch shows the correct value, Homey should catch up on the next sync cycle (`sync_interval`).
+
 ### Device shows as unavailable
-- The poll interval may be too short, causing rate limiting. Try increasing it to 120s in device settings.
+- The sync interval may be too short, causing rate limiting. Try increasing **Sync interval** in the app settings (e.g. 120 s).
 - The device may be offline in the Cozytouch bridge.
 
 ### Temperature values seem wrong
@@ -700,7 +743,7 @@ Varies by model. Below are the known mappings:
 - Some models report temperature in tenths of degrees.
 
 ### My device is not discovered
-- Only devices with known `modelId` mappings are shown. Check [Compatible Devices](#compatible-devices).
+- Only devices with known `modelId` / Overkiz `controllableName` mappings are shown. Check [Compatible Devices](#compatible-devices).
 - To add a new model, see [Adding Support for New Devices](#adding-support-for-new-devices).
 
 ---
