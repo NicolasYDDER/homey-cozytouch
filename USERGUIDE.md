@@ -13,7 +13,7 @@ This guide will help you set up and use the Atlantic Cozytouch app on your Homey
 5. [Understanding Device Types](#understanding-device-types)
 6. [Understanding Protocols (Cozytouch vs Overkiz)](#understanding-protocols)
 7. [Controlling Your Devices](#controlling-your-devices)
-8. [Device Settings](#device-settings)
+8. [Device Sync](#device-sync)
 9. [Creating Automations (Flows)](#creating-automations-flows)
 10. [Managing Devices](#managing-devices)
 11. [Frequently Asked Questions](#frequently-asked-questions)
@@ -26,7 +26,7 @@ Make sure you have the following ready:
 
 - **Homey Pro** with firmware 5.0 or later
 - **Atlantic Cozytouch bridge** installed and connected to your home Wi-Fi
-- **Atlantic devices** (boiler, water heater, heat pump, or AC) already paired to your Cozytouch bridge via the official Cozytouch mobile app
+- **Atlantic devices** already paired to your Cozytouch bridge via the official Cozytouch mobile app (boilers, radiators, water heaters, towel racks, heat pumps/AC, Pass Cozytouch, Shogun Zone Control, etc.)
 - **Cozytouch account credentials** (the email and password you use to log in to the Cozytouch mobile app)
 
 > **Important**: Your Atlantic devices must first be set up and working in the official Cozytouch app before they can be added to Homey.
@@ -49,7 +49,7 @@ Once your devices are visible and controllable in the Cozytouch app, you're read
 
 ## App Configuration Page
 
-The app includes a configuration page where you can manage your credentials, test API connections, and see the status of both communication protocols.
+The app includes a configuration page where you can manage your credentials, set the global sync interval, test API connections, and see the status of both communication protocols.
 
 ### Accessing the Configuration Page
 
@@ -60,7 +60,7 @@ The app includes a configuration page where you can manage your credentials, tes
 
 ### Credentials Management
 
-The configuration page has three main actions:
+The configuration page has three main actions for credentials:
 
 #### Save Credentials
 
@@ -92,6 +92,19 @@ This is useful for troubleshooting: if a device you expect isn't showing up duri
 
 Tap **Clear** to remove saved credentials from Homey. Existing paired devices will continue to work until the app is restarted, but new pairing will require entering credentials again.
 
+### Device Sync
+
+Under **Device sync**, set how often Homey updates all paired devices:
+
+1. Enter the **Update interval** in seconds (30–300, default **60**)
+2. Tap **Save interval**
+
+Each cycle:
+1. Refreshes the Overkiz gateway/cloud state cache (so wall remotes and external changes can appear)
+2. Polls **all** paired devices (Overkiz and Magellan) and updates Homey
+
+See [Device Sync](#device-sync) for recommendations.
+
 ### Connection Status Panel
 
 The status panel shows two boxes side by side:
@@ -99,7 +112,7 @@ The status panel shows two boxes side by side:
 | Protocol | Endpoint | Typical Devices |
 |----------|----------|----------------|
 | **CozyTouch (Magellan)** | apis.groupe-atlantic.com | Newer boilers, towel racks, AC units |
-| **Overkiz** | ha110-1.overkiz.com | Older water heaters, Thermor/Sauter devices |
+| **Overkiz** | ha110-1.overkiz.com | Water heaters, Pass Cozytouch, Shogun Zone Control, Ipala, Thermor/Sauter devices |
 
 Each box shows:
 - **Status dot**: Green = connected, Red = error, Gray = not configured
@@ -123,18 +136,20 @@ Each box shows:
 
 ### Step 3 - Choose the Device Type
 
-You will see three device types to choose from:
+You will see these device types to choose from:
 
 | Type | What to choose |
-|------|---------------|
-| **Heater / Boiler** | For gas boilers (Naema, Naia) and thermostats |
-| **Water Heater** | For domestic hot water tanks (Zeneo, Calypso, Vizengo, Lineo) |
-| **Towel Rack** | For electric towel dryers (Kelud, Asama, Kaoli) |
-| **Heat Pump / AC** | For heat pumps (Loria) and air conditioning units (Takao) |
+|------|----------------|
+| **Radiator / Heating** | Gas boilers (Naema, Naia), radiators, thermostats, and Ipala adjustable-setpoint heaters |
+| **Water Heater** | Domestic hot water tanks (Zeneo, Calypso, Vizengo, Lineo) |
+| **Towel Rack** | Electric towel dryers (Kelud, Asama, Kaoli) |
+| **Heat Pump / AC** | Heat pumps (Loria) and air conditioning units (Takao) |
+| **Pass Cozytouch** | Atlantic Pass Cozytouch wall modules (heating level, no temperature setpoint) |
+| **Shogun Zone Control** | Shogun Zone Control main unit and heating/cooling zones |
 
 Select the type that matches your device and tap **Next**.
 
-> **Tip**: If you have multiple device types (e.g. a boiler and a water heater), you will need to repeat this process for each type.
+> **Tip**: If you have multiple device types (e.g. a boiler and a water heater), you will need to repeat this process for each type. Zone Control pairs the main unit and zones in one go; zone temperature sensors are linked automatically and are not added as separate Homey devices.
 
 ### Step 4 - Enter Your Credentials
 
@@ -154,30 +169,32 @@ The app will connect to the Cozytouch cloud and search for compatible devices on
 
 ### Step 6 - Done!
 
-Your devices are now added to Homey. They will appear on the Devices page and start polling for current data immediately.
+Your devices are now added to Homey. They will appear on the Devices page and start syncing data on the next global sync cycle.
 
 ---
 
 ## Understanding Device Types
 
-### Heater / Boiler
+### Radiator / Heating
 
-Controls gas boilers and electric heaters. Available controls:
+Controls gas boilers, electric radiators, thermostats, and Ipala-style adjustable-setpoint heaters. Available controls:
 
 - **On/Off** - Turn the device on or off
 - **Target Temperature** - Set the desired temperature (range depends on your device, typically 5-30 C)
 - **Current Temperature** - Displays the measured room temperature
-- **Heating Mode** - Choose between:
+- **Heating Mode** - Choose between (availability depends on your model):
   - **Off** - Device is turned off
   - **Manual** - Maintain the target temperature you set
-  - **Eco+** - Energy-saving mode (reduced temperature)
+  - **Eco+** - Energy-saving mode (reduced temperature; boilers/thermostats)
   - **Program** - Follow the weekly schedule configured in the Cozytouch app
+  - **Auto** - Automatic mode when supported
+
+**Ipala (Sauter / Thermor)**: Uses the same **Radiator / Heating** driver. Modes are typically **Off**, **Manual**, and **Program**. On turns the heater to Manual; Off turns it Off.
 
 ### Water Heater
 
 Controls domestic hot water tanks (Calypso, Zeneo, Vizengo, Lineo). Available controls:
 
-- **On/Off** - Turn the water heater on or off (simulated via away mode — the device is always running)
 - **Target Temperature** - Set the desired water temperature (typically 30-65 C)
 - **Current Temperature** - Displays the current water temperature
 - **Heating Mode** - Choose between:
@@ -187,6 +204,8 @@ Controls domestic hot water tanks (Calypso, Zeneo, Vizengo, Lineo). Available co
   - **Auto** - Automatic optimization
 - **Boost** - Toggle to temporarily boost water heating (runs for 7 days then returns to normal)
 - **Away Mode** - Toggle vacation mode on or off. When enabled, the water heater reduces energy consumption while you're away
+
+> **Note**: These tanks have no separate Homey on/off switch. "Off" is handled via Away / heating mode.
 
 ### Towel Rack
 
@@ -219,6 +238,37 @@ Controls heat pumps and air conditioning units. Available controls:
 - **Fan Speed** (AC units only) - Auto, Low, Medium, or High
 - **Swing Position** (AC units only) - Up, Middle Up, Middle Down, or Down
 
+### Pass Cozytouch
+
+Controls Atlantic Pass Cozytouch wall modules (Overkiz). These modules set a heating **level**, not a temperature setpoint.
+
+Available controls:
+
+- **On/Off** - On sets **Comfort**; Off sets **Off**
+- **Pass Mode** - Choose between:
+  - **Off**
+  - **Frost Protection**
+  - **Eco**
+  - **Comfort -2**
+  - **Comfort -1**
+  - **Comfort**
+
+### Shogun Zone Control
+
+Controls a Shogun Zone Control system (Overkiz): one **main unit** plus one Homey device per **heating/cooling zone**. Zone temperature sensors are linked to zones and are not paired separately.
+
+#### Main unit (controller)
+
+- **On/Off** - On restores the last HVAC mode (or Heat); Off turns the system off
+- **HVAC Mode (Mode CVC)** - Off, Heat, Cool, Dehumidify, or Automatic
+
+#### Zones
+
+- **On/Off** - On sets **Manual**; Off sets **Off**
+- **Target Temperature** / **Current Temperature** - Per-zone setpoint and measured temperature
+- **Zone Mode** - Off, Manual, or Program
+- **Thermostat mode** - Read-only mirror of the main unit’s HVAC mode (used by Homey for heat/cool tile colors). Change HVAC mode on the **main unit**, not on a zone.
+
 ---
 
 ## Understanding Protocols
@@ -234,7 +284,7 @@ Atlantic uses **two separate cloud backends** depending on the age and type of t
 ### Overkiz Protocol
 
 - **Endpoint**: `ha110-1.overkiz.com`
-- **Used by**: Older devices — water heaters (Calypso, Zeneo, Vizengo), Thermor and Sauter branded products
+- **Used by**: Water heaters (Calypso, Zeneo, Vizengo), Pass Cozytouch, Shogun Zone Control, Ipala, Thermor and Sauter branded products
 - **How it works**: 3-step authentication (Atlantic token -> JWT exchange -> Overkiz login), then command/state based API with named states and commands
 - **Also used by**: Somfy TaHoma, Hitachi Hi Kumo (same platform, different vendors)
 
@@ -244,13 +294,13 @@ When you pair a device:
 1. The app authenticates to **both** backends using your single set of Cozytouch credentials
 2. It discovers devices from **both** protocols
 3. Each device is tagged internally with which protocol it uses
-4. All subsequent polling and commands are routed to the correct backend automatically
+4. All subsequent syncing and commands are routed to the correct backend automatically
 
 You don't need to know or choose which protocol your device uses — it's fully automatic. However, if you're wondering why a device appears or doesn't appear, run the **Test Connection** from the [App Configuration Page](#app-configuration-page) to see which protocol each device is on.
 
 ### Thermor and Sauter Compatibility
 
-Thermor and Sauter are brands owned by Groupe Atlantic. Their products use the **same Cozytouch platform** and the same Overkiz backend. If your Thermor or Sauter device works with the Cozytouch mobile app, it should be discovered by this Homey app.
+Thermor and Sauter are brands owned by Groupe Atlantic. Their products use the **same Cozytouch platform** and the same Overkiz backend. If your Thermor or Sauter device works with the Cozytouch mobile app, it should be discovered by this Homey app (for example Ipala radiators under **Radiator / Heating**).
 
 ---
 
@@ -259,10 +309,11 @@ Thermor and Sauter are brands owned by Groupe Atlantic. Their products use the *
 ### From the Homey App
 
 1. Go to **Devices** and tap on your Cozytouch device
-2. Use the **on/off toggle** to turn the device on or off
-3. Use the **temperature slider** to adjust the target temperature
-4. Tap on **Heating Mode** or **HVAC Mode** to change the operating mode
+2. Use the **on/off toggle** when available
+3. Use the **temperature slider** to adjust the target temperature (when the device supports it)
+4. Tap on **Heating Mode**, **HVAC Mode**, **Pass Mode**, or **Zone Mode** depending on the device type
 5. For AC units, tap on **Fan Speed** or **Swing Position** to adjust airflow
+6. For Zone Control, change global heat/cool on the **main unit**; control each room on its **zone** device
 
 ### From the Homey Dashboard (Web)
 
@@ -278,30 +329,31 @@ If you have a voice assistant connected to Homey (Google Home, Amazon Alexa, App
 - *"Turn off the water heater"*
 - *"Turn on the heating"*
 
-> **Note**: Mode changes (Eco+, Program, etc.) are not available through voice commands. Use Homey Flows or the app instead.
+> **Note**: Mode changes (Eco+, Program, Pass Mode, Zone Mode, etc.) are not available through voice commands. Use Homey Flows or the app instead.
 
 ---
 
-## Device Settings
+## Device Sync
 
-Each device has configurable settings you can access through the Homey app:
+Device updates are controlled by a **single app-wide interval**, not a setting on each device.
 
-1. Go to **Devices**
-2. Tap on the device
-3. Tap the **gear icon** (Settings)
+1. Go to **Settings > Apps > Atlantic Cozytouch**
+2. Under **Device sync**, set **Update interval** (seconds)
+3. Tap **Save interval**
 
-### Poll Interval
-
-- **Default**: 60 seconds
-- **Range**: 10 to 300 seconds
-- **What it does**: Controls how often Homey fetches the latest data from the Cozytouch cloud
+| Setting | Value |
+|---------|--------|
+| **Default** | 60 seconds |
+| **Range** | 30 to 300 seconds |
 
 **Recommendations:**
 - **60 seconds** - Good balance between responsiveness and API usage (recommended)
-- **30 seconds** - More responsive, but uses more API calls
-- **120-300 seconds** - Less responsive, but reduces load if you have many devices
+- **30–45 seconds** - More responsive, but uses more API calls
+- **120–300 seconds** - Less responsive, but reduces load if you have many devices
 
-> **Warning**: Setting the poll interval too low (under 30 seconds) with many devices may cause rate limiting from the Atlantic API, which could temporarily make your devices unavailable.
+> **Warning**: Setting the interval too low (near 30 seconds) with many Overkiz devices may cause rate limiting from the Atlantic API, which could temporarily make your devices unavailable.
+
+After a change made on a wall remote or in the Cozytouch app, Homey usually catches up on the next sync cycle once the cloud has the updated state.
 
 ---
 
@@ -315,8 +367,10 @@ These can start a Flow:
 
 | Trigger | Description | Example Use |
 |---------|-------------|-------------|
-| **Temperature changed** | Fires when the measured temperature changes | Alert when temperature drops below 15 C |
-| **Heating mode changed** | Fires when the heating mode changes | Log mode changes |
+| **Temperature changed** | Fires when the measured temperature changes (any device with a temperature sensor) | Alert when temperature drops below 15 C |
+| **Heating mode changed** | Fires when heating mode changes (Radiator / Heating, Water Heater, Towel Rack) | Log mode changes |
+| **Pass Cozytouch mode changed** | Fires when Pass Mode changes | React to Comfort / Eco / Frost |
+| **Zone Control HVAC mode changed** | Fires when the main unit HVAC mode changes | Log heat/cool switches |
 
 ### Available Actions
 
@@ -324,8 +378,11 @@ These can be used as Flow actions:
 
 | Action | Description |
 |--------|-------------|
-| **Set heating mode** | Change to Off, Manual, Eco+, or Program |
-| **Set HVAC mode** | Change to Off, Heat, Cool, Auto, Dry, or Fan Only |
+| **Set heating mode** | Change to Off, Manual, Eco+, Program, or Auto (Radiator / Heating, Water Heater, Towel Rack) |
+| **Set HVAC mode** | Change to Off, Heat, Cool, Auto, Dry, or Fan Only (Heat Pump / AC) |
+| **Set Zone Control HVAC mode** | Change the main unit to Off, Heat, Cool, Dehumidify, or Automatic |
+| **Set Zone Control zone mode** | Change a zone to Off, Manual, or Program |
+| **Set Pass Cozytouch mode** | Change Pass Mode (Off, Frost Protection, Eco, Comfort -2/-1, Comfort) |
 
 ### Available Conditions
 
@@ -333,7 +390,9 @@ These can be used to add logic to your Flows:
 
 | Condition | Description |
 |-----------|-------------|
-| **Heating mode is...** | Check if the current mode matches a specific value |
+| **Heating mode is...** | Check if the current heating mode matches (Radiator / Heating, Water Heater, Towel Rack) |
+| **Zone Control HVAC mode is...** | Check the main unit HVAC mode |
+| **Zone mode is...** | Check a zone’s Off / Manual / Program mode |
 
 ### Example Flows
 
@@ -374,6 +433,21 @@ THEN    Send push notification: "Warning: Living room temperature is low!"
 WHEN    Temperature changed (for device: Living Room AC)
 AND     Temperature is greater than 27
 THEN    Set HVAC mode to Cool (for device: Living Room AC)
+```
+
+#### "Zone Control to cool when hot"
+
+```
+WHEN    Temperature changed (for device: Living Room Zone)
+AND     Temperature is greater than 27
+THEN    Set Zone Control HVAC mode to Cool (for device: Shogun Main Unit)
+```
+
+#### "Pass to Eco at night"
+
+```
+WHEN    Time is 22:00
+THEN    Set Pass Cozytouch mode to Eco (for device: Hall Pass)
 ```
 
 ---
@@ -417,13 +491,14 @@ This usually means Homey cannot reach the Cozytouch cloud. Check:
 - Is your Homey connected to the internet?
 - Is the Cozytouch app on your phone working?
 - Try waiting a few minutes - the connection may recover automatically
+- If you have many devices, try increasing the **Update interval** on the [App Configuration Page](#app-configuration-page) (e.g. 120 seconds)
 - As a last resort, remove and re-add the device
 
 ### The temperature doesn't update
 
-The temperature updates at each poll interval (default: 60 seconds). If it still doesn't update:
+Temperatures update on each global sync cycle (default: 60 seconds). If they still don't update:
 - Check that the device is online in the Cozytouch mobile app
-- Check the device settings for the poll interval value
+- Check the **Update interval** on the App Configuration Page
 - Restart the app from Homey Settings > Apps > Atlantic Cozytouch > Restart
 
 ### I changed the temperature but nothing happened
@@ -432,6 +507,11 @@ After you change a setting, the app sends the command to the cloud and waits for
 - The Cozytouch bridge may be offline
 - The device may not accept the value (e.g. temperature out of range)
 - Check the Cozytouch mobile app to verify the current state
+
+### I changed a setting on the wall remote, but Homey is still wrong
+
+1. Open the Cozytouch mobile app and wait until it shows the correct value (the cloud can lag behind the wall unit)
+2. Homey should catch up on the next [Device Sync](#device-sync) cycle after the cloud is updated
 
 ### I changed my Cozytouch password
 
@@ -443,7 +523,15 @@ If you change your Cozytouch account password:
 
 ### My device type isn't listed
 
-The app currently supports gas boilers, water heaters, towel racks, heat pumps, and AC units. If your Atlantic device is connected to Cozytouch but doesn't appear during pairing, it may not be supported yet. Please [open an issue](https://github.com/NicolasYDDER/homey-cozytouch/issues) with your device model name and we'll look into adding support.
+The app currently supports radiators/heating (including Ipala), water heaters, towel racks, heat pumps/AC, Pass Cozytouch, and Shogun Zone Control. If your Atlantic device is connected to Cozytouch but doesn't appear during pairing, it may not be supported yet. Please [open an issue](https://github.com/NicolasYDDER/homey-cozytouch/issues) with your device model name and we'll look into adding support.
+
+### Why do I see both a Zone Control main unit and several zones?
+
+That is expected. Pair **Shogun Zone Control** once: Homey creates the main unit (global HVAC) plus one device per zone. Zone temperature sensors stay linked in the background and are not separate Homey devices.
+
+### Can I change heat/cool from a Zone Control zone tile?
+
+No. The thermostat mode on a zone is read-only and mirrors the main unit (for Homey tile colors). Change HVAC mode on the **main unit** (or via the Zone Control HVAC Flow action).
 
 ### My device only appears on one protocol
 
@@ -451,7 +539,7 @@ This is normal. Atlantic uses two backends (CozyTouch and Overkiz) for different
 
 ### Can I use this app with Thermor or Sauter devices?
 
-Yes! Thermor and Sauter are brands owned by Groupe Atlantic and use the same Cozytouch platform and the same Overkiz backend. If your device works with the Cozytouch app, it should work with this Homey app.
+Yes! Thermor and Sauter are brands owned by Groupe Atlantic and use the same Cozytouch platform and the same Overkiz backend. If your device works with the Cozytouch app, it should work with this Homey app (including Ipala under **Radiator / Heating**).
 
 ### Does this work without an internet connection?
 
