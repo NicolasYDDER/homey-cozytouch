@@ -435,6 +435,10 @@
         if (status.username) {
           document.getElementById('username').value = status.username;
           document.getElementById('password').placeholder = 'Password saved (enter new to change)';
+        } else {
+          document.getElementById('username').value = '';
+          document.getElementById('password').value = '';
+          document.getElementById('password').placeholder = 'Your Cozytouch password';
         }
 
         if (status.syncInterval) {
@@ -577,12 +581,56 @@
       }
     }
 
+    /**
+     * Homey.confirm signatures vary by client:
+     * - (err, result) with result === true on OK  (docs)
+     * - (result) with result === true on OK
+     * - Promise resolving to boolean
+     * Native window.confirm() is blocked in settings webviews.
+     */
+    function homeyConfirm(message) {
+      return new Promise((resolve) => {
+        let settled = false;
+        const done = (value) => {
+          if (settled) return;
+          settled = true;
+          resolve(!!value);
+        };
+
+        try {
+          const ret = Homey.confirm(message, (a, b) => {
+            if (typeof b === 'boolean') {
+              // (err, result)
+              done(!a && b);
+              return;
+            }
+            if (typeof a === 'boolean') {
+              // (result)
+              done(a);
+              return;
+            }
+            // (err) only — null/undefined means OK
+            done(!a);
+          });
+
+          if (ret && typeof ret.then === 'function') {
+            ret.then((result) => done(result)).catch(() => done(false));
+          }
+        } catch (err) {
+          done(false);
+        }
+      });
+    }
+
     async function clearCredentials() {
-      if (!confirm('Clear saved credentials? Existing devices will keep working until next restart.')) return;
+      const confirmed = await homeyConfirm(
+        'Clear saved credentials from app Settings?\n\nExisting devices keep working. Adding a new device will ask you to log in again.',
+      );
+      if (!confirmed) return;
 
       setButtonLoading('btn-clear', true);
       try {
-        await apiDelete('/clear-credentials');
+        await apiPost('/clear-credentials', {});
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
         document.getElementById('password').placeholder = 'Your Cozytouch password';
@@ -593,6 +641,7 @@
         document.getElementById('cozy-devices').style.display = 'none';
         document.getElementById('ovkz-devices').style.display = 'none';
         showAlert('success', 'Credentials cleared.');
+        await loadStatus();
       } catch (err) {
         showAlert('error', 'Failed to clear: ' + (err.message || err));
       } finally {

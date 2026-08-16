@@ -94,7 +94,7 @@ The app authenticates to **both** and discovers devices from each during pairing
 
 1. **Configuration**: User saves Cozytouch credentials in the App Configuration Page. On startup, the app restores sessions for both protocols.
 
-2. **Pairing**: User enters credentials. The app queries both CozyTouch and Overkiz APIs to discover devices. Each device is tagged with its protocol.
+2. **Pairing**: Uses Homey's system `login_credentials` view. If credentials are already in app Settings, pairing skips the form and lists devices for that driver. Otherwise the user logs in; a successful login is saved to Settings. Discovery always queries both CozyTouch and Overkiz; each device is tagged with its protocol.
 
 3. **Sync (global)**: One app setting `sync_interval` (default **60 s**, range 30–300). Each cycle:
    1. For each Overkiz account: `POST /setup/devices/states/refresh` (`refreshStates`) — asks the gateway/cloud to refresh device states (same family of call official apps use when opened).
@@ -110,7 +110,7 @@ The app authenticates to **both** and discovers devices from each during pairing
 | `CozyTouchAPI` | `lib/CozyTouchAPI.js` | HTTP client for the Magellan API (newer devices). |
 | `OverkizAPI` | `lib/OverkizAPI.js` | HTTP client for the Overkiz API (older / io devices). 3-step auth. |
 | `CozyTouchDevice` | `lib/CozyTouchDevice.js` | Base device class. Protocol-aware polling and command routing. |
-| `CozyTouchDriver` | `lib/CozyTouchDriver.js` | Base driver class. Combined discovery from both APIs. |
+| `CozyTouchDriver` | `lib/CozyTouchDriver.js` | Base driver: Homey login template, Settings credential reuse, combined discovery. |
 | `HeaterDevice` | `drivers/heater/device.js` | Radiators / boilers (incl. Ipala adjustable setpoint). |
 | `WaterHeaterDevice` | `drivers/water_heater/device.js` | Water heater with DHW mode, boost, and away mode. |
 | `TowelRackDevice` | `drivers/towel_rack/device.js` | Towel rack with dual-protocol support (Magellan + Overkiz). |
@@ -137,6 +137,7 @@ The app provides a settings page accessible from **Homey Settings > Apps > Atlan
 ### Features
 
 - **Credential management**: Save, update, and clear Cozytouch credentials
+- **Pairing reuse**: Saved credentials are used automatically when adding devices (no re-entry per driver)
 - **Connection testing**: Test both CozyTouch and Overkiz protocols with a single click
 - **Status monitoring**: Real-time green/red/gray indicators for each protocol
 - **Device discovery**: View all devices found on each protocol after a connection test
@@ -528,12 +529,12 @@ homey-cozytouch/
 ├── drivers/
 │   ├── heater/
 │   │   ├── device.js                   # Thin shell: creates handler, wires listeners
-│   │   ├── driver.js                   # Filters for boiler/thermostat models
+│   │   ├── driver.js                   # Filters for boiler/thermostat/Ipala models
 │   │   ├── handlers/
 │   │   │   ├── cozytouch.js            # CozyTouch cap IDs, mode values, API writes
-│   │   │   └── overkiz.js              # Overkiz states, commands, heating levels
-│   │   ├── assets/icon.svg
-│   │   └── pair/login_credentials.html
+│   │   │   ├── overkiz.js              # Overkiz states, commands, heating levels
+│   │   │   └── overkiz-adjustable-setpoint.js  # Ipala-style radiators
+│   │   └── assets/icon.svg
 │   │
 │   ├── water_heater/
 │   │   ├── device.js                   # Thin shell + away mode listener
@@ -541,8 +542,7 @@ homey-cozytouch/
 │   │   ├── handlers/
 │   │   │   ├── cozytouch.js            # CozyTouch cap IDs, away mode, mode values
 │   │   │   └── overkiz.js              # Overkiz DHW commands, absence mode
-│   │   ├── assets/icon.svg
-│   │   └── pair/login_credentials.html
+│   │   └── assets/icon.svg
 │   │
 │   ├── climate/
 │   │   ├── device.js                   # Thin shell + fan/swing listeners
@@ -550,18 +550,31 @@ homey-cozytouch/
 │   │   ├── handlers/
 │   │   │   ├── cozytouch.js            # HVAC modes per model, fan, swing
 │   │   │   └── overkiz.js              # Simple heat on/off
-│   │   ├── assets/icon.svg
-│   │   └── pair/login_credentials.html
+│   │   └── assets/icon.svg
 │   │
-│   └── towel_rack/
-│       ├── device.js                   # Thin shell: delegates to handler
-│       ├── driver.js                   # Filters for towel rack models
+│   ├── towel_rack/
+│   │   ├── device.js                   # Thin shell: delegates to handler
+│   │   ├── driver.js                   # Filters for towel rack models
+│   │   ├── handlers/
+│   │   │   ├── cozytouch.js
+│   │   │   └── overkiz.js
+│   │   └── assets/icon.svg
+│   │
+│   ├── pass_cozytouch/
+│   │   ├── device.js
+│   │   ├── driver.js
+│   │   ├── handlers/
+│   │   └── assets/icon.svg
+│   │
+│   └── zone_control/
+│       ├── device.js
+│       ├── driver.js
+│       ├── constants.js
 │       ├── handlers/
-│       │   ├── cozytouch.js            # HVAC mode (0/4) + prog preset (cap 184)
-│       │   └── overkiz.js              # setTowelDryerOperatingMode command
-│       ├── assets/icon.svg
-│       └── pair/login_credentials.html
-│
+│       └── assets/icon.svg
+
+Pairing uses Homey's system `login_credentials` template (no per-driver HTML).
+
 ├── locales/
 │   ├── en.json
 │   └── fr.json

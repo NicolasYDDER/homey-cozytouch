@@ -10,7 +10,7 @@ module.exports = {
    * Returns current connection status for both protocols.
    */
   async getStatus({ homey }) {
-    const settings = homey.settings.get('credentials') || {};
+    const settings = homey.app.getCredentials() || {};
 
     const cozyInstance = settings.username
       ? homey.app._cozyInstances[settings.username]
@@ -52,7 +52,7 @@ module.exports = {
    * Tests connection to both protocols with provided or saved credentials.
    */
   async testConnection({ homey, body }) {
-    const saved = homey.settings.get('credentials') || {};
+    const saved = homey.app.getCredentials() || {};
     const username = body.username || saved.username;
     const password = body.password || saved.password;
 
@@ -113,28 +113,16 @@ module.exports = {
    */
   async saveCredentials({ homey, body }) {
     const { username, password } = body;
-
-    if (!username || !password) {
-      throw new Error('Username and password are required');
-    }
-
-    homey.settings.set('credentials', { username, password });
-
-    // Refresh API instances in the app
-    homey.app._cozyInstances = {};
-    homey.app._overkizInstances = {};
-
+    homey.app.saveCredentials(username, password);
     return { success: true };
   },
 
   /**
-   * DELETE /api/clear-credentials
+   * POST /api/clear-credentials
    * Removes saved credentials.
    */
   async clearCredentials({ homey }) {
-    homey.settings.unset('credentials');
-    homey.app._cozyInstances = {};
-    homey.app._overkizInstances = {};
+    homey.app.clearCredentials();
     return { success: true };
   },
 

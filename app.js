@@ -121,11 +121,48 @@ class CozyTouchApp extends Homey.App {
   }
 
   /**
+   * Saved Cozytouch account from app settings, or null.
+   * @returns {{ username: string, password: string } | null}
+   */
+  getCredentials() {
+    const credentials = this.homey.settings.get('credentials');
+    if (!credentials || !credentials.username || !credentials.password) {
+      return null;
+    }
+    return {
+      username: credentials.username,
+      password: credentials.password,
+    };
+  }
+
+  /**
+   * Persist credentials and reset cached API clients (pairing + settings UI).
+   */
+  saveCredentials(username, password) {
+    if (!username || !password) {
+      throw new Error('Username and password are required');
+    }
+    this.homey.settings.set('credentials', { username, password });
+    this._cozyInstances = {};
+    this._overkizInstances = {};
+  }
+
+  /**
+   * Remove saved credentials and reset cached API clients.
+   * Paired devices keep working (their own data). Next pairing shows the login form.
+   */
+  clearCredentials() {
+    this.homey.settings.unset('credentials');
+    this._cozyInstances = {};
+    this._overkizInstances = {};
+  }
+
+  /**
    * Restore credentials from settings and attempt to authenticate.
    */
   async _restoreCredentials() {
-    const credentials = this.homey.settings.get('credentials');
-    if (!credentials || !credentials.username || !credentials.password) {
+    const credentials = this.getCredentials();
+    if (!credentials) {
       this.log('No saved credentials found');
       return;
     }

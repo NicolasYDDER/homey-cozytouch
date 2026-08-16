@@ -90,7 +90,11 @@ This is useful for troubleshooting: if a device you expect isn't showing up duri
 
 #### Clear Credentials
 
-Tap **Clear** to remove saved credentials from Homey. Existing paired devices will continue to work until the app is restarted, but new pairing will require entering credentials again.
+Tap **Clear** to remove the account from app Settings.
+
+- Already paired devices **keep working** (they still have their own login).
+- The **next time you add a device**, Homey will show the login form again.
+- After a successful login, the account is saved to Settings once more.
 
 ### Device Sync
 
@@ -151,15 +155,21 @@ Select the type that matches your device and tap **Next**.
 
 > **Tip**: If you have multiple device types (e.g. a boiler and a water heater), you will need to repeat this process for each type. Zone Control pairs the main unit and zones in one go; zone temperature sensors are linked automatically and are not added as separate Homey devices.
 
-### Step 4 - Enter Your Credentials
+### Step 4 - Credentials
+
+If you already saved your Cozytouch account in the [App Configuration Page](#app-configuration-page) (or logged in during a previous pairing), Homey **skips the login form** and goes straight to the device list.
+
+Otherwise:
 
 1. Enter the **email address** you use for your Cozytouch account
 2. Enter your **password**
 3. Tap **Login**
 
-The app will connect to the Cozytouch cloud and search for compatible devices on your account.
+A successful login is saved to app Settings as soon as the account connects (even if that device type has nothing to pair), so the next driver you add will not ask again. If you use **Clear** in Settings, the next pairing will show the login form again.
 
-> **Note**: Your credentials are stored locally on your Homey and are only used to communicate with the Atlantic API. They are never shared with third parties.
+The app connects to both CozyTouch and Overkiz clouds and searches for compatible devices for the type you selected.
+
+> **Note**: Credentials are stored locally on your Homey and are only used to communicate with the Atlantic API. They are never shared with third parties.
 
 ### Step 5 - Select Your Devices
 
@@ -479,7 +489,7 @@ THEN    Set Pass Cozytouch mode to Eco (for device: Hall Pass)
 
 ### Adding Devices from a Second Account
 
-If you have devices on multiple Cozytouch accounts, simply repeat the [Adding Your First Device](#adding-your-first-device) process with the other account's credentials. The app supports multiple accounts simultaneously.
+When adding devices, log in with the other Cozytouch account if Homey shows the login form. Devices from different accounts can coexist; each keeps the credentials used when it was paired.
 
 ---
 

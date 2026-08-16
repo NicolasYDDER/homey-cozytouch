@@ -45,7 +45,7 @@
       "path": "/save-credentials"
     },
     "clearCredentials": {
-      "method": "DELETE",
+      "method": "POST",
       "path": "/clear-credentials"
     },
     "saveSyncInterval": {
@@ -79,7 +79,27 @@
           "id": "login_credentials",
           "template": "login_credentials",
           "options": {
-            "logo": "/drivers/heater/assets/icon.svg"
+            "logo": "/drivers/heater/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
           }
         },
         {
@@ -126,7 +146,27 @@
           "id": "login_credentials",
           "template": "login_credentials",
           "options": {
-            "logo": "/drivers/water_heater/assets/icon.svg"
+            "logo": "/drivers/water_heater/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
           }
         },
         {
@@ -174,7 +214,27 @@
           "id": "login_credentials",
           "template": "login_credentials",
           "options": {
-            "logo": "/drivers/climate/assets/icon.svg"
+            "logo": "/drivers/climate/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
           }
         },
         {
@@ -220,7 +280,27 @@
           "id": "login_credentials",
           "template": "login_credentials",
           "options": {
-            "logo": "/drivers/towel_rack/assets/icon.svg"
+            "logo": "/drivers/towel_rack/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
           }
         },
         {
@@ -257,7 +337,27 @@
           "id": "login_credentials",
           "template": "login_credentials",
           "options": {
-            "logo": "/drivers/pass_cozytouch/assets/icon.svg"
+            "logo": "/drivers/pass_cozytouch/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
           }
         },
         {
@@ -311,7 +411,27 @@
           "id": "login_credentials",
           "template": "login_credentials",
           "options": {
-            "logo": "/drivers/zone_control/assets/icon.svg"
+            "logo": "/drivers/zone_control/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
           }
         },
         {
