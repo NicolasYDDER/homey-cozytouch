@@ -302,7 +302,7 @@
         "cozytouch_heating_mode": {
           "title": {
             "en": "Zone Mode",
-            "fr": "Mode de zone"
+            "fr": "Mode de la zone"
           }
         }
       },
@@ -855,7 +855,7 @@
                 "id": "off",
                 "label": {
                   "en": "Off",
-                  "fr": "Désactivé"
+                  "fr": "Désactiver"
                 }
               },
               {
@@ -894,11 +894,11 @@
         "id": "set_zone_control_zone_mode",
         "title": {
           "en": "Set Zone Control zone mode",
-          "fr": "Définir le mode de zone Zone Control"
+          "fr": "Définir le mode de la zone Zone Control"
         },
         "titleFormatted": {
           "en": "Set Zone Control zone mode to [[mode]]",
-          "fr": "Définir le mode de zone sur [[mode]]"
+          "fr": "Définir le mode de la zone sur [[mode]]"
         },
         "args": [
           {
@@ -1102,7 +1102,7 @@
                 "id": "off",
                 "label": {
                   "en": "Off",
-                  "fr": "Désactivé"
+                  "fr": "Désactiver"
                 }
               },
               {
@@ -1141,11 +1141,11 @@
         "id": "is_zone_control_zone_mode",
         "title": {
           "en": "Zone mode !{{is|is not}} ...",
-          "fr": "Le mode de zone !{{est|n'est pas}} ..."
+          "fr": "Le mode de la zone !{{est|n'est pas}} ..."
         },
         "titleFormatted": {
           "en": "Zone mode !{{is|is not}} [[mode]]",
-          "fr": "Le mode de zone !{{est|n'est pas}} [[mode]]"
+          "fr": "Le mode de la zone !{{est|n'est pas}} [[mode]]"
         },
         "args": [
           {

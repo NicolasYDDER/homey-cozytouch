@@ -6,7 +6,7 @@
  * dry has no Homey equivalent → verb form Déshumidifier.
  */
 const ZONE_CONTROL_HVAC_MODE_VALUES = [
-  { id: 'off', title: { en: 'Off', fr: 'Désactivé' } },
+  { id: 'off', title: { en: 'Off', fr: 'Désactiver' } },
   { id: 'heat', title: { en: 'Heat', fr: 'Chauffer' } },
   { id: 'cool', title: { en: 'Cool', fr: 'Refroidir' } },
   { id: 'dry', title: { en: 'Dehumidify', fr: 'Déshumidifier' } },
@@ -22,7 +22,7 @@ const ZONE_CONTROL_ZONE_MODE_VALUES = [
 
 /** capabilitiesOptions for zone cozytouch_heating_mode */
 const ZONE_CONTROL_ZONE_HEATING_MODE_OPTIONS = {
-  title: { en: 'Zone Mode', fr: 'Mode de zone' },
+  title: { en: 'Zone Mode', fr: 'Mode de la zone' },
   values: ZONE_CONTROL_ZONE_MODE_VALUES,
 };
 
