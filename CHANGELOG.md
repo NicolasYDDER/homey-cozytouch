@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-08-17
+
+### Added
+- **Pass Cozytouch support** (issue #1): new `pass_cozytouch` driver for Atlantic Pass Cozytouch wall modules (`io:AtlanticElectricalHeaterIOComponent`, ref. 602251). Exposes a heating-level picker (`cozytouch_pass_level`: off / frost protection / eco / comfort-2 / comfort-1 / comfort) and on/off via `setHeatingLevel` — no setpoint, since the module itself has none.
+- **Shogun Zone Control support** (issue #1): new `zone_control` driver for the Overkiz Pass APC stack — main unit (`AtlanticPassAPCZoneControlMainComponent` / `AtlanticPassAPCZoneControl`) plus each heating/cooling zone (`AtlanticPassAPCZoneControlZoneComponent` / `AtlanticPassAPCHeatingAndCoolingZone`). Zones expose target/measured temperature, zone mode (off / manual / prog) and on/off; zone temperature sensors stay linked instead of being paired as separate devices.
+- **Sauter / Thermor Ipala support** (issue #1): adjustable-setpoint radiators (`io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent`) now work under the existing `heater` driver via a dedicated handler using IO-accepted operating params (`standby` / `basic` / `internal` → Off / Manual / Program). Room temperature is read from the linked sensor endpoint rather than the actuator.
+- **Global sync interval**: one app setting (`sync_interval`, default 60 s, range 30–300) replaces the per-device poll timers. Each cycle runs Overkiz `refreshStates` and then polls every paired device, so changes made from a wall remote reach Homey without opening the Cozytouch app. Configurable under **Device sync** on the app settings page.
+- **Flow cards for the new devices**: `Pass Cozytouch mode changed` / `Set Pass Cozytouch mode`, `Zone Control HVAC mode changed` / `Set Zone Control HVAC mode` / `Set Zone Control zone mode`, and `Zone Control HVAC mode is` / `Zone mode is` conditions.
+- **Device detection tests**: `tests/device-detection.test.js` covers the Overkiz widget/controllable detection helpers and the new mode mappings (anonymized dumps).
+
+### Changed
+- **Pairing reuses your Cozytouch credentials**: the six per-driver custom login pages were replaced with Homey's `login_credentials` template, with titles and field labels set from `app.json`. Credentials are saved as soon as cloud auth succeeds — even if the driver you started from has no matching devices — so subsequent pairings skip the login screen entirely. When a driver finds no devices, the flow now continues to the device list and reports `pair.no_devices` there instead of showing a JS alert that stranded users on the login screen.
+- **Clear credentials** in app settings now uses `Homey.confirm` (`window.confirm` is blocked in the settings webview) and clears only the app settings, so the next pairing shows the login form again.
+- **Heater driver renamed** to "Radiator / Heating" — the previous boiler-oriented label was misleading for a driver that mainly covers radiators.
+- **Shogun zones mirror the main unit's HVAC mode** as a read-only native `thermostat_mode`, so Homey tiles render the correct heat/cool colors, with clearer zone vs. HVAC labels.
+- Per-device `poll_interval` device setting removed; polling is driven entirely by the global sync cycle.
+- README and USERGUIDE updated for the new drivers, the Device sync section, the tested-device tables, and the known Overkiz cloud/remote state lag (including `QUOTA_EXCEEDED` guidance to keep the interval at 60–120 s).
+
+### Fixed
+- **Pass and Zone Control icons on mobile**: explicit black strokes/fills, tighter framing and thicker lines so the icons render correctly and larger on Homey mobile tiles.
+- **French translations** for zone control labels: "Mode de zone" → "Mode de la zone", "Désactivé" → "Désactiver".
+- Temperature Flow triggers are now filtered by capability, so they no longer appear for devices without a temperature reading.
+
 ## [1.2.5] - 2026-04-27
 
 ### Fixed
