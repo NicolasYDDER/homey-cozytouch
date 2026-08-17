@@ -3,12 +3,15 @@
 const CozyTouchDriver = require('../../lib/CozyTouchDriver');
 const CozyTouchAPI = require('../../lib/CozyTouchAPI');
 const OverkizAPI = require('../../lib/OverkizAPI');
+const { isZoneControlDevice } = require('../../lib/helpers/overkiz-device');
 
 class ClimateDriver extends CozyTouchDriver {
 
   _filterDevices(allDevices) {
     return allDevices.filter((dev) => {
       if (dev._protocol === 'overkiz') {
+        // Shogun Zone Control has its own driver
+        if (isZoneControlDevice(dev)) return false;
         const overkizApi = new OverkizAPI({});
         return overkizApi.getDeviceType(dev) === 'CLIMATE';
       }

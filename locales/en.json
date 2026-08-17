@@ -8,11 +8,12 @@
   },
   "errors": {
     "auth_failed": "Authentication failed. Please check your credentials.",
-    "connection_failed": "Unable to connect to Cozytouch. Please check your internet connection.",
-    "command_failed": "Failed to send command to device.",
-    "no_protocol": "No devices found on either Cozytouch or Overkiz protocols."
+    "connection_failed": "Unable to connect to Cozytouch. Check your internet connection.",
+    "command_failed": "Failed to send command to the device.",
+    "no_protocol": "No devices found on Cozytouch or Overkiz protocols.",
+    "zone_thermostat_mode_readonly": "Shogun Zone Control: this shows the Shogun’s global mode (all zones). Change it on the main unit."
   },
   "settings": {
-    "poll_interval": "Poll interval (seconds)"
+    "sync_interval": "Update interval (seconds)"
   }
 }

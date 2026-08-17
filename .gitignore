@@ -1,4 +1,7 @@
-node_modules/
+*.tgz
 .homeybuild/
 env.json
-*.tgz
+node_modules/
+
+# Local debug / log workspace — not for Homey
+_debug/

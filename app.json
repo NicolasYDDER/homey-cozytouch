@@ -3,7 +3,9 @@
   "version": "1.2.5",
   "compatibility": ">=5.0.0",
   "sdk": 3,
-  "platforms": ["local"],
+  "platforms": [
+    "local"
+  ],
   "name": {
     "en": "Atlantic Cozytouch",
     "fr": "Atlantic Cozytouch"
@@ -12,7 +14,9 @@
     "en": "Control your Atlantic heating devices via Cozytouch",
     "fr": "Contrôlez vos appareils Atlantic via Cozytouch"
   },
-  "category": ["climate"],
+  "category": [
+    "climate"
+  ],
   "brandColor": "#E3001B",
   "images": {
     "small": "/assets/images/small.png",
@@ -41,16 +45,20 @@
       "path": "/save-credentials"
     },
     "clearCredentials": {
-      "method": "DELETE",
+      "method": "POST",
       "path": "/clear-credentials"
+    },
+    "saveSyncInterval": {
+      "method": "POST",
+      "path": "/save-sync-interval"
     }
   },
   "drivers": [
     {
       "id": "heater",
       "name": {
-        "en": "Heater / Boiler",
-        "fr": "Chauffage / Chaudière"
+        "en": "Radiator / Heating",
+        "fr": "Radiateur / Chauffage"
       },
       "class": "heater",
       "capabilities": [
@@ -71,7 +79,27 @@
           "id": "login_credentials",
           "template": "login_credentials",
           "options": {
-            "logo": "/drivers/heater/assets/icon.svg"
+            "logo": "/drivers/heater/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
           }
         },
         {
@@ -90,29 +118,7 @@
         "small": "/drivers/heater/assets/images/small.png",
         "large": "/drivers/heater/assets/images/large.png",
         "xlarge": "/drivers/heater/assets/images/xlarge.png"
-      },
-      "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "Device Settings",
-            "fr": "Paramètres de l'appareil"
-          },
-          "children": [
-            {
-              "id": "poll_interval",
-              "type": "number",
-              "label": {
-                "en": "Poll interval (seconds)",
-                "fr": "Intervalle de mise à jour (secondes)"
-              },
-              "value": 60,
-              "min": 10,
-              "max": 300
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "id": "water_heater",
@@ -140,7 +146,27 @@
           "id": "login_credentials",
           "template": "login_credentials",
           "options": {
-            "logo": "/drivers/water_heater/assets/icon.svg"
+            "logo": "/drivers/water_heater/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
           }
         },
         {
@@ -159,29 +185,7 @@
         "small": "/drivers/water_heater/assets/images/small.png",
         "large": "/drivers/water_heater/assets/images/large.png",
         "xlarge": "/drivers/water_heater/assets/images/xlarge.png"
-      },
-      "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "Device Settings",
-            "fr": "Paramètres de l'appareil"
-          },
-          "children": [
-            {
-              "id": "poll_interval",
-              "type": "number",
-              "label": {
-                "en": "Poll interval (seconds)",
-                "fr": "Intervalle de mise à jour (secondes)"
-              },
-              "value": 60,
-              "min": 10,
-              "max": 300
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "id": "climate",
@@ -210,7 +214,27 @@
           "id": "login_credentials",
           "template": "login_credentials",
           "options": {
-            "logo": "/drivers/climate/assets/icon.svg"
+            "logo": "/drivers/climate/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
           }
         },
         {
@@ -229,29 +253,7 @@
         "small": "/drivers/climate/assets/images/small.png",
         "large": "/drivers/climate/assets/images/large.png",
         "xlarge": "/drivers/climate/assets/images/xlarge.png"
-      },
-      "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "Device Settings",
-            "fr": "Paramètres de l'appareil"
-          },
-          "children": [
-            {
-              "id": "poll_interval",
-              "type": "number",
-              "label": {
-                "en": "Poll interval (seconds)",
-                "fr": "Intervalle de mise à jour (secondes)"
-              },
-              "value": 60,
-              "min": 10,
-              "max": 300
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "id": "towel_rack",
@@ -278,7 +280,27 @@
           "id": "login_credentials",
           "template": "login_credentials",
           "options": {
-            "logo": "/drivers/towel_rack/assets/icon.svg"
+            "logo": "/drivers/towel_rack/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
           }
         },
         {
@@ -297,32 +319,195 @@
         "small": "/drivers/towel_rack/assets/images/small.png",
         "large": "/drivers/towel_rack/assets/images/large.png",
         "xlarge": "/drivers/towel_rack/assets/images/xlarge.png"
+      }
+    },
+    {
+      "id": "pass_cozytouch",
+      "name": {
+        "en": "Pass Cozytouch",
+        "fr": "Pass Cozytouch"
       },
-      "settings": [
+      "class": "heater",
+      "capabilities": [
+        "cozytouch_pass_level",
+        "onoff"
+      ],
+      "pair": [
         {
-          "type": "group",
-          "label": {
-            "en": "Device Settings",
-            "fr": "Paramètres de l'appareil"
-          },
-          "children": [
-            {
-              "id": "poll_interval",
-              "type": "number",
-              "label": {
-                "en": "Poll interval (seconds)",
-                "fr": "Intervalle de mise à jour (secondes)"
-              },
-              "value": 60,
-              "min": 10,
-              "max": 300
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "/drivers/pass_cozytouch/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
             }
-          ]
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
         }
-      ]
+      ],
+      "images": {
+        "small": "/drivers/pass_cozytouch/assets/images/small.png",
+        "large": "/drivers/pass_cozytouch/assets/images/large.png",
+        "xlarge": "/drivers/pass_cozytouch/assets/images/xlarge.png"
+      }
+    },
+    {
+      "id": "zone_control",
+      "name": {
+        "en": "Shogun Zone Control",
+        "fr": "Shogun Zone Control"
+      },
+      "class": "thermostat",
+      "capabilities": [
+        "target_temperature",
+        "measure_temperature",
+        "cozytouch_heating_mode",
+        "thermostat_mode",
+        "cozytouch_hvac_mode",
+        "onoff"
+      ],
+      "capabilitiesOptions": {
+        "target_temperature": {
+          "min": 16,
+          "max": 30,
+          "step": 0.5
+        },
+        "cozytouch_heating_mode": {
+          "title": {
+            "en": "Zone Mode",
+            "fr": "Mode de la zone"
+          }
+        }
+      },
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "/drivers/zone_control/assets/icon.svg",
+            "title": {
+              "en": "Connect to Cozytouch",
+              "fr": "Connexion à Cozytouch"
+            },
+            "usernameLabel": {
+              "en": "Cozytouch email",
+              "fr": "Email Cozytouch"
+            },
+            "usernamePlaceholder": {
+              "en": "your.email@example.com",
+              "fr": "votre.email@exemple.com"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "fr": "Mot de passe"
+            },
+            "passwordPlaceholder": {
+              "en": "Your Cozytouch password",
+              "fr": "Votre mot de passe Cozytouch"
+            }
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/zone_control/assets/images/small.png",
+        "large": "/drivers/zone_control/assets/images/large.png",
+        "xlarge": "/drivers/zone_control/assets/images/xlarge.png"
+      }
     }
   ],
   "capabilities": {
+    "cozytouch_pass_level": {
+      "type": "enum",
+      "title": {
+        "en": "Pass Mode",
+        "fr": "Mode Pass"
+      },
+      "values": [
+        {
+          "id": "off",
+          "title": {
+            "en": "Off",
+            "fr": "Arrêt"
+          }
+        },
+        {
+          "id": "frostprotection",
+          "title": {
+            "en": "Frost Protection",
+            "fr": "Hors-gel"
+          }
+        },
+        {
+          "id": "eco",
+          "title": {
+            "en": "Eco",
+            "fr": "Eco"
+          }
+        },
+        {
+          "id": "comfort-2",
+          "title": {
+            "en": "Comfort -2",
+            "fr": "Confort -2"
+          }
+        },
+        {
+          "id": "comfort-1",
+          "title": {
+            "en": "Comfort -1",
+            "fr": "Confort -1"
+          }
+        },
+        {
+          "id": "comfort",
+          "title": {
+            "en": "Comfort",
+            "fr": "Confort"
+          }
+        }
+      ],
+      "getable": true,
+      "setable": true,
+      "uiComponent": "picker"
+    },
     "cozytouch_heating_mode": {
       "type": "enum",
       "title": {
@@ -332,23 +517,38 @@
       "values": [
         {
           "id": "off",
-          "title": { "en": "Off", "fr": "Arrêt" }
+          "title": {
+            "en": "Off",
+            "fr": "Arrêt"
+          }
         },
         {
           "id": "manual",
-          "title": { "en": "Manual", "fr": "Manuel" }
+          "title": {
+            "en": "Manual",
+            "fr": "Manuel"
+          }
         },
         {
           "id": "eco_plus",
-          "title": { "en": "Eco+", "fr": "Eco+" }
+          "title": {
+            "en": "Eco+",
+            "fr": "Eco+"
+          }
         },
         {
           "id": "prog",
-          "title": { "en": "Program", "fr": "Programme" }
+          "title": {
+            "en": "Program",
+            "fr": "Programme"
+          }
         },
         {
           "id": "auto",
-          "title": { "en": "Auto", "fr": "Auto" }
+          "title": {
+            "en": "Auto",
+            "fr": "Auto"
+          }
         }
       ],
       "getable": true,
@@ -364,27 +564,45 @@
       "values": [
         {
           "id": "off",
-          "title": { "en": "Off", "fr": "Arrêt" }
+          "title": {
+            "en": "Off",
+            "fr": "Arrêt"
+          }
         },
         {
           "id": "heat",
-          "title": { "en": "Heat", "fr": "Chauffage" }
+          "title": {
+            "en": "Heat",
+            "fr": "Chauffage"
+          }
         },
         {
           "id": "cool",
-          "title": { "en": "Cool", "fr": "Refroidissement" }
+          "title": {
+            "en": "Cool",
+            "fr": "Refroidissement"
+          }
         },
         {
           "id": "auto",
-          "title": { "en": "Auto", "fr": "Automatique" }
+          "title": {
+            "en": "Auto",
+            "fr": "Automatique"
+          }
         },
         {
           "id": "dry",
-          "title": { "en": "Dry", "fr": "Séchage" }
+          "title": {
+            "en": "Dry",
+            "fr": "Séchage"
+          }
         },
         {
           "id": "fan_only",
-          "title": { "en": "Fan Only", "fr": "Ventilation" }
+          "title": {
+            "en": "Fan Only",
+            "fr": "Ventilation"
+          }
         }
       ],
       "getable": true,
@@ -400,19 +618,31 @@
       "values": [
         {
           "id": "auto",
-          "title": { "en": "Auto", "fr": "Automatique" }
+          "title": {
+            "en": "Auto",
+            "fr": "Automatique"
+          }
         },
         {
           "id": "low",
-          "title": { "en": "Low", "fr": "Faible" }
+          "title": {
+            "en": "Low",
+            "fr": "Faible"
+          }
         },
         {
           "id": "medium",
-          "title": { "en": "Medium", "fr": "Moyen" }
+          "title": {
+            "en": "Medium",
+            "fr": "Moyen"
+          }
         },
         {
           "id": "high",
-          "title": { "en": "High", "fr": "Fort" }
+          "title": {
+            "en": "High",
+            "fr": "Fort"
+          }
         }
       ],
       "getable": true,
@@ -428,19 +658,31 @@
       "values": [
         {
           "id": "up",
-          "title": { "en": "Up", "fr": "Haut" }
+          "title": {
+            "en": "Up",
+            "fr": "Haut"
+          }
         },
         {
           "id": "middle_up",
-          "title": { "en": "Middle Up", "fr": "Mi-haut" }
+          "title": {
+            "en": "Middle Up",
+            "fr": "Mi-haut"
+          }
         },
         {
           "id": "middle_down",
-          "title": { "en": "Middle Down", "fr": "Mi-bas" }
+          "title": {
+            "en": "Middle Down",
+            "fr": "Mi-bas"
+          }
         },
         {
           "id": "down",
-          "title": { "en": "Down", "fr": "Bas" }
+          "title": {
+            "en": "Down",
+            "fr": "Bas"
+          }
         }
       ],
       "getable": true,
@@ -480,7 +722,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=heater|water_heater|climate|towel_rack"
+            "filter": "capabilities=measure_temperature"
           }
         ],
         "tokens": [
@@ -519,6 +761,56 @@
             "example": "manual"
           }
         ]
+      },
+      {
+        "id": "pass_cozytouch_level_changed",
+        "title": {
+          "en": "Pass Cozytouch mode changed",
+          "fr": "Mode Pass Cozytouch changé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=pass_cozytouch"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "level",
+            "type": "string",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "example": "comfort"
+          }
+        ]
+      },
+      {
+        "id": "zone_control_hvac_mode_changed",
+        "title": {
+          "en": "Zone Control HVAC mode changed",
+          "fr": "Mode CVC Zone Control changé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=zone_control&capabilities=cozytouch_hvac_mode"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "mode",
+            "type": "string",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "example": "heat"
+          }
+        ]
       }
     ],
     "actions": [
@@ -546,11 +838,41 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
-              { "id": "eco_plus", "label": { "en": "Eco+", "fr": "Eco+" } },
-              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } },
-              { "id": "auto", "label": { "en": "Auto", "fr": "Auto" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "manual",
+                "label": {
+                  "en": "Manual",
+                  "fr": "Manuel"
+                }
+              },
+              {
+                "id": "eco_plus",
+                "label": {
+                  "en": "Eco+",
+                  "fr": "Eco+"
+                }
+              },
+              {
+                "id": "prog",
+                "label": {
+                  "en": "Program",
+                  "fr": "Programme"
+                }
+              },
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Auto",
+                  "fr": "Auto"
+                }
+              }
             ]
           }
         ]
@@ -579,12 +901,230 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "heat", "label": { "en": "Heat", "fr": "Chauffage" } },
-              { "id": "cool", "label": { "en": "Cool", "fr": "Refroidissement" } },
-              { "id": "auto", "label": { "en": "Auto", "fr": "Automatique" } },
-              { "id": "dry", "label": { "en": "Dry", "fr": "Séchage" } },
-              { "id": "fan_only", "label": { "en": "Fan Only", "fr": "Ventilation" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "heat",
+                "label": {
+                  "en": "Heat",
+                  "fr": "Chauffage"
+                }
+              },
+              {
+                "id": "cool",
+                "label": {
+                  "en": "Cool",
+                  "fr": "Refroidissement"
+                }
+              },
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Auto",
+                  "fr": "Automatique"
+                }
+              },
+              {
+                "id": "dry",
+                "label": {
+                  "en": "Dry",
+                  "fr": "Séchage"
+                }
+              },
+              {
+                "id": "fan_only",
+                "label": {
+                  "en": "Fan Only",
+                  "fr": "Ventilation"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set_zone_control_hvac_mode",
+        "title": {
+          "en": "Set Zone Control HVAC mode",
+          "fr": "Définir le mode CVC Zone Control"
+        },
+        "titleFormatted": {
+          "en": "Set Zone Control HVAC mode to [[mode]]",
+          "fr": "Définir le mode CVC Zone Control sur [[mode]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=zone_control&capabilities=cozytouch_hvac_mode"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Désactiver"
+                }
+              },
+              {
+                "id": "heat",
+                "label": {
+                  "en": "Heat",
+                  "fr": "Chauffer"
+                }
+              },
+              {
+                "id": "cool",
+                "label": {
+                  "en": "Cool",
+                  "fr": "Refroidir"
+                }
+              },
+              {
+                "id": "dry",
+                "label": {
+                  "en": "Dehumidify",
+                  "fr": "Déshumidifier"
+                }
+              },
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Automatic",
+                  "fr": "Automatique"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set_zone_control_zone_mode",
+        "title": {
+          "en": "Set Zone Control zone mode",
+          "fr": "Définir le mode de la zone Zone Control"
+        },
+        "titleFormatted": {
+          "en": "Set Zone Control zone mode to [[mode]]",
+          "fr": "Définir le mode de la zone sur [[mode]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=zone_control&capabilities=cozytouch_heating_mode"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "manual",
+                "label": {
+                  "en": "Manual",
+                  "fr": "Manuel"
+                }
+              },
+              {
+                "id": "prog",
+                "label": {
+                  "en": "Program",
+                  "fr": "Programme"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set_pass_cozytouch_level",
+        "title": {
+          "en": "Set Pass Cozytouch mode",
+          "fr": "Définir le mode Pass Cozytouch"
+        },
+        "titleFormatted": {
+          "en": "Set Pass Cozytouch mode to [[level]]",
+          "fr": "Définir le mode Pass Cozytouch sur [[level]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=pass_cozytouch"
+          },
+          {
+            "type": "dropdown",
+            "name": "level",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "frostprotection",
+                "label": {
+                  "en": "Frost Protection",
+                  "fr": "Hors-gel"
+                }
+              },
+              {
+                "id": "eco",
+                "label": {
+                  "en": "Eco",
+                  "fr": "Eco"
+                }
+              },
+              {
+                "id": "comfort-2",
+                "label": {
+                  "en": "Comfort -2",
+                  "fr": "Confort -2"
+                }
+              },
+              {
+                "id": "comfort-1",
+                "label": {
+                  "en": "Comfort -1",
+                  "fr": "Confort -1"
+                }
+              },
+              {
+                "id": "comfort",
+                "label": {
+                  "en": "Comfort",
+                  "fr": "Confort"
+                }
+              }
             ]
           }
         ]
@@ -615,11 +1155,153 @@
               "fr": "Mode"
             },
             "values": [
-              { "id": "off", "label": { "en": "Off", "fr": "Arrêt" } },
-              { "id": "manual", "label": { "en": "Manual", "fr": "Manuel" } },
-              { "id": "eco_plus", "label": { "en": "Eco+", "fr": "Eco+" } },
-              { "id": "prog", "label": { "en": "Program", "fr": "Programme" } },
-              { "id": "auto", "label": { "en": "Auto", "fr": "Auto" } }
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "manual",
+                "label": {
+                  "en": "Manual",
+                  "fr": "Manuel"
+                }
+              },
+              {
+                "id": "eco_plus",
+                "label": {
+                  "en": "Eco+",
+                  "fr": "Eco+"
+                }
+              },
+              {
+                "id": "prog",
+                "label": {
+                  "en": "Program",
+                  "fr": "Programme"
+                }
+              },
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Auto",
+                  "fr": "Auto"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "is_zone_control_hvac_mode",
+        "title": {
+          "en": "Zone Control HVAC mode !{{is|is not}} ...",
+          "fr": "Le mode CVC Zone Control !{{est|n'est pas}} ..."
+        },
+        "titleFormatted": {
+          "en": "Zone Control HVAC mode !{{is|is not}} [[mode]]",
+          "fr": "Le mode CVC Zone Control !{{est|n'est pas}} [[mode]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=zone_control&capabilities=cozytouch_hvac_mode"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Désactiver"
+                }
+              },
+              {
+                "id": "heat",
+                "label": {
+                  "en": "Heat",
+                  "fr": "Chauffer"
+                }
+              },
+              {
+                "id": "cool",
+                "label": {
+                  "en": "Cool",
+                  "fr": "Refroidir"
+                }
+              },
+              {
+                "id": "dry",
+                "label": {
+                  "en": "Dehumidify",
+                  "fr": "Déshumidifier"
+                }
+              },
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Automatic",
+                  "fr": "Automatique"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "is_zone_control_zone_mode",
+        "title": {
+          "en": "Zone mode !{{is|is not}} ...",
+          "fr": "Le mode de la zone !{{est|n'est pas}} ..."
+        },
+        "titleFormatted": {
+          "en": "Zone mode !{{is|is not}} [[mode]]",
+          "fr": "Le mode de la zone !{{est|n'est pas}} [[mode]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=zone_control&capabilities=cozytouch_heating_mode"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "manual",
+                "label": {
+                  "en": "Manual",
+                  "fr": "Manuel"
+                }
+              },
+              {
+                "id": "prog",
+                "label": {
+                  "en": "Program",
+                  "fr": "Programme"
+                }
+              }
             ]
           }
         ]
