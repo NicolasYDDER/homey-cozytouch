@@ -19,9 +19,9 @@
   ],
   "brandColor": "#E3001B",
   "images": {
-    "small": "/assets/images/small.png",
-    "large": "/assets/images/large.png",
-    "xlarge": "/assets/images/xlarge.png"
+    "small": "/assets/images/small.jpg",
+    "large": "/assets/images/large.jpg",
+    "xlarge": "/assets/images/xlarge.jpg"
   },
   "author": {
     "name": "Nicolas YDDER"
@@ -123,9 +123,9 @@
         }
       ],
       "images": {
-        "small": "/drivers/heater/assets/images/small.png",
-        "large": "/drivers/heater/assets/images/large.png",
-        "xlarge": "/drivers/heater/assets/images/xlarge.png"
+        "small": "/drivers/heater/assets/images/small.jpg",
+        "large": "/drivers/heater/assets/images/large.jpg",
+        "xlarge": "/drivers/heater/assets/images/xlarge.jpg"
       }
     },
     {
@@ -190,9 +190,9 @@
         }
       ],
       "images": {
-        "small": "/drivers/water_heater/assets/images/small.png",
-        "large": "/drivers/water_heater/assets/images/large.png",
-        "xlarge": "/drivers/water_heater/assets/images/xlarge.png"
+        "small": "/drivers/water_heater/assets/images/small.jpg",
+        "large": "/drivers/water_heater/assets/images/large.jpg",
+        "xlarge": "/drivers/water_heater/assets/images/xlarge.jpg"
       }
     },
     {
@@ -258,9 +258,9 @@
         }
       ],
       "images": {
-        "small": "/drivers/climate/assets/images/small.png",
-        "large": "/drivers/climate/assets/images/large.png",
-        "xlarge": "/drivers/climate/assets/images/xlarge.png"
+        "small": "/drivers/climate/assets/images/small.jpg",
+        "large": "/drivers/climate/assets/images/large.jpg",
+        "xlarge": "/drivers/climate/assets/images/xlarge.jpg"
       }
     },
     {
@@ -324,9 +324,9 @@
         }
       ],
       "images": {
-        "small": "/drivers/towel_rack/assets/images/small.png",
-        "large": "/drivers/towel_rack/assets/images/large.png",
-        "xlarge": "/drivers/towel_rack/assets/images/xlarge.png"
+        "small": "/drivers/towel_rack/assets/images/small.jpg",
+        "large": "/drivers/towel_rack/assets/images/large.jpg",
+        "xlarge": "/drivers/towel_rack/assets/images/xlarge.jpg"
       }
     },
     {
@@ -381,9 +381,9 @@
         }
       ],
       "images": {
-        "small": "/drivers/pass_cozytouch/assets/images/small.png",
-        "large": "/drivers/pass_cozytouch/assets/images/large.png",
-        "xlarge": "/drivers/pass_cozytouch/assets/images/xlarge.png"
+        "small": "/drivers/pass_cozytouch/assets/images/small.jpg",
+        "large": "/drivers/pass_cozytouch/assets/images/large.jpg",
+        "xlarge": "/drivers/pass_cozytouch/assets/images/xlarge.jpg"
       }
     },
     {
@@ -455,9 +455,9 @@
         }
       ],
       "images": {
-        "small": "/drivers/zone_control/assets/images/small.png",
-        "large": "/drivers/zone_control/assets/images/large.png",
-        "xlarge": "/drivers/zone_control/assets/images/xlarge.png"
+        "small": "/drivers/zone_control/assets/images/small.jpg",
+        "large": "/drivers/zone_control/assets/images/large.jpg",
+        "xlarge": "/drivers/zone_control/assets/images/xlarge.jpg"
       }
     }
   ],
