@@ -212,10 +212,13 @@ Controls domestic hot water tanks (Calypso, Zeneo, Vizengo, Lineo). Available co
   - **Manual** - Standard heat pump operation
   - **Eco** - Energy-saving eco mode (reduced target temperature)
   - **Auto** - Automatic optimization
+  - **Program** - Follow the weekly schedule configured in the Cozytouch app
 - **Boost** - Toggle to temporarily boost water heating (runs for 7 days then returns to normal)
 - **Away Mode** - Toggle vacation mode on or off. When enabled, the water heater reduces energy consumption while you're away
 
 > **Note**: These tanks have no separate Homey on/off switch. "Off" is handled via Away / heating mode.
+
+> **Note**: the mode list depends on your tank, because the two Atlantic platforms do not offer the same modes. Tanks reached over Cozytouch (e.g. **Calypso connecté**) show Off / Manual / Eco / **Program**; tanks reached over Overkiz show Off / Manual / Eco / **Auto** (Égéo has no Auto — its Auto and Eco are the same mode). Only the modes your tank accepts appear in the picker.
 
 ### Towel Rack
 
@@ -288,7 +291,7 @@ Atlantic uses **two separate cloud backends** depending on the age and type of t
 ### CozyTouch (Magellan) Protocol
 
 - **Endpoint**: `apis.groupe-atlantic.com`
-- **Used by**: Newer devices — recent gas boilers, towel racks (Kelud), thermostats, AC units (Takao)
+- **Used by**: Newer devices — recent gas boilers, towel racks (Kelud), thermostats, AC units (Takao), and some water heaters (e.g. Calypso connecté)
 - **How it works**: Direct REST API with numeric capability IDs for reading and writing values
 
 ### Overkiz Protocol
@@ -411,7 +414,7 @@ These can be used to add logic to your Flows:
 | **Boost is on** | Check whether the water heater boost is running |
 | **Away mode is on** | Check whether the water heater is in away mode |
 
-> **Note**: the **Set heating mode** card lists every mode used by the heating drivers. A water heater accepts Off, Manual and Eco (plus Auto, except on Égéo / MBL tanks where Auto is the same mode as Eco) — picking Program returns an error instead of doing nothing.
+> **Note**: the **Set heating mode** card lists every mode used by the heating drivers, so it can offer a mode your tank has no command for. A water heater always accepts Off, Manual and Eco. Auto works on Overkiz tanks (on Égéo / MBL it is the same mode as Eco), Program works on Cozytouch tanks (e.g. Calypso connecté) — pick the wrong one and the card returns an error instead of silently doing nothing.
 
 ### Example Flows
 
@@ -550,7 +553,9 @@ If you change your Cozytouch account password:
 
 ### My device type isn't listed
 
-The app currently supports radiators/heating (including Ipala), water heaters, towel racks, heat pumps/AC, Pass Cozytouch, and Shogun Zone Control. If your Atlantic device is connected to Cozytouch but doesn't appear during pairing, it may not be supported yet. Please [open an issue](https://github.com/NicolasYDDER/homey-cozytouch/issues) with your device model name and we'll look into adding support.
+The app currently supports radiators/heating (including Ipala), water heaters, towel racks, heat pumps/AC, Pass Cozytouch, and Shogun Zone Control. If your Atlantic device is connected to Cozytouch but doesn't appear during pairing, it may not be supported yet.
+
+A device the app can see but cannot classify shows up as **type unknown** in the Connection Status panel, and pairing ends with *"No compatible devices found"* followed by the devices it did find — for example `Calypso connecté (modelId 1658)`. Please [open an issue](https://github.com/NicolasYDDER/homey-cozytouch/issues) with that line (or a screenshot of the Connection Status panel): the model ID or `io:...` name is exactly what is needed to add support.
 
 ### Why do I see both a Zone Control main unit and several zones?
 

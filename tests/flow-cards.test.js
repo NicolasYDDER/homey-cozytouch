@@ -15,26 +15,39 @@ const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8')
 const appSource = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
 const deviceSource = fs.readFileSync(path.join(ROOT, 'lib', 'CozyTouchDevice.js'), 'utf8');
 
+const OVERKIZ_TANK = { protocol: 'overkiz', isMbl: false };
+const MBL_TANK = { protocol: 'overkiz', isMbl: true };
+const MAGELLAN_TANK = { protocol: 'cozytouch', isMbl: false };
+
 describe('water heater modes', () => {
-  it('offers auto only on non-MBL tanks', () => {
-    assert.deepEqual(supportedWaterHeaterModes(false), ['off', 'manual', 'eco_plus', 'auto']);
-    assert.deepEqual(supportedWaterHeaterModes(true), ['off', 'manual', 'eco_plus']);
+  it('offers auto only on non-MBL Overkiz tanks', () => {
+    assert.deepEqual(supportedWaterHeaterModes(OVERKIZ_TANK), ['off', 'manual', 'eco_plus', 'auto']);
+    assert.deepEqual(supportedWaterHeaterModes(MBL_TANK), ['off', 'manual', 'eco_plus']);
+  });
+
+  // Magellan mode is capability 1: 0=manual, 3=eco+, 4=prog — no auto value.
+  it('offers prog instead of auto on Magellan tanks', () => {
+    assert.deepEqual(supportedWaterHeaterModes(MAGELLAN_TANK), ['off', 'manual', 'eco_plus', 'prog']);
   });
 
   it('passes supported modes through', () => {
-    const supported = supportedWaterHeaterModes(false);
-    for (const mode of supported) {
-      assert.equal(resolveWaterHeaterMode(mode, supported), mode);
+    for (const tank of [OVERKIZ_TANK, MBL_TANK, MAGELLAN_TANK]) {
+      const supported = supportedWaterHeaterModes(tank);
+      for (const mode of supported) {
+        assert.equal(resolveWaterHeaterMode(mode, supported, tank.isMbl), mode);
+      }
     }
   });
 
-  it('aliases auto to eco on MBL tanks (same autoMode command)', () => {
-    assert.equal(resolveWaterHeaterMode('auto', supportedWaterHeaterModes(true)), 'eco_plus');
+  it('aliases auto to eco on MBL tanks only (same autoMode command)', () => {
+    assert.equal(resolveWaterHeaterMode('auto', supportedWaterHeaterModes(MBL_TANK), true), 'eco_plus');
+    // A Magellan tank has no auto at all: it must error, not silently do eco.
+    assert.equal(resolveWaterHeaterMode('auto', supportedWaterHeaterModes(MAGELLAN_TANK), false), null);
   });
 
-  it('rejects modes no tank implements', () => {
-    assert.equal(resolveWaterHeaterMode('prog', supportedWaterHeaterModes(false)), null);
-    assert.equal(resolveWaterHeaterMode('prog', supportedWaterHeaterModes(true)), null);
+  it('rejects modes a tank has no command for', () => {
+    assert.equal(resolveWaterHeaterMode('prog', supportedWaterHeaterModes(OVERKIZ_TANK), false), null);
+    assert.equal(resolveWaterHeaterMode('prog', supportedWaterHeaterModes(MBL_TANK), true), null);
   });
 });
 

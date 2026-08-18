@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.4] - 2026-08-18
+
+### Fixed
+- **Calypso connecté could not be added** ([issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5) — Calypso 240L, latest model): the tank showed up in app settings as `TYPE : INCONNU` and pairing ended on "no compatible device found", because Magellan `modelId` 1658 was missing from the water heater family (1656 and 1657 were already there). Discovery classifies it as `WATER_HEATER`, so it now appears in the **Water Heater** list. The same account's Overkiz side answers `No such user account : GACOMA_Production_1244489` — that gateway only exists on Cozytouch/Magellan, which is why the device has to be paired over that protocol.
+- **Boost on a Cozytouch (Magellan) water heater** (surfaced by [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5)): the driver adds the `cozytouch_boost` capability to every tank, but the Magellan handler had no `setBoost()`, so the tile toggle and the `Turn boost on or off` Flow card would have thrown `this._handler.setBoost is not a function` on the first Magellan tank ever paired. Boost is now written to capability 5 and read back on every poll.
+- **Mode picker on a Cozytouch (Magellan) water heater** (surfaced by [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5)): it offered **Auto**, which has no value in capability 1 (0=manual, 3=eco+, 4=prog), so selecting it only switched the tank on and left the mode untouched — while **Program**, which those tanks do support, was missing and could not even be displayed when the tank was in it. The picker is now per protocol: Magellan tanks get Off / Manual / Eco / Program, Overkiz tanks keep Off / Manual / Eco / Auto (no Auto on Égéo / MBL). The Magellan handler rejects a mode it has no value for instead of silently sending only "on".
+
+### Changed
+- **Pairing says what it found**: when a driver has no matching device, the error now lists the discovered devices with the identifier support is keyed on — e.g. `Calypso connecté (modelId 1658)` or `Chauffe-eau (io:AtlanticDomesticHotWaterProductionMBLComponent)`. Previously both the alert and the app log only said "no compatible devices found", so a report like [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5) could not say which product was missing without a full diagnostic log.
+
+### Added
+- **Water heater tests** (`tests/water-heater.test.js`): model-family classification (including 1658 and a no-model-in-two-families check), handler-surface parity across the three water heater handlers so a missing method like `setBoost` fails in CI instead of on a user's tile, mode-picker values against the `cozytouch_heating_mode` enum, and the new discovery report formatting.
+
 ## [1.3.3] - 2026-08-18
 
 ### Added

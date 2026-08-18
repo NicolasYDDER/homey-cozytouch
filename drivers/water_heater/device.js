@@ -15,6 +15,7 @@ const MODE_TITLES = {
   off: { en: 'Off', fr: 'Arrêt' },
   manual: { en: 'Manual', fr: 'Manuel' },
   eco_plus: { en: 'Eco', fr: 'Éco' },
+  prog: { en: 'Program', fr: 'Programme' },
   auto: { en: 'Auto', fr: 'Auto' },
 };
 
@@ -43,8 +44,10 @@ class WaterHeaterDevice extends CozyTouchDevice {
       await this.removeCapability('onoff');
     }
 
-    // Water heater mode picker. MBL devices (Atlantic Égéo) have no auto mode
-    // on the device side — autoMode is how their "eco" is represented.
+    // Water heater mode picker, which differs per protocol: Magellan tanks
+    // (Calypso connecté) do prog but not auto, MBL devices (Atlantic Égéo) have
+    // no auto mode on the device side — autoMode is how their "eco" is
+    // represented. Read from the store: this runs before super.onInit().
     const modeValues = this._supportedModes().map((id) => ({ id, title: MODE_TITLES[id] }));
     await this.setCapabilityOptions('cozytouch_heating_mode', { values: modeValues });
 
@@ -101,16 +104,28 @@ class WaterHeaterDevice extends CozyTouchDevice {
     await super.onDeleted();
   }
 
+  // Protocol comes from the store, not this._protocol: the mode picker is built
+  // before super.onInit() has resolved it.
+  _modeContext() {
+    const store = this.getStore();
+    return {
+      protocol: store.protocol || 'cozytouch',
+      isMbl: isMblWidget(store),
+    };
+  }
+
   _supportedModes() {
-    return supportedWaterHeaterModes(isMblWidget(this.getStore()));
+    return supportedWaterHeaterModes(this._modeContext());
   }
 
   // Called by the shared "Set heating mode" Flow card, whose dropdown lists
   // every mode across the heating drivers — including modes a tank has no
-  // command for. Program is rejected with a readable error instead of silently
-  // doing nothing, and Auto on MBL falls back to Eco (the same autoMode).
+  // command for. Modes the tank cannot do are rejected with a readable error
+  // instead of silently doing nothing (Program on Overkiz tanks, Auto on
+  // Magellan ones), and Auto on MBL falls back to Eco (the same autoMode).
   async setHeatingMode(mode) {
-    const target = resolveWaterHeaterMode(mode, this._supportedModes());
+    const { isMbl } = this._modeContext();
+    const target = resolveWaterHeaterMode(mode, this._supportedModes(), isMbl);
     if (target === null) {
       throw new Error(`${this.homey.__('errors.mode_not_supported')} (${mode})`);
     }

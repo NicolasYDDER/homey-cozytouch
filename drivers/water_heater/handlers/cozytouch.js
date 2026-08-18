@@ -6,6 +6,13 @@ const {
   API_TO_HEATER_MODE,
 } = require('../../../lib/constants/cozytouch-mappings');
 
+/**
+ * Cozytouch (Magellan) handler for domestic hot water tanks — e.g. Calypso
+ * connecté, whose gateway only answers on Magellan, never on Overkiz.
+ *
+ * Modes come from capability 1 (0=manual, 3=eco+, 4=prog); there is no auto
+ * value, so the driver never offers Auto on this protocol.
+ */
 class WaterHeaterCozytouchHandler {
 
   constructor(ctx) { this.ctx = ctx; }
@@ -18,13 +25,20 @@ class WaterHeaterCozytouchHandler {
     if (mode === 'off') {
       await this.ctx.setCapValue(CAP.ON_OFF, '0');
     } else {
-      await this.ctx.setCapValue(CAP.ON_OFF, '1');
       const apiValue = HEATER_MODE_TO_API[mode];
-      if (apiValue !== null && apiValue !== undefined) {
-        await this.ctx.setCapValue(CAP.HEATING_MODE, apiValue);
+      // Fail loudly instead of only switching the tank on and leaving it in
+      // whatever mode it was: the caller shows the error to the user.
+      if (apiValue === null || apiValue === undefined) {
+        throw new Error(`Unsupported heating mode for a Cozytouch water heater: ${mode}`);
       }
+      await this.ctx.setCapValue(CAP.ON_OFF, '1');
+      await this.ctx.setCapValue(CAP.HEATING_MODE, apiValue);
     }
     this.ctx.setCapability('cozytouch_heating_mode', mode);
+  }
+
+  async setBoost(value) {
+    await this.ctx.setCapValue(CAP.BOOST, value ? '1' : '0');
   }
 
   async setAwayMode(value) {
@@ -49,6 +63,11 @@ class WaterHeaterCozytouchHandler {
       if (modeStr) {
         this.ctx.setCapability('cozytouch_heating_mode', isOn ? modeStr : 'off');
       }
+    }
+
+    const boost = this.ctx.getCapValue(caps, CAP.BOOST);
+    if (boost !== null) {
+      this.ctx.setCapability('cozytouch_boost', boost === '1' || boost === 1 || boost === true);
     }
 
     const away = this.ctx.getCapValue(caps, CAP.AWAY_MODE);

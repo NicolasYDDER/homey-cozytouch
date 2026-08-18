@@ -406,6 +406,8 @@ The following devices have been validated with real hardware:
 | **Shogun Zone Control** | Main unit + heating/cooling zones | Overkiz | `zone_control` | Fully working (HVAC mode, zone temps/modes, on/off, tile heat/cool) |
 | **Sauter / Thermor Ipala** | Adjustable-setpoint radiator | Overkiz | `heater` | Fully working (mode, temperature, on/off) |
 
+Added from user reports, not yet validated on real hardware: **Calypso connecté 240L** (Magellan `modelId` 1658, paired under `water_heater` — its gateway answers on Cozytouch/Magellan only, the Overkiz side returns `No such user account`). See [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5).
+
 ### Heater / Boiler Driver
 
 Handles gas boilers and thermostats.
@@ -435,11 +437,15 @@ Handles electric towel dryers via both protocols.
 
 | Device Type | Model IDs (Magellan) | Overkiz controllableName | Known Products |
 |-------------|---------------------|--------------------------|----------------|
-| Water Heater | 236, 389, 390, 1369, 1371, 1372, 1376, 1642, 1644, 1645, 1656, 1657, 1966 | `io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent` | Atlantic Calypso, Zeneo, Vizengo, Lineo |
+| Water Heater | 236, 389, 390, 1369, 1371, 1372, 1376, 1642, 1644, 1645, 1656, 1657, 1658, 1966 | `io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent`, `io:AtlanticDomesticHotWaterProductionMBLComponent` (MBL) | Atlantic Calypso (incl. Calypso connecté, 1658), Zeneo, Vizengo, Lineo, Égéo (MBL) |
 
 **Overkiz commands**: `setDHWMode` (manualEcoInactive/manualEcoActive/autoMode), `setTargetTemperature`, `setCurrentOperatingMode` (away/boost), `setBoostModeDuration`
 
-**Capabilities**: target temperature (30-65C), current temperature, heating mode (off/manual/eco/auto), boost toggle, away mode, on/off
+**Magellan capabilities**: Cap 1 (mode: 0=manual, 3=eco+, 4=prog), Cap 2 (target temperature), Cap 3 (on/off), Cap 5 (boost), Cap 7 (current temperature), Cap 10 (away), Cap 160/161 (temperature range)
+
+**Capabilities**: target temperature (30-65C), current temperature, heating mode, boost toggle, away mode
+
+> **Note**: the mode picker differs per protocol, because the two protocols do not expose the same modes. Overkiz tanks get Off / Manual / Eco / Auto (no Auto on Égéo / MBL, where Auto *is* Eco); Magellan tanks get Off / Manual / Eco / Program, since capability 1 has a prog value and no auto value.
 
 > **Note**: The CETHI_V4 water heater has no real on/off command. "Off" is simulated via away mode. Shower count is only controllable from the Cozytouch phone app.
 
@@ -519,9 +525,13 @@ homey-cozytouch/
 │   ├── OverkizAPI.js                   # Overkiz REST API client (3-step auth)
 │   ├── CozyTouchDevice.js              # Base device: handler dispatch, polling, auth
 │   ├── CozyTouchDriver.js              # Base driver: pairing, combined discovery
-│   └── constants/
-│       ├── cozytouch-mappings.js       # CAP_IDS + mode maps per device type
-│       └── overkiz-mappings.js         # STATES, COMMANDS, level/DHW maps, helpers
+│   ├── constants/
+│   │   ├── cozytouch-mappings.js       # CAP_IDS + mode maps per device type
+│   │   └── overkiz-mappings.js         # STATES, COMMANDS, level/DHW maps, helpers
+│   └── helpers/
+│       ├── discovery-report.js         # Names found devices in pairing errors
+│       ├── overkiz-device.js           # Widget / controllableName detection
+│       └── water-heater-modes.js       # Modes a tank accepts, per protocol
 │
 ├── settings/
 │   └── index.html                      # App config page (credentials, status)
@@ -537,11 +547,12 @@ homey-cozytouch/
 │   │   └── assets/icon.svg
 │   │
 │   ├── water_heater/
-│   │   ├── device.js                   # Thin shell + away mode listener
+│   │   ├── device.js                   # Thin shell + boost/away listeners
 │   │   ├── driver.js                   # Filters for water heater models
 │   │   ├── handlers/
-│   │   │   ├── cozytouch.js            # CozyTouch cap IDs, away mode, mode values
-│   │   │   └── overkiz.js              # Overkiz DHW commands, absence mode
+│   │   │   ├── cozytouch.js            # Magellan cap IDs (mode, boost, away)
+│   │   │   ├── overkiz.js              # Overkiz DHW commands, absence mode
+│   │   │   └── overkiz-mbl.js          # Égéo / modbuslink tanks (setDHWMode)
 │   │   └── assets/icon.svg
 │   │
 │   ├── climate/

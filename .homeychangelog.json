@@ -1,4 +1,8 @@
 {
+  "1.3.4": {
+    "en": "Adds the Calypso connecté water heater (modelId 1658), which was found by the app but could not be added to Homey. Water heaters reached over Cozytouch now support boost, and their mode picker offers Program instead of Auto, which those tanks cannot do. When no compatible device is found, pairing now names the devices it did find.",
+    "fr": "Ajoute le chauffe-eau Calypso connecté (modelId 1658), que l'application voyait sans pouvoir l'ajouter à Homey. Les chauffe-eau vus via Cozytouch gèrent désormais le boost, et leur sélecteur de mode propose Programme au lieu d'Auto, que ces ballons ne savent pas faire. Quand aucun appareil compatible n'est trouvé, l'ajout indique maintenant les appareils détectés."
+  },
   "1.3.3": {
     "en": "Boost and away mode can now be used in Flows (actions, triggers and conditions) on water heaters, including Atlantic Égéo. Also fixes Flow triggers that were listed but never fired, and the Set heating mode card offering modes a water heater cannot do.",
     "fr": "Le mode boost et le mode absence sont désormais utilisables dans les Flows (actions, déclencheurs et conditions) sur les chauffe-eau, y compris l'Atlantic Égéo. Corrige aussi les déclencheurs de Flow qui étaient proposés mais ne se déclenchaient jamais, et la carte « Définir le mode de chauffage » qui proposait des modes impossibles sur un chauffe-eau."
