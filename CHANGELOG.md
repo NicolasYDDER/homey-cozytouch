@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [1.3.1] - 2026-08-18
 
 ### Fixed
-- **Flow card validation warning**: added the missing `titleFormatted` to all four Flow triggers (`measure_temperature_changed`, `heating_mode_changed`, `pass_cozytouch_level_changed`, `zone_control_hvac_mode_changed`). `homey app validate --level publish` warned only about the first one, but none of the triggers declared it. Since each trigger's only argument is the device — which Homey renders itself — the formatted titles match the plain titles, as with the existing actions and conditions.
+- **Flow card validation warning**: added the missing `titleFormatted` to all four Flow triggers (`measure_temperature_changed`, `heating_mode_changed`, `pass_cozytouch_level_changed`, `zone_control_hvac_mode_changed`). `homey app validate --level publish` warned only about the first one, but none of the triggers declared it. Each formatted title embeds `[[device]]` — the trigger's only argument — because Homey rejects a `titleFormatted` that references none of the card's args ("Missing all args"). The trigger titles now read e.g. "Temperature of *device* changed" in the Flow editor.
 
 ## [1.3.0] - 2026-08-17
 

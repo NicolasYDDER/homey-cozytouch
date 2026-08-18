@@ -719,8 +719,8 @@
           "fr": "Température changée"
         },
         "titleFormatted": {
-          "en": "Temperature changed",
-          "fr": "Température changée"
+          "en": "Temperature of [[device]] changed",
+          "fr": "Température de [[device]] changée"
         },
         "args": [
           {
@@ -748,8 +748,8 @@
           "fr": "Mode de chauffage changé"
         },
         "titleFormatted": {
-          "en": "Heating mode changed",
-          "fr": "Mode de chauffage changé"
+          "en": "Heating mode of [[device]] changed",
+          "fr": "Mode de chauffage de [[device]] changé"
         },
         "args": [
           {
@@ -777,8 +777,8 @@
           "fr": "Mode Pass Cozytouch changé"
         },
         "titleFormatted": {
-          "en": "Pass Cozytouch mode changed",
-          "fr": "Mode Pass Cozytouch changé"
+          "en": "Pass Cozytouch mode of [[device]] changed",
+          "fr": "Mode Pass Cozytouch de [[device]] changé"
         },
         "args": [
           {
@@ -806,8 +806,8 @@
           "fr": "Mode CVC Zone Control changé"
         },
         "titleFormatted": {
-          "en": "Zone Control HVAC mode changed",
-          "fr": "Mode CVC Zone Control changé"
+          "en": "Zone Control HVAC mode of [[device]] changed",
+          "fr": "Mode CVC Zone Control de [[device]] changé"
         },
         "args": [
           {
