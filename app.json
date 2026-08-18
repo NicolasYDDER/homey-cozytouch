@@ -1,6 +1,6 @@
 {
   "id": "com.nicolasydder.cozytouch",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -718,6 +718,10 @@
           "en": "Temperature changed",
           "fr": "Température changée"
         },
+        "titleFormatted": {
+          "en": "Temperature changed",
+          "fr": "Température changée"
+        },
         "args": [
           {
             "type": "device",
@@ -740,6 +744,10 @@
       {
         "id": "heating_mode_changed",
         "title": {
+          "en": "Heating mode changed",
+          "fr": "Mode de chauffage changé"
+        },
+        "titleFormatted": {
           "en": "Heating mode changed",
           "fr": "Mode de chauffage changé"
         },
@@ -768,6 +776,10 @@
           "en": "Pass Cozytouch mode changed",
           "fr": "Mode Pass Cozytouch changé"
         },
+        "titleFormatted": {
+          "en": "Pass Cozytouch mode changed",
+          "fr": "Mode Pass Cozytouch changé"
+        },
         "args": [
           {
             "type": "device",
@@ -790,6 +802,10 @@
       {
         "id": "zone_control_hvac_mode_changed",
         "title": {
+          "en": "Zone Control HVAC mode changed",
+          "fr": "Mode CVC Zone Control changé"
+        },
+        "titleFormatted": {
           "en": "Zone Control HVAC mode changed",
           "fr": "Mode CVC Zone Control changé"
         },

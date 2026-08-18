@@ -1,4 +1,8 @@
 {
+  "1.3.1": {
+    "en": "Maintenance release: Flow triggers now declare their formatted titles, clearing a publish-level validation warning. No change in behaviour.",
+    "fr": "Version de maintenance : les déclencheurs de Flow déclarent désormais leur titre formaté, ce qui supprime un avertissement de validation. Aucun changement de comportement."
+  },
   "1.2.5": {
     "en": "Added support for Atlantic Égéo water heaters (AtlanticDomesticHotWaterProductionMBLComponent / modbuslink). Mode, boost, away and target temperature commands now work on these devices.",
     "fr": "Ajout du support des chauffe-eau Atlantic Égéo (AtlanticDomesticHotWaterProductionMBLComponent / modbuslink). Les commandes de mode, boost, absence et température de consigne fonctionnent désormais sur ces appareils."
