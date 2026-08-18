@@ -26,6 +26,14 @@
   "author": {
     "name": "Nicolas YDDER"
   },
+  "contributors": {
+    "developers": [
+      {
+        "name": "Cédric Andrietti",
+        "website": "https://github.com/cedric07"
+      }
+    ]
+  },
   "bugs": {
     "url": "https://github.com/NicolasYDDER/homey-cozytouch/issues"
   },
