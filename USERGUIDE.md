@@ -381,6 +381,8 @@ These can start a Flow:
 | **Heating mode changed** | Fires when heating mode changes (Radiator / Heating, Water Heater, Towel Rack) | Log mode changes |
 | **Pass Cozytouch mode changed** | Fires when Pass Mode changes | React to Comfort / Eco / Frost |
 | **Zone Control HVAC mode changed** | Fires when the main unit HVAC mode changes | Log heat/cool switches |
+| **Boost turned on** / **Boost turned off** | Fires when the water heater boost starts or stops | Notify when boost ends |
+| **Away mode turned on** / **Away mode turned off** | Fires when the water heater away mode starts or stops | Confirm the tank went to away mode |
 
 ### Available Actions
 
@@ -393,6 +395,9 @@ These can be used as Flow actions:
 | **Set Zone Control HVAC mode** | Change the main unit to Off, Heat, Cool, Dehumidify, or Automatic |
 | **Set Zone Control zone mode** | Change a zone to Off, Manual, or Program |
 | **Set Pass Cozytouch mode** | Change Pass Mode (Off, Frost Protection, Eco, Comfort -2/-1, Comfort) |
+| **Turn boost on or off** | Start or stop the water heater boost |
+| **Turn away mode on or off** | Start or stop the water heater away / absence mode |
+| **Set the target temperature** | Homey's built-in action — works on the water heater, radiators and zones |
 
 ### Available Conditions
 
@@ -403,6 +408,10 @@ These can be used to add logic to your Flows:
 | **Heating mode is...** | Check if the current heating mode matches (Radiator / Heating, Water Heater, Towel Rack) |
 | **Zone Control HVAC mode is...** | Check the main unit HVAC mode |
 | **Zone mode is...** | Check a zone’s Off / Manual / Program mode |
+| **Boost is on** | Check whether the water heater boost is running |
+| **Away mode is on** | Check whether the water heater is in away mode |
+
+> **Note**: the **Set heating mode** card lists every mode used by the heating drivers. A water heater accepts Off, Manual and Eco (plus Auto, except on Égéo / MBL tanks where Auto is the same mode as Eco) — picking Program returns an error instead of doing nothing.
 
 ### Example Flows
 
@@ -426,7 +435,15 @@ THEN    Set heating mode to Manual (for device: Living Room Boiler)
 ```
 WHEN    Homey location: I left my Home zone
 THEN    Set heating mode to Off (for device: Living Room Boiler)
-THEN    Set Away Mode to On (for device: Water Heater)
+THEN    Turn away mode On (for device: Water Heater)
+```
+
+#### "Boost the tank before guests arrive"
+
+```
+WHEN    Time is 17:00
+THEN    Turn boost On (for device: Water Heater)
+THEN    Set the target temperature to 60 (for device: Water Heater)
 ```
 
 #### "Alert on low temperature"

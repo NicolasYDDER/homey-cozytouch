@@ -4,8 +4,19 @@ const CozyTouchDevice = require('../../lib/CozyTouchDevice');
 const WaterHeaterCozytouchHandler = require('./handlers/cozytouch');
 const WaterHeaterOverkizHandler = require('./handlers/overkiz');
 const WaterHeaterOverkizMblHandler = require('./handlers/overkiz-mbl');
+const {
+  supportedWaterHeaterModes,
+  resolveWaterHeaterMode,
+} = require('../../lib/helpers/water-heater-modes');
 
 const POST_COMMAND_REFRESH_DELAY_MS = 3000;
+
+const MODE_TITLES = {
+  off: { en: 'Off', fr: 'Arrêt' },
+  manual: { en: 'Manual', fr: 'Manuel' },
+  eco_plus: { en: 'Eco', fr: 'Éco' },
+  auto: { en: 'Auto', fr: 'Auto' },
+};
 
 function isMblWidget(store) {
   const url = store.deviceURL || '';
@@ -34,14 +45,7 @@ class WaterHeaterDevice extends CozyTouchDevice {
 
     // Water heater mode picker. MBL devices (Atlantic Égéo) have no auto mode
     // on the device side — autoMode is how their "eco" is represented.
-    const modeValues = [
-      { id: 'off', title: { en: 'Off', fr: 'Arrêt' } },
-      { id: 'manual', title: { en: 'Manual', fr: 'Manuel' } },
-      { id: 'eco_plus', title: { en: 'Eco', fr: 'Éco' } },
-    ];
-    if (!isMblWidget(this.getStore())) {
-      modeValues.push({ id: 'auto', title: { en: 'Auto', fr: 'Auto' } });
-    }
+    const modeValues = this._supportedModes().map((id) => ({ id, title: MODE_TITLES[id] }));
     await this.setCapabilityOptions('cozytouch_heating_mode', { values: modeValues });
 
     await super.onInit();
@@ -97,8 +101,39 @@ class WaterHeaterDevice extends CozyTouchDevice {
     await super.onDeleted();
   }
 
+  _supportedModes() {
+    return supportedWaterHeaterModes(isMblWidget(this.getStore()));
+  }
+
+  // Called by the shared "Set heating mode" Flow card, whose dropdown lists
+  // every mode across the heating drivers — including modes a tank has no
+  // command for. Program is rejected with a readable error instead of silently
+  // doing nothing, and Auto on MBL falls back to Eco (the same autoMode).
   async setHeatingMode(mode) {
-    await this._handler.setMode(mode);
+    const target = resolveWaterHeaterMode(mode, this._supportedModes());
+    if (target === null) {
+      throw new Error(`${this.homey.__('errors.mode_not_supported')} (${mode})`);
+    }
+    await this._handler.setMode(target);
+    this._schedulePostCommandRefresh();
+  }
+
+  // Called by the "Turn boost on or off" Flow card. Handlers only send the
+  // command, so reflect the new value on the tile right away — the follow-up
+  // poll confirms it.
+  async setBoostMode(value) {
+    if (!this.hasCapability('cozytouch_boost')) {
+      throw new Error(this.homey.__('errors.boost_not_supported'));
+    }
+    await this._handler.setBoost(value);
+    this._safeSetCapability('cozytouch_boost', value);
+    this._schedulePostCommandRefresh();
+  }
+
+  // Called by the "Turn away mode on or off" Flow card.
+  async setAwayMode(value) {
+    await this._handler.setAwayMode(value);
+    this._safeSetCapability('cozytouch_away_mode', value);
     this._schedulePostCommandRefresh();
   }
 

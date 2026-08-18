@@ -299,6 +299,26 @@ class CozyTouchApp extends Homey.App {
         await args.device.setPassLevel(args.level);
       });
 
+    this.homey.flow.getActionCard('set_boost')
+      .registerRunListener(async (args) => {
+        await args.device.setBoostMode(args.state === 'on');
+      });
+
+    this.homey.flow.getActionCard('set_away_mode')
+      .registerRunListener(async (args) => {
+        await args.device.setAwayMode(args.state === 'on');
+      });
+
+    this.homey.flow.getConditionCard('is_boost')
+      .registerRunListener(async (args) => {
+        return args.device.getCapabilityValue('cozytouch_boost') === true;
+      });
+
+    this.homey.flow.getConditionCard('is_away_mode')
+      .registerRunListener(async (args) => {
+        return args.device.getCapabilityValue('cozytouch_away_mode') === true;
+      });
+
     this.homey.flow.getConditionCard('is_heating_mode')
       .registerRunListener(async (args) => {
         return args.device.getCapabilityValue('cozytouch_heating_mode') === args.mode;

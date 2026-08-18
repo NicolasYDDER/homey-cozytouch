@@ -1,6 +1,6 @@
 {
   "id": "com.nicolasydder.cozytouch",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -835,6 +835,78 @@
             "example": "heat"
           }
         ]
+      },
+      {
+        "id": "boost_turned_on",
+        "title": {
+          "en": "Boost turned on",
+          "fr": "Mode boost activé"
+        },
+        "titleFormatted": {
+          "en": "Boost of [[device]] turned on",
+          "fr": "Mode boost de [[device]] activé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_boost"
+          }
+        ]
+      },
+      {
+        "id": "boost_turned_off",
+        "title": {
+          "en": "Boost turned off",
+          "fr": "Mode boost désactivé"
+        },
+        "titleFormatted": {
+          "en": "Boost of [[device]] turned off",
+          "fr": "Mode boost de [[device]] désactivé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_boost"
+          }
+        ]
+      },
+      {
+        "id": "away_mode_turned_on",
+        "title": {
+          "en": "Away mode turned on",
+          "fr": "Mode absence activé"
+        },
+        "titleFormatted": {
+          "en": "Away mode of [[device]] turned on",
+          "fr": "Mode absence de [[device]] activé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_away_mode"
+          }
+        ]
+      },
+      {
+        "id": "away_mode_turned_off",
+        "title": {
+          "en": "Away mode turned off",
+          "fr": "Mode absence désactivé"
+        },
+        "titleFormatted": {
+          "en": "Away mode of [[device]] turned off",
+          "fr": "Mode absence de [[device]] désactivé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_away_mode"
+          }
+        ]
       }
     ],
     "actions": [
@@ -1152,6 +1224,90 @@
             ]
           }
         ]
+      },
+      {
+        "id": "set_boost",
+        "title": {
+          "en": "Turn boost on or off",
+          "fr": "Activer ou désactiver le mode boost"
+        },
+        "titleFormatted": {
+          "en": "Turn boost [[state]] on [[device]]",
+          "fr": "Mode boost [[state]] pour [[device]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_boost"
+          },
+          {
+            "type": "dropdown",
+            "name": "state",
+            "title": {
+              "en": "State",
+              "fr": "État"
+            },
+            "values": [
+              {
+                "id": "on",
+                "label": {
+                  "en": "On",
+                  "fr": "Activé"
+                }
+              },
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Désactivé"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set_away_mode",
+        "title": {
+          "en": "Turn away mode on or off",
+          "fr": "Activer ou désactiver le mode absence"
+        },
+        "titleFormatted": {
+          "en": "Turn away mode [[state]] on [[device]]",
+          "fr": "Mode absence [[state]] pour [[device]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_away_mode"
+          },
+          {
+            "type": "dropdown",
+            "name": "state",
+            "title": {
+              "en": "State",
+              "fr": "État"
+            },
+            "values": [
+              {
+                "id": "on",
+                "label": {
+                  "en": "On",
+                  "fr": "Activé"
+                }
+              },
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Désactivé"
+                }
+              }
+            ]
+          }
+        ]
       }
     ],
     "conditions": [
@@ -1327,6 +1483,42 @@
                 }
               }
             ]
+          }
+        ]
+      },
+      {
+        "id": "is_boost",
+        "title": {
+          "en": "Boost !{{is|is not}} on",
+          "fr": "Le mode boost !{{est|n'est pas}} activé"
+        },
+        "titleFormatted": {
+          "en": "Boost of [[device]] !{{is|is not}} on",
+          "fr": "Le mode boost de [[device]] !{{est|n'est pas}} activé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_boost"
+          }
+        ]
+      },
+      {
+        "id": "is_away_mode",
+        "title": {
+          "en": "Away mode !{{is|is not}} on",
+          "fr": "Le mode absence !{{est|n'est pas}} activé"
+        },
+        "titleFormatted": {
+          "en": "Away mode of [[device]] !{{is|is not}} on",
+          "fr": "Le mode absence de [[device]] !{{est|n'est pas}} activé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_away_mode"
           }
         ]
       }

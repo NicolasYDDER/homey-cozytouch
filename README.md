@@ -711,25 +711,42 @@ Varies by model. Below are the known mappings:
 |---------|-------------|-------|
 | Temperature changed | Fires when measured temperature changes | `temperature` (number) |
 | Heating mode changed | Fires when heating mode changes | `mode` (string) |
+| Pass Cozytouch mode changed | Fires when the Pass module level changes | `level` (string) |
+| Zone Control HVAC mode changed | Fires when the Shogun main unit mode changes | `mode` (string) |
+| Boost turned on / off | Fires when boost starts or stops (water heater) | — |
+| Away mode turned on / off | Fires when away mode starts or stops (water heater) | — |
 
 ### Actions
 
 | Action | Description | Parameters |
 |--------|-------------|------------|
-| Set heating mode | Change the heating mode | `mode`: off, manual, eco_plus, prog |
+| Set heating mode | Change the heating mode | `mode`: off, manual, eco_plus, prog, auto |
 | Set HVAC mode | Change the HVAC mode (climate only) | `mode`: off, heat, cool, auto, dry, fan_only |
+| Set Zone Control HVAC mode | Change the Shogun main unit mode | `mode`: off, heat, cool, dry, auto |
+| Set Zone Control zone mode | Change a Shogun zone mode | `mode`: off, manual, prog |
+| Set Pass Cozytouch mode | Change the Pass module level | `level`: off, frostprotection, eco, comfort-2, comfort-1, comfort |
+| Turn boost on or off | Start or stop boost (water heater) | `state`: on, off |
+| Turn away mode on or off | Start or stop away / absence mode (water heater) | `state`: on, off |
+
+Target temperature has no app card: Homey's built-in **Set the target temperature** action works on every device that exposes it.
 
 ### Conditions
 
 | Condition | Description | Parameters |
 |-----------|-------------|------------|
-| Heating mode is... | Check current heating mode | `mode`: off, manual, eco_plus, prog |
+| Heating mode is... | Check current heating mode | `mode`: off, manual, eco_plus, prog, auto |
+| Zone Control HVAC mode is... | Check the Shogun main unit mode | `mode`: off, heat, cool, dry, auto |
+| Zone mode is... | Check a Shogun zone mode | `mode`: off, manual, prog |
+| Boost is on | Check whether boost is running (water heater) | — |
+| Away mode is on | Check whether away mode is on (water heater) | — |
+
+Modes a device has no command for are rejected with an error instead of being silently ignored: a water heater accepts Off / Manual / Eco (+ Auto except on Égéo MBL tanks, where Auto is the same as Eco), not Program.
 
 ### Flow Examples
 
 **"When I leave home, set water heater to away mode":**
 - Trigger: Homey location (left home zone)
-- Action: Set capability `cozytouch_away_mode` to `true`
+- Action: Turn away mode **on** (water heater)
 
 **"Set heating to eco+ at night":**
 - Trigger: Time is 22:00

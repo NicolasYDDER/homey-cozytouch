@@ -1,4 +1,8 @@
 {
+  "1.3.3": {
+    "en": "Boost and away mode can now be used in Flows (actions, triggers and conditions) on water heaters, including Atlantic Égéo. Also fixes Flow triggers that were listed but never fired, and the Set heating mode card offering modes a water heater cannot do.",
+    "fr": "Le mode boost et le mode absence sont désormais utilisables dans les Flows (actions, déclencheurs et conditions) sur les chauffe-eau, y compris l'Atlantic Égéo. Corrige aussi les déclencheurs de Flow qui étaient proposés mais ne se déclenchaient jamais, et la carte « Définir le mode de chauffage » qui proposait des modes impossibles sur un chauffe-eau."
+  },
   "1.3.2": {
     "en": "Credits Cédric Andrietti as a contributor for the Pass Cozytouch, Shogun Zone Control, Ipala and global sync work. No functional change.",
     "fr": "Ajoute Cédric Andrietti aux contributeurs pour le travail sur Pass Cozytouch, Shogun Zone Control, Ipala et la synchronisation globale. Aucun changement fonctionnel."

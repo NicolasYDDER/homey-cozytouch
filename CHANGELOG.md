@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.3] - 2026-08-18
+
+### Added
+- **Boost and away mode in Flows** (issue #2): the water heater's boost and away/absence toggles were only reachable from the device tile, because Homey does not generate Flow cards for app-defined capabilities. Added `Turn boost on or off` / `Turn away mode on or off` actions, `Boost turned on/off` and `Away mode turned on/off` triggers, and `Boost is on` / `Away mode is on` conditions. Together with the existing `Set heating mode` card and Homey's built-in `Set the target temperature`, everything the Égéo can do from the tile is now available in a Flow.
+- **Flow wiring test** (`tests/flow-cards.test.js`): asserts every action/condition in the manifest has a run listener and every trigger is mapped to the capability that fires it, so a card can no longer ship dead.
+
+### Fixed
+- **Flow triggers never fired**: `measure_temperature_changed`, `heating_mode_changed`, `pass_cozytouch_level_changed` and `zone_control_hvac_mode_changed` were declared in `app.json` but no code ever called `getDeviceTriggerCard().trigger()`, so they appeared in the Flow editor and did nothing. The base device now fires the matching card whenever a capability value changes (skipping the first read after a restart, which is the device reporting where it already was).
+- **"Set heating mode" on a water heater**: the card's dropdown lists every mode used by the heating drivers, including `prog`, which no tank implements, and `auto`, which Égéo (MBL) tanks do not expose. Program now returns a readable error instead of silently sending nothing, and Auto on MBL falls back to Eco — the same `autoMode` command on the device.
+
+### Note
+- Homey generates its own **Temperature changed** trigger from `measure_temperature`, so the Flow editor lists two similar triggers. The app's card is kept (and now works) so existing Flows using it keep running.
+
 ## [1.3.2] - 2026-08-18
 
 ### Added
