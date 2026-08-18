@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 2026-08-18
+
+### Added
+- **Contributor credit**: Cédric Andrietti is now listed under `contributors.developers` in `app.json`, so the App Store page credits the Pass Cozytouch, Shogun Zone Control, Ipala and global sync work contributed in [PR #7](https://github.com/NicolasYDDER/homey-cozytouch/pull/7).
+
 ## [1.3.1] - 2026-08-18
 
 ### Fixed
