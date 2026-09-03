@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.6] - 2026-09-03
+
+### Added
+- **AQUEO ACI HYB support** ([issue #9](https://github.com/NicolasYDDER/homey-cozytouch/issues/9) — modelId 390 «VM 150L 2200M», also 389 «VS 300L 3000M»): the capability dump added in 1.3.5 showed this tank answers on **none** of the IDs the app read (it reports 87, 231, 266, 165, 227, 105301/105304 among 86 capabilities). Magellan capability IDs are now resolved per `productId` from the device store — see `WATER_HEATER_CAP_IDS_BY_PRODUCT` — so the tile shows temperature, setpoint, mode, boost and away, and each control writes the ID this product actually implements:
+  - mode on cap **87** (same values as cap 1: 0=manual, 3=eco+, 4=prog);
+  - setpoint on cap **231**, with its range from cap **105301/105304** (cap 160/161 are absent here), falling back to cap **22** — the same setpoint mirrored — if the product refuses the first one;
+  - current temperature from cap **266** (top of tank);
+  - boost on cap **165**, away on cap **227** (0=off, 1=on, 2=booked but not started, shown as on).
+- The **away mode toggle now works on this tank**: capability 10, which the API answers with `UnknownCapabilityId` for every product, is not what this product uses. This is the error [issue #9](https://github.com/NicolasYDDER/homey-cozytouch/issues/9) was opened with.
+
+### Changed
+- **No Off in the picker for a tank that has no off command**: the AQUEO has no on/off capability at all — it is always on and its mode is what drives it. Rather than offering a command the API refuses, the mode picker offers Manual / Eco / Program only, and the `Set heating mode` Flow card returns the usual "mode not supported" error for Off.
+- **A declared setpoint range is only applied when it can be degrees** (between 20 °C and 90 °C, min below max). The limit capabilities of an unmapped product may hold something else entirely, and a nonsense range would lock the slider.
+- **The capability dump reaches 120 entries** instead of 60: this tank reports 86 capabilities and its setpoint limits sit at the very end of the list, so they were truncated out of the first report.
+
+### Note
+- Capability IDs were mapped from the list the device reports, cross-checked against [gduteil/cozytouch](https://github.com/gduteil/cozytouch) (`capability.py`, `model.py`), the Home Assistant integration this app already credits, which names modelId 390 explicitly. Nothing was guessed from value shapes alone.
+- Reported by the tank but not exposed yet: energy (cap 59, in Wh), electric backup running (99), Wi-Fi signal (179), tank capacity (258), V40 water available/capacity (268/270), hot water available in % (271), off-peak hours (283) and the weekly program (245–251).
+
 ## [1.3.5] - 2026-09-03
 
 ### Fixed
