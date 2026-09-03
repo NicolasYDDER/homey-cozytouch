@@ -557,6 +557,18 @@ The app currently supports radiators/heating (including Ipala), water heaters, t
 
 A device the app can see but cannot classify shows up as **type unknown** in the Connection Status panel, and pairing ends with *"No compatible devices found"* followed by the devices it did find — for example `Calypso connecté (modelId 1658)`. Please [open an issue](https://github.com/NicolasYDDER/homey-cozytouch/issues) with that line (or a screenshot of the Connection Status panel): the model ID or `io:...` name is exactly what is needed to add support.
 
+### My device was added, but its tile shows no values
+
+Atlantic answers per **product**, not per model: two tanks of the same family can expose different internal capability IDs. When none of the values the app reads exist on your device, the tile stays empty and every command comes back as an error such as *"There is no implementation for capability Id 2 on product Id 7"*.
+
+The app now says so instead of looking healthy: the device shows a warning ("this model is not fully supported yet…") and the app log contains one line listing exactly what your device does report, e.g.
+
+```
+Magellan capabilities (modelId 390, productId 7, capabilities endpoint): 1 "Mode"=0, 117=52.5, …
+```
+
+Please [open an issue](https://github.com/NicolasYDDER/homey-cozytouch/issues) with a **diagnostic report** (Homey app > Settings > Apps > Atlantic Cozytouch > *Send diagnostic report*, or `homey app log` if you run it from source). That one line is what support for your product is built from.
+
 ### Why do I see both a Zone Control main unit and several zones?
 
 That is expected. Pair **Shogun Zone Control** once: Homey creates the main unit (global HVAC) plus one device per zone. Zone temperature sensors stay linked in the background and are not separate Homey devices.

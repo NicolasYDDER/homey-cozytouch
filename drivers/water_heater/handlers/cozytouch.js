@@ -5,6 +5,7 @@ const {
   HEATER_MODE_TO_API,
   API_TO_HEATER_MODE,
 } = require('../../../lib/constants/cozytouch-mappings');
+const { isCapabilityUnsupportedError } = require('../../../lib/helpers/magellan-capabilities');
 
 /**
  * Cozytouch (Magellan) handler for domestic hot water tanks — e.g. Calypso
@@ -31,10 +32,23 @@ class WaterHeaterCozytouchHandler {
       if (apiValue === null || apiValue === undefined) {
         throw new Error(`Unsupported heating mode for a Cozytouch water heater: ${mode}`);
       }
-      await this.ctx.setCapValue(CAP.ON_OFF, '1');
+      await this._switchOn();
       await this.ctx.setCapValue(CAP.HEATING_MODE, apiValue);
     }
     this.ctx.setCapability('cozytouch_heating_mode', mode);
+  }
+
+  // Not every tank implements the on/off capability: the AQUEO ACI HYB
+  // (productId 7) answers "no implementation for capability Id 3", and on such a
+  // product picking a heating mode *is* how it runs. Failing there would leave
+  // the mode unsent, so only a real failure is propagated.
+  async _switchOn() {
+    try {
+      await this.ctx.setCapValue(CAP.ON_OFF, '1');
+    } catch (err) {
+      if (!isCapabilityUnsupportedError(err)) throw err;
+      this.ctx.log(`No on/off capability (${CAP.ON_OFF}) on this tank; setting the mode alone`);
+    }
   }
 
   async setBoost(value) {
@@ -54,8 +68,11 @@ class WaterHeaterCozytouchHandler {
     const targetTemp = this.ctx.getCapValue(caps, CAP.TARGET_TEMP);
     if (targetTemp !== null) this.ctx.setCapability('target_temperature', parseFloat(targetTemp));
 
+    // A tank that reports no on/off capability is never off — reading its
+    // absence as "off" is what made such tanks (productId 7) show Off while
+    // running in Manual.
     const onOff = this.ctx.getCapValue(caps, CAP.ON_OFF);
-    const isOn = onOff === '1' || onOff === 1 || onOff === true;
+    const isOn = onOff === null || onOff === '1' || onOff === 1 || onOff === true;
 
     const mode = this.ctx.getCapValue(caps, CAP.HEATING_MODE);
     if (mode !== null) {

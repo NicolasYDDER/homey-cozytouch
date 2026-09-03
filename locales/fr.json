@@ -13,7 +13,9 @@
     "no_protocol": "Aucun appareil trouvé sur les protocoles Cozytouch et Overkiz.",
     "zone_thermostat_mode_readonly": "Shogun Zone Control : cet affichage reprend le mode global du Shogun (toutes les zones). Pour le changer, utilisez l’unité principale.",
     "mode_not_supported": "Cet appareil ne prend pas en charge ce mode de chauffage.",
-    "boost_not_supported": "Cet appareil ne prend pas en charge le mode boost."
+    "boost_not_supported": "Cet appareil ne prend pas en charge le mode boost.",
+    "capability_not_supported": "Cette commande n'existe pas sur ce modèle d'appareil.",
+    "capabilities_unmapped": "Ce modèle n'est pas encore entièrement pris en charge : aucune des valeurs lues par l'application n'existe sur cet appareil. Envoyez un rapport de diagnostic pour que la prise en charge soit ajoutée."
   },
   "settings": {
     "sync_interval": "Intervalle de mise à jour (secondes)"

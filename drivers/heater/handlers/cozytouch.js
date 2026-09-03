@@ -52,7 +52,9 @@ class HeaterCozytouchHandler {
     if (mode !== null) {
       const modeStr = API_TO_HEATER_MODE[parseInt(mode, 10)];
       if (modeStr) {
-        const isOn = onOff === '1' || onOff === 1 || onOff === true;
+        // No on/off capability reported means the product has none, not that it
+        // is off: keep the mode it reports instead of overriding it with Off.
+        const isOn = onOff === null || onOff === '1' || onOff === 1 || onOff === true;
         this.ctx.setCapability('cozytouch_heating_mode', isOn ? modeStr : 'off');
       }
     }

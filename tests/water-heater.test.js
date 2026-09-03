@@ -65,6 +65,69 @@ describe('water heater handler surface', () => {
   }
 });
 
+// The AQUEO ACI HYB (Magellan productId 7) implements neither the on/off (3)
+// nor the target temperature (2) capability: it answered every write with
+// "There is no implementation for capability Id 3 on product Id 7" while its
+// tile showed no value at all.
+describe('Magellan water heater without an on/off capability', () => {
+  const unsupported = () => Object.assign(new Error('API request failed: 404'), {
+    statusCode: 404,
+    body: '{"code":36002008,"message":"There is no implementation for capability Id 3 on product Id 7.","type":"NoCapabilityImplementationFound"}',
+  });
+
+  const fakeCtx = ({ caps = [], failWrites = {} } = {}) => {
+    const ctx = {
+      writes: [],
+      values: {},
+      getCapabilities: async () => caps,
+      getCapValue: (list, capId) => api.getCapabilityValue(list, capId),
+      setCapValue: async (capId, value) => {
+        ctx.writes.push([capId, value]);
+        if (failWrites[capId]) throw failWrites[capId];
+      },
+      setCapability: (name, value) => { ctx.values[name] = value; },
+      setCapabilityOptions: () => {},
+      hasCapability: () => true,
+      log: () => {},
+    };
+    return ctx;
+  };
+
+  it('keeps the mode the tank reports instead of showing Off', async () => {
+    const ctx = fakeCtx({
+      caps: [{ capabilityId: 1, value: '0' }, { capabilityId: 7, value: '52.5' }],
+    });
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.values.cozytouch_heating_mode, 'manual');
+    assert.equal(ctx.values.measure_temperature, 52.5);
+  });
+
+  it('still shows Off when the tank does report on/off', async () => {
+    const ctx = fakeCtx({
+      caps: [{ capabilityId: 1, value: '0' }, { capabilityId: 3, value: '0' }],
+    });
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.values.cozytouch_heating_mode, 'off');
+  });
+
+  it('sends the mode even when the on/off write is refused', async () => {
+    const ctx = fakeCtx({ failWrites: { 3: unsupported() } });
+    await new CozytouchHandler(ctx).setMode('manual');
+    assert.deepEqual(ctx.writes, [[3, '1'], [1, '0']]);
+    assert.equal(ctx.values.cozytouch_heating_mode, 'manual');
+  });
+
+  it('propagates a real failure on the on/off write', async () => {
+    const failure = Object.assign(new Error('API request failed: 401'), {
+      statusCode: 401,
+      body: '{"code":"900901","message":"Invalid Credentials"}',
+    });
+    const ctx = fakeCtx({ failWrites: { 3: failure } });
+    await assert.rejects(() => new CozytouchHandler(ctx).setMode('manual'), /401/);
+    assert.deepEqual(ctx.writes, [[3, '1']]);
+  });
+});
+
 describe('water heater mode picker', () => {
   const declared = manifest.capabilities.cozytouch_heating_mode.values.map((v) => v.id);
 
