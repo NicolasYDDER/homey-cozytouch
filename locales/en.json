@@ -13,7 +13,9 @@
     "no_protocol": "No devices found on Cozytouch or Overkiz protocols.",
     "zone_thermostat_mode_readonly": "Shogun Zone Control: this shows the Shogun’s global mode (all zones). Change it on the main unit.",
     "mode_not_supported": "This device does not support that heating mode.",
-    "boost_not_supported": "This device does not support boost mode."
+    "boost_not_supported": "This device does not support boost mode.",
+    "capability_not_supported": "This control does not exist on this device model.",
+    "capabilities_unmapped": "This model is not fully supported yet: none of the values the app reads exist on it. Send a diagnostic report so support can be added."
   },
   "settings": {
     "sync_interval": "Update interval (seconds)"

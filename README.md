@@ -449,6 +449,8 @@ Handles electric towel dryers via both protocols.
 
 > **Note**: The CETHI_V4 water heater has no real on/off command. "Off" is simulated via away mode. Shower count is only controllable from the Cozytouch phone app.
 
+> **Note**: Some Magellan tanks implement neither cap 2 (target temperature) nor cap 3 (on/off) — the AQUEO ACI HYB VM (modelId 390, productId 7) answers `NoCapabilityImplementationFound` for both. On such a tank the mode is what runs it, so selecting a mode no longer fails on the missing on/off write, and a missing on/off is no longer read as "Off". Away mode over Magellan is written to cap 10, which the API answers with `UnknownCapabilityId`: on Magellan tanks away is a **setup-level** property (`PUT /magellan/v2/setups/{setupId}`) whose payload is not mapped yet, so the toggle reports that the control does not exist on the device.
+
 ### Climate Driver (Heat Pump / AC)
 
 | Device Type | Model IDs | Known Products | Modes |
@@ -530,6 +532,7 @@ homey-cozytouch/
 │   │   └── overkiz-mappings.js         # STATES, COMMANDS, level/DHW maps, helpers
 │   └── helpers/
 │       ├── discovery-report.js         # Names found devices in pairing errors
+│       ├── magellan-capabilities.js    # Capability payload: lookup, dump, API errors
 │       ├── overkiz-device.js           # Widget / controllableName detection
 │       └── water-heater-modes.js       # Modes a tank accepts, per protocol
 │
@@ -640,6 +643,8 @@ setInterval (every 60s)
 ## Capability ID Reference
 
 These numeric IDs are used internally by the Atlantic API to identify device properties. They are sent as `capabilityId` in API requests.
+
+> **Per product, not per model**: the IDs below are the ones observed on supported products. Another product of the same family may implement a different set — writing an ID it does not have returns `NoCapabilityImplementationFound` (product-level) or `UnknownCapabilityId` (the API does not know that ID at all). The app dumps the capability list of each Magellan device once per run so an unknown product can be mapped from a log; see [Troubleshooting](#a-device-was-added-but-shows-no-values-cozytouch--magellan).
 
 ### Common Capabilities (All Devices)
 
@@ -811,6 +816,20 @@ Calling Overkiz too aggressively can hit quotas (`QUOTA_EXCEEDED`). Prefer a mod
 - Capability IDs may differ for your specific device model. Check Homey developer logs (`homey app log`) to see raw capability data.
 - Some models report temperature in tenths of degrees.
 
+### A device was added but shows no values (Cozytouch / Magellan)
+
+Magellan answers per **product**, not per model family: a device this app classifies as a water heater can implement a different capability set than the IDs its handler reads. When that happens every read is empty and every write returns a 404 such as `There is no implementation for capability Id 2 on product Id 7` or `Capability Id '10' not found` (seen on the AQUEO ACI HYB VM, modelId 390 / productId 7).
+
+The app makes that case visible instead of showing a healthy-looking empty device:
+
+- The first capability read of each device is dumped once per app run:
+  `Magellan capabilities (modelId 390, productId 7, capabilities endpoint): 1 "Mode"=0, 117=52.5, …`
+- When the per-device endpoint answers with an empty list, the app retries from the setup view (`setupviewv2`), which carries the values for some products, and says which source it used.
+- A poll where **not one** mapped capability matched logs what the device does report and puts a warning on the tile.
+- A refused write reports *"This control does not exist on this device model."* instead of raw API JSON.
+
+Send that dump line (diagnostic report or `homey app log`) in an issue — it is what the capability map for a new product is built from.
+
 ### My device is not discovered
 - Only devices with known `modelId` / Overkiz `controllableName` mappings are shown. Check [Compatible Devices](#compatible-devices).
 - To add a new model, see [Adding Support for New Devices](#adding-support-for-new-devices).
@@ -848,7 +867,13 @@ const HVAC_MODES = {
 
 ### Step 4: Map Capabilities
 
-If the device uses non-standard capability IDs, update the `CAP_IDS` object in the relevant `device.js` file. Use the raw capability data from the API (visible in logs) to identify the correct IDs.
+If the device uses non-standard capability IDs, update the `CAP_IDS` object in `lib/constants/cozytouch-mappings.js` for that device family. The app logs the raw capability list of every Magellan device once per run, which is what you map from:
+
+```
+Magellan capabilities (modelId 390, productId 7, capabilities endpoint): 1 "Mode"=0, 117=52.5, 160=50, 161=65
+```
+
+A device whose payload matches none of the mapped IDs also logs `None of the capabilities this app reads exist on this device (…)` and warns on its tile, so an unsupported product is visible without reading the whole log.
 
 ### Step 5: Test
 

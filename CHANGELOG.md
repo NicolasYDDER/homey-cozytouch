@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.5] - 2026-09-03
+
+### Fixed
+- **A Cozytouch (Magellan) water heater showing no values at all** (AQUEO ACI HYB VM 150L 2200M, modelId 390 / productId 7): Magellan answers per *product*, so this tank implements neither capability 2 (target temperature) nor capability 3 (on/off) and returns `NoCapabilityImplementationFound` for both, while away mode (capability 10) does not exist in the API at all (`UnknownCapabilityId`). The device still looked healthy in Homey — every read returned nothing and the tile stayed empty. Three things caused values to be lost or hidden, and each is fixed:
+  - Capability IDs are matched whether the API returns them as numbers or as strings, and a capability sent without a value now reads as missing instead of `NaN`.
+  - When the per-device capability endpoint answers with an empty list, the app falls back to the capabilities embedded in the setup view (`setupviewv2`), which is where some products report their values. The log says which source was used.
+  - A tank that reports no on/off capability is no longer read as **Off**: it shows the mode it actually reports (same fix applied to Magellan radiators). Selecting a mode on such a tank no longer fails on the missing on/off write either — the mode is what runs it.
+- **Unreadable command errors**: a refused write now reports *"This control does not exist on this device model."* instead of raw API JSON, and logs the capability, the product and the IDs the device does report.
+
+### Added
+- **Capability dump for Magellan devices**: the first capability read of every device is logged once per app run, with the identifiers support is keyed on — `Magellan capabilities (modelId 390, productId 7, capabilities endpoint): 1 "Mode"=0, 117=52.5, …`. Mapping an unsupported product previously required guessing from a log that contained none of this.
+- **A device that maps to nothing says so**: a poll where not one mapped capability matched logs what the device does report and puts a warning on the tile, instead of showing an empty device that looks connected. The warning clears as soon as a value is read.
+- **Tests** (`tests/magellan-capabilities.test.js`, plus a Magellan water heater block in `tests/water-heater.test.js`): ID matching across types, the dump format, the two Atlantic capability errors versus auth/transport failures, and the productId 7 behaviour (mode kept without on/off, mode still sent when on/off is refused, a real failure still propagated).
+
+### Known limitation
+- **Away mode on a Cozytouch (Magellan) tank** still cannot be set: the app writes capability 10, which the API does not know. On Magellan, away is a setup-level property (`PUT /magellan/v2/setups/{setupId}`) whose payload is not mapped yet. The toggle now reports that the control does not exist on the device rather than failing silently with API JSON.
+
 ## [1.3.4] - 2026-08-18
 
 ### Fixed
