@@ -2,6 +2,8 @@
 
 Control your Atlantic heating, hot water, and air conditioning devices through the Cozytouch cloud platform on your Homey Pro.
 
+**Support & device reports**: [Homey Community thread](https://community.homey.app/t/app-pro-atlantic-cozytouch-en-fr/159117) · [Issue tracker](https://github.com/NicolasYDDER/homey-cozytouch/issues)
+
 > **Disclaimer**: This app is not affiliated with or endorsed by Atlantic/Groupe Atlantic. It relies on a reverse-engineered cloud API that may change without notice.
 
 ---

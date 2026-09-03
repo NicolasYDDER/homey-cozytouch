@@ -38,6 +38,7 @@
     "url": "https://github.com/NicolasYDDER/homey-cozytouch/issues"
   },
   "source": "https://github.com/NicolasYDDER/homey-cozytouch",
+  "homeyCommunityTopicId": 159117,
   "permissions": [],
   "api": {
     "getStatus": {
