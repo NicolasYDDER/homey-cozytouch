@@ -8,6 +8,7 @@ const {
   supportedWaterHeaterModes,
   resolveWaterHeaterMode,
 } = require('../../lib/helpers/water-heater-modes');
+const { waterHeaterCapIds } = require('../../lib/constants/cozytouch-mappings');
 
 const POST_COMMAND_REFRESH_DELAY_MS = 3000;
 
@@ -108,9 +109,15 @@ class WaterHeaterDevice extends CozyTouchDevice {
   // before super.onInit() has resolved it.
   _modeContext() {
     const store = this.getStore();
+    const protocol = store.protocol || 'cozytouch';
     return {
-      protocol: store.protocol || 'cozytouch',
+      protocol,
       isMbl: isMblWidget(store),
+      // Magellan products without an on/off capability (AQUEO ACI HYB) cannot
+      // be switched off at all: leave Off out of the picker instead of offering
+      // a command the API refuses.
+      hasOnOff: protocol !== 'cozytouch'
+        || Boolean(waterHeaterCapIds(store.productId).ON_OFF),
     };
   }
 

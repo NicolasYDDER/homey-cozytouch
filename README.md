@@ -439,7 +439,7 @@ Handles electric towel dryers via both protocols.
 
 | Device Type | Model IDs (Magellan) | Overkiz controllableName | Known Products |
 |-------------|---------------------|--------------------------|----------------|
-| Water Heater | 236, 389, 390, 1369, 1371, 1372, 1376, 1642, 1644, 1645, 1656, 1657, 1658, 1966 | `io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent`, `io:AtlanticDomesticHotWaterProductionMBLComponent` (MBL) | Atlantic Calypso (incl. Calypso connecté, 1658), Zeneo, Vizengo, Lineo, Égéo (MBL) |
+| Water Heater | 236, 389, 390, 1369, 1371, 1372, 1376, 1642, 1644, 1645, 1656, 1657, 1658, 1966 | `io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent`, `io:AtlanticDomesticHotWaterProductionMBLComponent` (MBL) | Atlantic Calypso (incl. Calypso connecté, 1658), AQUEO ACI HYB (389 / 390, productId 7), Zeneo, Vizengo, Lineo, Égéo (MBL) |
 
 **Overkiz commands**: `setDHWMode` (manualEcoInactive/manualEcoActive/autoMode), `setTargetTemperature`, `setCurrentOperatingMode` (away/boost), `setBoostModeDuration`
 
@@ -447,11 +447,13 @@ Handles electric towel dryers via both protocols.
 
 **Capabilities**: target temperature (30-65C), current temperature, heating mode, boost toggle, away mode
 
-> **Note**: the mode picker differs per protocol, because the two protocols do not expose the same modes. Overkiz tanks get Off / Manual / Eco / Auto (no Auto on Égéo / MBL, where Auto *is* Eco); Magellan tanks get Off / Manual / Eco / Program, since capability 1 has a prog value and no auto value.
+> **Note**: the mode picker differs per protocol, because the two protocols do not expose the same modes. Overkiz tanks get Off / Manual / Eco / Auto (no Auto on Égéo / MBL, where Auto *is* Eco); Magellan tanks get Off / Manual / Eco / Program, since capability 1 has a prog value and no auto value. A Magellan product with no on/off capability (AQUEO ACI HYB) drops Off: it is always on and its mode is what runs it.
 
 > **Note**: The CETHI_V4 water heater has no real on/off command. "Off" is simulated via away mode. Shower count is only controllable from the Cozytouch phone app.
 
-> **Note**: Some Magellan tanks implement neither cap 2 (target temperature) nor cap 3 (on/off) — the AQUEO ACI HYB VM (modelId 390, productId 7) answers `NoCapabilityImplementationFound` for both. On such a tank the mode is what runs it, so selecting a mode no longer fails on the missing on/off write, and a missing on/off is no longer read as "Off". Away mode over Magellan is written to cap 10, which the API answers with `UnknownCapabilityId`: on Magellan tanks away is a **setup-level** property (`PUT /magellan/v2/setups/{setupId}`) whose payload is not mapped yet, so the toggle reports that the control does not exist on the device.
+**Magellan capabilities, AQUEO ACI HYB (productId 7 — modelId 389 / 390)**: this product answers on **none** of the IDs above. Its own block is Cap 87 (mode: 0=manual, 3=eco+, 4=prog), Cap 231 (target temperature, mirrored on Cap 22), Cap 266 (tank top temperature; 265 middle, 267 bottom), Cap 165 (boost), Cap 227 (away: 0=off, 1=on, 2=booked), Cap 105301/105304 (setpoint range). It has **no on/off capability at all**: the tank is always on and driven by its mode, so the mode picker offers Manual / Eco / Program without Off.
+
+> **Note**: capability IDs are resolved per `productId` from the device store — see `WATER_HEATER_CAP_IDS_BY_PRODUCT` in `lib/constants/cozytouch-mappings.js`. A product that is not in that table falls back to the default IDs and, if it matches none of them, says so in the log (see [Troubleshooting](#a-device-was-added-but-shows-no-values-cozytouch--magellan)).
 
 ### Climate Driver (Heat Pump / AC)
 
@@ -665,7 +667,23 @@ These numeric IDs are used internally by the Atlantic API to identify device pro
 |--------|------|------|-------------|
 | 5 | Boost | bool | Boost mode toggle |
 | 6 | Eco | bool | Eco mode toggle |
-| 10 | Away Mode | bool | Away/vacation mode |
+| 10 | Away Mode | bool | Away/vacation mode — **rejected by the API** (`UnknownCapabilityId`) on the products seen so far; use the per-product ID below |
+
+### Water Heater — AQUEO ACI HYB (productId 7, modelId 389 / 390)
+
+This product shares **no** capability ID with the table above. IDs mapped from the list the device reports, cross-checked against [gduteil/cozytouch](https://github.com/gduteil/cozytouch) (`capability.py`), which names modelId 390.
+
+| Cap ID | Name | Type | Description |
+|--------|------|------|-------------|
+| 87 | Heating mode | int | 0=manual, 3=eco+, 4=prog (same values as cap 1) |
+| 231 | Target temperature | float | Setpoint; mirrored on cap 22 (`target_temperature_dhw`) |
+| 105301 / 105304 | Setpoint min / max | float | Range for cap 231 (cap 160/161 absent on this product) |
+| 266 | Tank top temperature | float | Used as the device's current temperature (265 middle, 267 bottom, 264 condenser) |
+| 165 | Boost | bool | Boost toggle (same ID as towel racks) |
+| 227 | Away mode | int | 0=off, 1=on, 2=booked but not started; timestamps in cap 226 |
+| — | On/off | — | **Does not exist**: the tank is always on, its mode drives it |
+
+Reported but not exposed yet: 59 (energy, in Wh), 99 (electric backup running), 179 (Wi-Fi signal), 258 (tank capacity, L), 268/270 (V40 water available/capacity), 271 (hot water available, %), 283 (off-peak hours), 245–251 (weekly program).
 
 ### Climate Specific (Heat Pump / AC)
 
@@ -889,7 +907,7 @@ Monitor the logs to verify capabilities are being read and written correctly.
 
 ## Credits
 
-- API reverse engineering based on [gduteil/cozytouch](https://github.com/gduteil/cozytouch) (Home Assistant integration)
+- API reverse engineering based on [gduteil/cozytouch](https://github.com/gduteil/cozytouch) (Home Assistant integration), whose `capability.py` / `model.py` are also the cross-reference for the per-product Magellan capability IDs (AQUEO ACI HYB, productId 7)
 - Built with the [Homey Apps SDK v3](https://apps-sdk-v3.developer.athom.com/)
 
 ## License

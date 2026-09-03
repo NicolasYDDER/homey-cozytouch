@@ -7,6 +7,7 @@ const path = require('node:path');
 
 const CozyTouchAPI = require('../lib/CozyTouchAPI');
 const { supportedWaterHeaterModes } = require('../lib/helpers/water-heater-modes');
+const { waterHeaterCapIds } = require('../lib/constants/cozytouch-mappings');
 const { describeDiscoveredDevices } = require('../lib/helpers/discovery-report');
 
 const CozytouchHandler = require('../drivers/water_heater/handlers/cozytouch');
@@ -65,10 +66,134 @@ describe('water heater handler surface', () => {
   }
 });
 
-// The AQUEO ACI HYB (Magellan productId 7) implements neither the on/off (3)
-// nor the target temperature (2) capability: it answered every write with
-// "There is no implementation for capability Id 3 on product Id 7" while its
-// tile showed no value at all.
+// issue #9: the AQUEO ACI HYB VM 150L 2200M (modelId 390) answers on none of
+// the capability IDs the app used to read — its own block was read from the
+// device and mapped against gduteil/cozytouch, which names this model.
+describe('AQUEO ACI HYB capability profile (productId 7)', () => {
+  // What the device reports, from the diagnostic dump of a real tank.
+  const AQUEO_CAPS = [
+    { capabilityId: 22, value: '50.00000000000000000000' },
+    { capabilityId: 87, value: '4' },
+    { capabilityId: 165, value: '0' },
+    { capabilityId: 227, value: '0' },
+    { capabilityId: 231, value: '50.00000000000000000000' },
+    { capabilityId: 258, value: '150' },
+    { capabilityId: 265, value: '42.71000000000000000000' },
+    { capabilityId: 266, value: '49.29000000000000000000' },
+    { capabilityId: 267, value: '49.6800000000000000000' },
+    { capabilityId: 105301, value: '40' },
+    { capabilityId: 105304, value: '65' },
+  ];
+
+  const fakeCtx = (extra = {}) => {
+    const ctx = {
+      writes: [],
+      values: {},
+      options: {},
+      reads: [],
+      store: { productId: 7, modelId: 390 },
+      getCapabilities: async () => AQUEO_CAPS,
+      getCapValue: (list, capId) => {
+        ctx.reads.push(capId);
+        return api.getCapabilityValue(list, capId);
+      },
+      setCapValue: async (capId, value) => {
+        ctx.writes.push([capId, value]);
+        if (extra.failWrites && extra.failWrites[capId]) throw extra.failWrites[capId];
+      },
+      setCapability: (name, value) => { ctx.values[name] = value; },
+      setCapabilityOptions: (name, opts) => { ctx.options[name] = opts; },
+      hasCapability: () => true,
+      log: () => {},
+    };
+    return ctx;
+  };
+
+  it('resolves the product block instead of the default IDs', () => {
+    const caps = waterHeaterCapIds(7);
+    assert.equal(caps.HEATING_MODE, 87);
+    assert.equal(caps.TARGET_TEMP, 231);
+    assert.equal(caps.CURRENT_TEMP, 266);
+    assert.equal(caps.AWAY_MODE, 227);
+    assert.equal(caps.BOOST, 165);
+    assert.equal(caps.ON_OFF, null);
+  });
+
+  it('keeps the default IDs for every other product', () => {
+    const caps = waterHeaterCapIds(undefined);
+    assert.equal(caps.HEATING_MODE, 1);
+    assert.equal(caps.TARGET_TEMP, 2);
+    assert.equal(caps.ON_OFF, 3);
+    assert.deepEqual(waterHeaterCapIds(99), caps);
+  });
+
+  it('reads temperature, setpoint, mode, boost and away from the product block', async () => {
+    const ctx = fakeCtx();
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.values.measure_temperature, 49.29);
+    assert.equal(ctx.values.target_temperature, 50);
+    assert.equal(ctx.values.cozytouch_heating_mode, 'prog');
+    assert.equal(ctx.values.cozytouch_boost, false);
+    assert.equal(ctx.values.cozytouch_away_mode, false);
+    assert.deepEqual(ctx.options.target_temperature, { min: 40, max: 65 });
+  });
+
+  it('never looks for a capability the product does not have', async () => {
+    const ctx = fakeCtx();
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.reads.includes(3), false, 'read the on/off capability');
+    assert.equal(ctx.reads.includes(null), false, 'read a null capability');
+  });
+
+  it('shows away as on while an away period is only booked (2)', async () => {
+    const ctx = fakeCtx();
+    ctx.getCapabilities = async () => [{ capabilityId: 227, value: '2' }];
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.values.cozytouch_away_mode, true);
+  });
+
+  it('ignores a setpoint range that cannot be degrees', async () => {
+    const ctx = fakeCtx();
+    ctx.getCapabilities = async () => [
+      { capabilityId: 105301, value: '0' },
+      { capabilityId: 105304, value: '100' },
+    ];
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.options.target_temperature, undefined);
+  });
+
+  it('sets the mode without touching on/off, and refuses Off', async () => {
+    const ctx = fakeCtx();
+    const handler = new CozytouchHandler(ctx);
+    await handler.setMode('eco_plus');
+    assert.deepEqual(ctx.writes, [[87, '3']]);
+    await assert.rejects(() => handler.setMode('off'), /no off command/);
+  });
+
+  it('writes away mode on 227, not on the capability the API does not know', async () => {
+    const ctx = fakeCtx();
+    await new CozytouchHandler(ctx).setAwayMode(true);
+    assert.deepEqual(ctx.writes, [[227, '1']]);
+  });
+
+  it('falls back to the mirrored setpoint when the first one is refused', async () => {
+    const refused = Object.assign(new Error('API request failed: 404'), {
+      statusCode: 404,
+      body: '{"type":"NoCapabilityImplementationFound"}',
+    });
+    const ctx = fakeCtx({ failWrites: { 231: refused } });
+    await new CozytouchHandler(ctx).setTargetTemperature(52);
+    assert.deepEqual(ctx.writes, [[231, 52], [22, 52]]);
+  });
+
+  it('offers Manual, Eco and Program but not Off', () => {
+    const modes = supportedWaterHeaterModes({ protocol: 'cozytouch', hasOnOff: false });
+    assert.deepEqual(modes, ['manual', 'eco_plus', 'prog']);
+  });
+});
+
+// A Magellan tank whose on/off capability is mapped but refused by the product:
+// "There is no implementation for capability Id 3 on product Id 7".
 describe('Magellan water heater without an on/off capability', () => {
   const unsupported = () => Object.assign(new Error('API request failed: 404'), {
     statusCode: 404,
