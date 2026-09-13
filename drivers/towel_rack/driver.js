@@ -7,6 +7,7 @@ const {
   isPassCozytouch,
   isAdjustableSetpointElectricalHeater,
   isZoneControlDevice,
+  isPassApcHeatPumpDevice,
 } = require('../../lib/helpers/overkiz-device');
 
 class TowelRackDriver extends CozyTouchDriver {
@@ -18,6 +19,7 @@ class TowelRackDriver extends CozyTouchDriver {
           isPassCozytouch(dev)
           || isAdjustableSetpointElectricalHeater(dev)
           || isZoneControlDevice(dev)
+          || isPassApcHeatPumpDevice(dev)
         ) {
           return false;
         }
@@ -31,14 +33,14 @@ class TowelRackDriver extends CozyTouchDriver {
     });
   }
 
-  _mapCozyTouchDevice(dev, username, password) {
-    const base = super._mapCozyTouchDevice(dev, username, password);
+  _mapCozyTouchDevice(dev) {
+    const base = super._mapCozyTouchDevice(dev);
     base.capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_heating_mode', 'onoff'];
     return base;
   }
 
-  _mapOverkizDevice(dev, username, password) {
-    const base = super._mapOverkizDevice(dev, username, password);
+  _mapOverkizDevice(dev) {
+    const base = super._mapOverkizDevice(dev);
     base.capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_heating_mode', 'onoff'];
     return base;
   }

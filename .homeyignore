@@ -12,3 +12,4 @@ LICENSE
 .eslintrc.json
 .vscode/
 tests/
+tools/

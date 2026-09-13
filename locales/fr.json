@@ -8,10 +8,12 @@
   },
   "errors": {
     "auth_failed": "Authentification échouée. Veuillez vérifier vos identifiants.",
+    "no_credentials": "Aucun compte Cozytouch enregistré. Ajoutez votre e-mail et votre mot de passe dans les réglages de l'application.",
     "connection_failed": "Impossible de se connecter à Cozytouch. Vérifiez votre connexion internet.",
     "command_failed": "Échec de l'envoi de la commande à l'appareil.",
     "no_protocol": "Aucun appareil trouvé sur les protocoles Cozytouch et Overkiz.",
     "zone_thermostat_mode_readonly": "Shogun Zone Control : cet affichage reprend le mode global du Shogun (toutes les zones). Pour le changer, utilisez l’unité principale.",
+    "hvac_mode_on_main_unit": "Pompe à chaleur : cet affichage reprend le mode chauffage/refroidissement de toute l’installation. Pour le changer, utilisez l’appareil « unité principale ».",
     "mode_not_supported": "Cet appareil ne prend pas en charge ce mode de chauffage.",
     "boost_not_supported": "Cet appareil ne prend pas en charge le mode boost.",
     "capability_not_supported": "Cette commande n'existe pas sur ce modèle d'appareil.",
