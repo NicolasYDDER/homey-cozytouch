@@ -229,6 +229,44 @@ def zone_control():
     return c
 
 
+def heat_pump():
+    """Air/water heat pump (Alféa): outdoor unit plus the indoor tank module."""
+    c = Canvas()
+
+    # Outdoor unit on the left: fan grille and exchanger fins
+    c.rect(90, 380, 470, 700, radius=28, fill=BODY, outline=EDGE, width=5)
+    c.ellipse(120, 410, 330, 620, fill=WHITE, outline=DETAIL, width=5)
+    for dx, dy in ((-62, -24), (36, -55), (31, 60)):
+        c.line(225, 515, 225 + dx, 515 + dy, fill=DETAIL, width=8)
+    for i in range(4):
+        x = 360 + i * 26
+        c.line(x, 415, x, 615, fill=DETAIL, width=5)
+    c.rect(120, 640, 440, 680, radius=14, fill=BODY_DARK, outline=EDGE, width=4)
+    c.rect(140, 700, 200, 760, radius=8, fill=BODY_DARK, outline=EDGE, width=4)
+    c.rect(360, 700, 420, 760, radius=8, fill=BODY_DARK, outline=EDGE, width=4)
+
+    # Water pipes running to the indoor module
+    c.line(470, 470, 610, 470, fill=DETAIL, width=12)
+    c.line(470, 545, 610, 545, fill=DETAIL, width=12)
+
+    # Indoor hydraulic module with its hot water tank
+    c.rect(600, 180, 910, 780, radius=40, fill=BODY, outline=EDGE, width=5)
+    c.line(625, 400, 885, 400, fill=EDGE, width=4)
+    # Control panel above the tank section
+    c.rect(645, 230, 865, 360, radius=22, fill=WHITE, outline=EDGE, width=5)
+    c.rect(670, 258, 840, 312, radius=10, fill=SCREEN)
+    c.line(692, 285, 762, 285, fill=WHITE, width=8)
+    c.ellipse(675, 322, 711, 350, fill=BODY_DARK, outline=DETAIL, width=4)
+    c.led(830, 336, 11)
+    # Tank body seam and feet
+    c.line(625, 700, 885, 700, fill=EDGE, width=4)
+    c.rect(650, 780, 710, 820, radius=8, fill=BODY_DARK, outline=EDGE, width=4)
+    c.rect(800, 780, 860, 820, radius=8, fill=BODY_DARK, outline=EDGE, width=4)
+
+    c.ground_shadow(500, 838, 430, 14)
+    return c
+
+
 DRIVERS = {
     "climate": climate,
     "heater": heater,
@@ -236,6 +274,7 @@ DRIVERS = {
     "towel_rack": towel_rack,
     "pass_cozytouch": pass_cozytouch,
     "zone_control": zone_control,
+    "heat_pump": heat_pump,
 }
 
 

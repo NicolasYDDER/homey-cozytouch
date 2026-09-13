@@ -260,7 +260,9 @@ class CozyTouchApp extends Homey.App {
       overkizDevices.forEach((dev) => {
         dev._protocol = 'overkiz';
         const type = overkizApi.getDeviceType(dev);
-        this.log(`  - "${dev.label}" | deviceURL=${dev.deviceURL} | uiClass=${dev.uiClass} | type=${type}`);
+        // controllableName is the identifier support is keyed on: uiClass alone
+        // cannot tell an Alféa Pass APC circuit from a plain electric heater.
+        this.log(`  - "${dev.label}" | deviceURL=${dev.deviceURL} | uiClass=${dev.uiClass} | controllableName=${dev.controllableName || '?'} | widget=${dev.widget || '?'} | type=${type}`);
         allDevices.push(dev);
       });
     } catch (err) {

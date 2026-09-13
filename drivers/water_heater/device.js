@@ -4,11 +4,14 @@ const CozyTouchDevice = require('../../lib/CozyTouchDevice');
 const WaterHeaterCozytouchHandler = require('./handlers/cozytouch');
 const WaterHeaterOverkizHandler = require('./handlers/overkiz');
 const WaterHeaterOverkizMblHandler = require('./handlers/overkiz-mbl');
+const WaterHeaterOverkizPassApcHandler = require('./handlers/overkiz-pass-apc');
 const {
   supportedWaterHeaterModes,
   resolveWaterHeaterMode,
 } = require('../../lib/helpers/water-heater-modes');
 const { waterHeaterCapIds } = require('../../lib/constants/cozytouch-mappings');
+const { isPassApcDhw } = require('../../lib/helpers/overkiz-device');
+const { pickCommand } = require('../../lib/helpers/overkiz-commands');
 
 const POST_COMMAND_REFRESH_DELAY_MS = 3000;
 
@@ -60,9 +63,15 @@ class WaterHeaterDevice extends CozyTouchDevice {
     if (this._protocol !== 'overkiz') {
       return new WaterHeaterCozytouchHandler(ctx);
     }
-    return isMblWidget(store)
-      ? new WaterHeaterOverkizMblHandler(ctx)
-      : new WaterHeaterOverkizHandler(ctx);
+    if (isMblWidget(store)) {
+      return new WaterHeaterOverkizMblHandler(ctx);
+    }
+    // Tank of a Pass APC heat pump (Alféa Duo): same DHW mode values as a
+    // standalone Overkiz tank, different command names.
+    if (isPassApcDhw(store)) {
+      return new WaterHeaterOverkizPassApcHandler(ctx);
+    }
+    return new WaterHeaterOverkizHandler(ctx);
   }
 
   _registerCapabilityListeners() {
@@ -113,12 +122,27 @@ class WaterHeaterDevice extends CozyTouchDevice {
     return {
       protocol,
       isMbl: isMblWidget(store),
-      // Magellan products without an on/off capability (AQUEO ACI HYB) cannot
-      // be switched off at all: leave Off out of the picker instead of offering
-      // a command the API refuses.
-      hasOnOff: protocol !== 'cozytouch'
-        || Boolean(waterHeaterCapIds(store.productId).ON_OFF),
+      hasOnOff: this._hasOnOffCommand(store, protocol),
     };
+  }
+
+  /**
+   * Whether the tank can be switched off at all. Magellan products without an
+   * on/off capability (AQUEO ACI HYB) cannot, and a Pass APC tank only can when
+   * it advertises setDHWOnOffState — leave Off out of the picker rather than
+   * offering a command the device refuses.
+   */
+  _hasOnOffCommand(store, protocol) {
+    if (protocol === 'cozytouch') {
+      return Boolean(waterHeaterCapIds(store.productId).ON_OFF);
+    }
+    if (isPassApcDhw(store)) {
+      return Boolean(pickCommand(
+        store.overkizCommands,
+        WaterHeaterOverkizPassApcHandler.DHW_COMMANDS.SET_ON_OFF,
+      ));
+    }
+    return true;
   }
 
   _supportedModes() {

@@ -7,6 +7,7 @@ const {
   isPassCozytouch,
   isZoneControlDevice,
   isAdjustableSetpointElectricalHeater,
+  isPassApcHeatPumpDevice,
 } = require('../../lib/helpers/overkiz-device');
 
 class HeaterDriver extends CozyTouchDriver {
@@ -14,7 +15,11 @@ class HeaterDriver extends CozyTouchDriver {
   _filterDevices(allDevices) {
     return allDevices.filter((dev) => {
       if (dev._protocol === 'overkiz') {
-        if (isPassCozytouch(dev) || isZoneControlDevice(dev)) return false;
+        // Pass APC heat pump units and circuits share uiClass HeatingSystem with
+        // plain heaters, but speak the Pass APC protocol and have their own driver.
+        if (isPassCozytouch(dev) || isZoneControlDevice(dev) || isPassApcHeatPumpDevice(dev)) {
+          return false;
+        }
         const overkizApi = new OverkizAPI({});
         const type = overkizApi.getDeviceType(dev);
         return type === 'HEATER' || type === 'THERMOSTAT';

@@ -147,13 +147,16 @@ You will see these device types to choose from:
 | **Radiator / Heating** | Gas boilers (Naema, Naia), radiators, thermostats, and Ipala adjustable-setpoint heaters |
 | **Water Heater** | Domestic hot water tanks (Zeneo, Calypso, Vizengo, Lineo) |
 | **Towel Rack** | Electric towel dryers (Kelud, Asama, Kaoli) |
-| **Heat Pump / AC** | Heat pumps (Loria) and air conditioning units (Takao) |
+| **Heat Pump / AC** | Air-to-air heat pumps (Loria) and air conditioning units (Takao) |
+| **Heat Pump (Alféa / Pass APC)** | Air/water heat pumps: Alféa Extensa, Alféa Excellia, Hydrapac — main unit and heating circuits |
 | **Pass Cozytouch** | Atlantic Pass Cozytouch wall modules (heating level, no temperature setpoint) |
 | **Shogun Zone Control** | Shogun Zone Control main unit and heating/cooling zones |
 
 Select the type that matches your device and tap **Next**.
 
-> **Tip**: If you have multiple device types (e.g. a boiler and a water heater), you will need to repeat this process for each type. Zone Control pairs the main unit and zones in one go; zone temperature sensors are linked automatically and are not added as separate Homey devices.
+> **Tip**: If you have multiple device types (e.g. a boiler and a water heater), you will need to repeat this process for each type. Zone Control and Alféa heat pumps pair the main unit and the circuits in one go; temperature sensors are linked automatically and are not added as separate Homey devices.
+
+> **Alféa Duo owners**: the hot water tank of a Duo is a separate Homey device. Pair the heat pump under **Heat Pump (Alféa / Pass APC)**, then run the pairing again under **Water Heater** to add its tank.
 
 ### Step 4 - Credentials
 
@@ -282,6 +285,36 @@ Controls a Shogun Zone Control system (Overkiz): one **main unit** plus one Home
 - **Zone Mode** - Off, Manual, or Program
 - **Thermostat mode** - Read-only mirror of the main unit’s HVAC mode (used by Homey for heat/cool tile colors). Change HVAC mode on the **main unit**, not on a zone.
 
+### Heat Pump (Alféa / Pass APC)
+
+Controls an Atlantic air/water heat pump (Overkiz): **Alféa Extensa**, **Alféa Excellia**, **Hydrapac** and
+the other units the Cozytouch app shows as a heat pump with heating circuits. Pairing adds one Homey device
+for the **main unit** and one per **heating circuit** (for example "Plancher" for underfloor heating).
+Outside and room temperature probes are linked automatically and are not paired separately.
+
+#### Main unit
+
+- **On/Off** - On restores the last mode (or Heat); Off stops the heat pump
+- **HVAC Mode (Mode CVC)** - Off and Heat on a heating-only unit; Cool, Dehumidify and Automatic are also
+  offered when your heat pump is reversible
+- **Outside temperature** - Measured by the heat pump's outdoor probe
+
+#### Heating circuits
+
+- **On/Off** - On sets **Manual**; Off stops the circuit
+- **Target Temperature** / **Current Temperature** - Setpoint and measured room temperature for that circuit
+- **Circuit Mode** - Off, Manual, or Program (the schedule set in the Cozytouch app)
+- **Thermostat mode** - On a reversible unit only: read-only mirror of the main unit's mode, used by Homey
+  for the heat/cool tile colors. Change the mode on the **main unit**.
+
+#### Hot water (Duo models)
+
+The tank of a Duo is added under **Water Heater**, with the usual mode, setpoint, boost and away controls.
+
+> **Note**: Not every heat pump accepts every command. The app reads from your own heat pump which commands
+> it supports when you pair it, and a control the unit does not have shows an error naming it instead of
+> doing nothing. If a control you expect is missing, send a diagnostic report.
+
 ---
 
 ## Understanding Protocols
@@ -381,8 +414,9 @@ These can start a Flow:
 | Trigger | Description | Example Use |
 |---------|-------------|-------------|
 | **Temperature changed** | Fires when the measured temperature changes (any device with a temperature sensor) | Alert when temperature drops below 15 C |
-| **Heating mode changed** | Fires when heating mode changes (Radiator / Heating, Water Heater, Towel Rack) | Log mode changes |
+| **Heating mode changed** | Fires when heating mode changes (Radiator / Heating, Water Heater, Towel Rack, heat pump circuits) | Log mode changes |
 | **Pass Cozytouch mode changed** | Fires when Pass Mode changes | React to Comfort / Eco / Frost |
+| **HVAC mode changed** | Fires when a Heat Pump / AC or an Alféa main unit changes mode | Log heat/cool switches |
 | **Zone Control HVAC mode changed** | Fires when the main unit HVAC mode changes | Log heat/cool switches |
 | **Boost turned on** / **Boost turned off** | Fires when the water heater boost starts or stops | Notify when boost ends |
 | **Away mode turned on** / **Away mode turned off** | Fires when the water heater away mode starts or stops | Confirm the tank went to away mode |
@@ -393,14 +427,14 @@ These can be used as Flow actions:
 
 | Action | Description |
 |--------|-------------|
-| **Set heating mode** | Change to Off, Manual, Eco+, Program, or Auto (Radiator / Heating, Water Heater, Towel Rack) |
-| **Set HVAC mode** | Change to Off, Heat, Cool, Auto, Dry, or Fan Only (Heat Pump / AC) |
+| **Set heating mode** | Change to Off, Manual, Eco+, Program, or Auto (Radiator / Heating, Water Heater, Towel Rack, heat pump circuits) |
+| **Set HVAC mode** | Change to Off, Heat, Cool, Auto, Dry, or Fan Only (Heat Pump / AC, Alféa main unit) |
 | **Set Zone Control HVAC mode** | Change the main unit to Off, Heat, Cool, Dehumidify, or Automatic |
 | **Set Zone Control zone mode** | Change a zone to Off, Manual, or Program |
 | **Set Pass Cozytouch mode** | Change Pass Mode (Off, Frost Protection, Eco, Comfort -2/-1, Comfort) |
 | **Turn boost on or off** | Start or stop the water heater boost |
 | **Turn away mode on or off** | Start or stop the water heater away / absence mode |
-| **Set the target temperature** | Homey's built-in action — works on the water heater, radiators and zones |
+| **Set the target temperature** | Homey's built-in action — works on the water heater, radiators, zones and heat pump circuits |
 
 ### Available Conditions
 
@@ -408,13 +442,13 @@ These can be used to add logic to your Flows:
 
 | Condition | Description |
 |-----------|-------------|
-| **Heating mode is...** | Check if the current heating mode matches (Radiator / Heating, Water Heater, Towel Rack) |
+| **Heating mode is...** | Check if the current heating mode matches (Radiator / Heating, Water Heater, Towel Rack, heat pump circuits) |
 | **Zone Control HVAC mode is...** | Check the main unit HVAC mode |
 | **Zone mode is...** | Check a zone’s Off / Manual / Program mode |
 | **Boost is on** | Check whether the water heater boost is running |
 | **Away mode is on** | Check whether the water heater is in away mode |
 
-> **Note**: the **Set heating mode** card lists every mode used by the heating drivers, so it can offer a mode your tank has no command for. A water heater always accepts Off, Manual and Eco. Auto works on Overkiz tanks (on Égéo / MBL it is the same mode as Eco), Program works on Cozytouch tanks (e.g. Calypso connecté) — pick the wrong one and the card returns an error instead of silently doing nothing.
+> **Note**: the **Set heating mode** card lists every mode used by the heating drivers, so it can offer a mode your tank has no command for. A water heater always accepts Off, Manual and Eco. Auto works on Overkiz tanks (on Égéo / MBL it is the same mode as Eco), Program works on Cozytouch tanks (e.g. Calypso connecté) — pick the wrong one and the card returns an error instead of silently doing nothing. A heat pump circuit accepts Off, Manual and Program, and an Alféa main unit refuses Cool / Dehumidify / Automatic when it is a heating-only model.
 
 ### Example Flows
 

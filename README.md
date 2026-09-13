@@ -119,6 +119,7 @@ The app authenticates to **both** and discovers devices from each during pairing
 | `ClimateDevice` | `drivers/climate/device.js` | Heat pump/AC with HVAC modes, fan, and swing. |
 | `PassCozytouchDevice` | `drivers/pass_cozytouch/device.js` | Atlantic Pass Cozytouch wall modules. |
 | `ZoneControlDevice` | `drivers/zone_control/device.js` | Shogun Zone Control (main unit + heating/cooling zones). |
+| `HeatPumpDevice` | `drivers/heat_pump/device.js` | Pass APC heat pumps: Alféa / Excellia main unit + heating circuits. |
 | API routes | `api.js` | Settings page backend: status, test connection, credential management. |
 
 ---
@@ -410,7 +411,7 @@ The following devices have been validated with real hardware:
 | **Shogun Zone Control** | Main unit + heating/cooling zones | Overkiz | `zone_control` | Fully working (HVAC mode, zone temps/modes, on/off, tile heat/cool) |
 | **Sauter / Thermor Ipala** | Adjustable-setpoint radiator | Overkiz | `heater` | Fully working (mode, temperature, on/off) |
 
-Added from user reports, not yet validated on real hardware: **Calypso connecté 240L** (Magellan `modelId` 1658, paired under `water_heater` — its gateway answers on Cozytouch/Magellan only, the Overkiz side returns `No such user account`). See [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5).
+Added from user reports, not yet validated on real hardware: **Atlantic Alféa Extensa Duo A.I. 5 R32** (Magellan `modelId` 212, paired under `heat_pump` + `water_heater` — see the Pass APC heat pump section below) and **Calypso connecté 240L** (Magellan `modelId` 1658, paired under `water_heater` — its gateway answers on Cozytouch/Magellan only, the Overkiz side returns `No such user account`). See [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5).
 
 ### Heater / Boiler Driver
 
@@ -493,6 +494,43 @@ Dedicated driver `zone_control` (Overkiz Pass APC Zone Control stack).
 
 **Capabilities (zones)**: target temperature, measure temperature, zone mode (`cozytouch_heating_mode`: off/manual/prog), on/off, read-only `thermostat_mode` mirrored from the main unit (Homey tile heat/cool colors)
 
+### Pass APC Heat Pump Driver
+
+Dedicated driver `heat_pump` (Overkiz Pass APC heat pump stack): Atlantic Alféa Extensa / Excellia,
+Hydrapac and the other air/water heat pumps that speak the same `io:PassAPC*` protocol as the Shogun.
+
+Overkiz splits one heat pump into several endpoints of the same `io://gateway/deviceId#index` stack.
+Endpoint indexes differ per product, so every role is detected on its component (or widget) name and
+siblings are linked by name, never by a fixed offset:
+
+| Role | Overkiz controllableName / widget | Driver | What it controls |
+|------|-----------------------------------|--------|------------------|
+| Main unit | `AtlanticPassAPCHeatPumpMainComponent` / `AtlanticPassAPCHeatPump` | `heat_pump` | System mode (`cozytouch_hvac_mode`), on/off, outside temperature |
+| Heating circuit | `AtlanticPassAPCHeating[AndCooling]ZoneComponent` / `AtlanticPassAPCHeatingZone`, `AtlanticPassAPCHeatingAndCoolingZone` | `heat_pump` | Setpoint, circuit mode (off/manual/prog), on/off |
+| Hot water tank (Duo) | `AtlanticPassAPCDHWComponent` / `AtlanticPassAPCDHW` | `water_heater` | DHW mode, setpoint, boost, away |
+| Outside probe | `AtlanticPassAPCOutsideTemperatureSensor` | — | Read by the main unit, not paired |
+| Circuit probe | `AtlanticPassAPCZoneTemperatureSensor` | — | Read by its circuit, not paired |
+| Energy sensor | `TotalElectricalEnergyConsumptionSensor` | — | Not exposed yet |
+
+**Capabilities (main unit)**: `cozytouch_hvac_mode`, on/off, `measure_temperature` (outside temperature,
+only when the stack has an outside probe)
+
+**Capabilities (circuits)**: target temperature (16–30 °C), measure temperature, circuit mode
+(`cozytouch_heating_mode`: off/manual/prog), on/off, and read-only `thermostat_mode` mirrored from the
+main unit **only on a reversible stack**
+
+**Command names come from the device, not from the model.** The Atlantic range keeps the protocol but not
+the command names — one circuit takes `setHeatingTargetTemperature`, another only advertises
+`setDerogatedTargetTemperature`, and a heating-only unit has no `setHeatingCoolingAutoSwitch` at all.
+`lib/helpers/overkiz-commands.js` snapshots each endpoint's `definition.commands` into the device store at
+pairing time and picks the first name the device actually accepts; a control whose command is missing fails
+with a message naming it instead of sending something the heat pump refuses. Cooling support is detected
+the same way, so an Extensa is not offered cool/dry/auto modes it cannot do.
+
+The heat pump is also announced on Magellan (`modelId` 212 for the Extensa Duo A.I.). It is deliberately
+**not** mapped in `MODEL_TYPES`: pairing it there would create a second tile for the same appliance, on a
+protocol whose capability IDs for this product are unknown. The Overkiz endpoints are the supported ones.
+
 ### Ipala (heater driver)
 
 Adjustable-setpoint radiators stay on the `heater` driver (no dedicated driver).
@@ -539,6 +577,7 @@ homey-cozytouch/
 │   └── helpers/
 │       ├── discovery-report.js         # Names found devices in pairing errors
 │       ├── magellan-capabilities.js    # Capability payload: lookup, dump, API errors
+│       ├── overkiz-commands.js         # Which commands an endpoint advertises
 │       ├── overkiz-device.js           # Widget / controllableName detection
 │       └── water-heater-modes.js       # Modes a tank accepts, per protocol
 │
@@ -561,7 +600,8 @@ homey-cozytouch/
 │   │   ├── handlers/
 │   │   │   ├── cozytouch.js            # Magellan cap IDs (mode, boost, away)
 │   │   │   ├── overkiz.js              # Overkiz DHW commands, absence mode
-│   │   │   └── overkiz-mbl.js          # Égéo / modbuslink tanks (setDHWMode)
+│   │   │   ├── overkiz-mbl.js          # Égéo / modbuslink tanks (setDHWMode)
+│   │   │   └── overkiz-pass-apc.js     # Tank of a Pass APC heat pump (Alféa Duo)
 │   │   └── assets/icon.svg
 │   │
 │   ├── climate/
@@ -586,11 +626,20 @@ homey-cozytouch/
 │   │   ├── handlers/
 │   │   └── assets/icon.svg
 │   │
-│   └── zone_control/
-│       ├── device.js
-│       ├── driver.js
+│   ├── zone_control/
+│   │   ├── device.js
+│   │   ├── driver.js
+│   │   ├── constants.js
+│   │   ├── handlers/
+│   │   └── assets/icon.svg
+│   │
+│   └── heat_pump/
+│       ├── device.js                   # Thin shell: main unit vs circuit role
+│       ├── driver.js                   # Filters the Pass APC heat pump stack
 │       ├── constants.js
 │       ├── handlers/
+│       │   ├── overkiz-main.js         # System mode, outside probe
+│       │   └── overkiz-zone.js         # Circuit setpoint, mode, on/off
 │       └── assets/icon.svg
 
 Pairing uses Homey's system `login_credentials` template (no per-driver HTML).
@@ -751,8 +800,9 @@ Varies by model. Below are the known mappings:
 | Trigger | Description | Token |
 |---------|-------------|-------|
 | Temperature changed | Fires when measured temperature changes | `temperature` (number) |
-| Heating mode changed | Fires when heating mode changes | `mode` (string) |
+| Heating mode changed | Fires when heating mode changes (heaters, tanks, towel racks, heat pump circuits) | `mode` (string) |
 | Pass Cozytouch mode changed | Fires when the Pass module level changes | `level` (string) |
+| HVAC mode changed | Fires when a climate or heat pump main unit mode changes | `mode` (string) |
 | Zone Control HVAC mode changed | Fires when the Shogun main unit mode changes | `mode` (string) |
 | Boost turned on / off | Fires when boost starts or stops (water heater) | — |
 | Away mode turned on / off | Fires when away mode starts or stops (water heater) | — |
@@ -762,7 +812,7 @@ Varies by model. Below are the known mappings:
 | Action | Description | Parameters |
 |--------|-------------|------------|
 | Set heating mode | Change the heating mode | `mode`: off, manual, eco_plus, prog, auto |
-| Set HVAC mode | Change the HVAC mode (climate only) | `mode`: off, heat, cool, auto, dry, fan_only |
+| Set HVAC mode | Change the HVAC mode (climate, heat pump main unit) | `mode`: off, heat, cool, auto, dry, fan_only |
 | Set Zone Control HVAC mode | Change the Shogun main unit mode | `mode`: off, heat, cool, dry, auto |
 | Set Zone Control zone mode | Change a Shogun zone mode | `mode`: off, manual, prog |
 | Set Pass Cozytouch mode | Change the Pass module level | `level`: off, frostprotection, eco, comfort-2, comfort-1, comfort |
@@ -775,13 +825,13 @@ Target temperature has no app card: Homey's built-in **Set the target temperatur
 
 | Condition | Description | Parameters |
 |-----------|-------------|------------|
-| Heating mode is... | Check current heating mode | `mode`: off, manual, eco_plus, prog, auto |
+| Heating mode is... | Check current heating mode (incl. heat pump circuits) | `mode`: off, manual, eco_plus, prog, auto |
 | Zone Control HVAC mode is... | Check the Shogun main unit mode | `mode`: off, heat, cool, dry, auto |
 | Zone mode is... | Check a Shogun zone mode | `mode`: off, manual, prog |
 | Boost is on | Check whether boost is running (water heater) | — |
 | Away mode is on | Check whether away mode is on (water heater) | — |
 
-Modes a device has no command for are rejected with an error instead of being silently ignored: a water heater accepts Off / Manual / Eco (+ Auto except on Égéo MBL tanks, where Auto is the same as Eco), not Program.
+Modes a device has no command for are rejected with an error instead of being silently ignored: a water heater accepts Off / Manual / Eco (+ Auto except on Égéo MBL tanks, where Auto is the same as Eco), not Program; a heat pump circuit accepts Off / Manual / Program, and a heating-only heat pump refuses Cool / Dry / Auto.
 
 ### Flow Examples
 
