@@ -121,7 +121,9 @@ class CozyTouchApp extends Homey.App {
   }
 
   /**
-   * Saved Cozytouch account from app settings, or null.
+   * Saved Cozytouch account from app settings — the single place the app keeps
+   * the credentials. Devices and drivers read them from here rather than
+   * storing their own copy.
    * @returns {{ username: string, password: string } | null}
    */
   getCredentials() {
@@ -148,8 +150,8 @@ class CozyTouchApp extends Homey.App {
   }
 
   /**
-   * Remove saved credentials and reset cached API clients.
-   * Paired devices keep working (their own data). Next pairing shows the login form.
+   * Remove saved credentials and reset cached API clients. Paired devices stop
+   * updating until an account is saved again — they hold no copy of their own.
    */
   clearCredentials() {
     this.homey.settings.unset('credentials');

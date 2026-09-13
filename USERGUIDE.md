@@ -92,7 +92,7 @@ This is useful for troubleshooting: if a device you expect isn't showing up duri
 
 Tap **Clear** to remove the account from app Settings.
 
-- Already paired devices **keep working** (they still have their own login).
+- App Settings is the **only** place the app keeps your email and password, so paired devices **stop updating** until an account is saved again. They go unavailable with *No Cozytouch account saved* and start again by themselves as soon as you save one.
 - The **next time you add a device**, Homey will show the login form again.
 - After a successful login, the account is saved to Settings once more.
 

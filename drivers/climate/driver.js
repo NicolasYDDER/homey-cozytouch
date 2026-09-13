@@ -21,8 +21,8 @@ class ClimateDriver extends CozyTouchDriver {
     });
   }
 
-  _mapCozyTouchDevice(dev, username, password) {
-    const base = super._mapCozyTouchDevice(dev, username, password);
+  _mapCozyTouchDevice(dev) {
+    const base = super._mapCozyTouchDevice(dev);
     const cozyApi = new CozyTouchAPI({});
     const type = cozyApi.getDeviceType(dev.modelId);
     const hvacModes = cozyApi.getHvacModes(dev.modelId);
@@ -39,8 +39,8 @@ class ClimateDriver extends CozyTouchDriver {
     return base;
   }
 
-  _mapOverkizDevice(dev, username, password) {
-    const base = super._mapOverkizDevice(dev, username, password);
+  _mapOverkizDevice(dev) {
+    const base = super._mapOverkizDevice(dev);
     base.capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_hvac_mode', 'onoff'];
     return base;
   }

@@ -134,7 +134,7 @@ The app provides a settings page accessible from **Homey Settings > Apps > Atlan
 | `GET` | `/api/status` | Returns current auth status for both protocols |
 | `POST` | `/api/test-connection` | Tests credentials against both APIs, returns device lists |
 | `POST` | `/api/save-credentials` | Saves credentials to Homey settings storage |
-| `DELETE` | `/api/clear-credentials` | Removes saved credentials |
+| `POST` | `/api/clear-credentials` | Removes saved credentials |
 
 ### Features
 
@@ -149,6 +149,8 @@ The app provides a settings page accessible from **Homey Settings > Apps > Atlan
 ### Settings Storage
 
 Credentials are stored using `homey.settings` (encrypted local storage on the Homey Pro). The key is `credentials` with the structure `{ username, password }`.
+
+This is the **only** place the app keeps them. A paired device's `data` object holds identifiers only (`id`, `accountDeviceId`), so a device that gets logged or exported carries no credentials; `CozyTouchDevice` reads the account from app settings on init. Devices paired before 1.3.7 still hold a copy in their immutable `data` — the first start after the update moves it into app settings and the app stops reading it. Clearing the account therefore leaves devices unavailable until one is saved again, at which point they start themselves.
 
 ---
 
@@ -597,8 +599,11 @@ Pairing uses Homey's system `login_credentials` template (no per-driver HTML).
 │   ├── en.json
 │   └── fr.json
 │
-└── assets/
-    └── icon.svg                        # App icon
+├── assets/
+│   └── icon.svg                        # App icon
+│
+└── tools/
+    └── generate-driver-images.py       # Redraws the driver store images (not shipped)
 ```
 
 ### Data Flow

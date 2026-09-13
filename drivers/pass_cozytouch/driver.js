@@ -12,8 +12,8 @@ class PassCozytouchDriver extends CozyTouchDriver {
     });
   }
 
-  _mapOverkizDevice(dev, username, password) {
-    const base = super._mapOverkizDevice(dev, username, password);
+  _mapOverkizDevice(dev) {
+    const base = super._mapOverkizDevice(dev);
     base.capabilities = ['cozytouch_pass_level', 'onoff'];
     return base;
   }

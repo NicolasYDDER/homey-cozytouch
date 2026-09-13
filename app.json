@@ -1,6 +1,6 @@
 {
   "id": "com.nicolasydder.cozytouch",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -11,8 +11,8 @@
     "fr": "Atlantic Cozytouch"
   },
   "description": {
-    "en": "Control your Atlantic heating devices via Cozytouch",
-    "fr": "Contrôlez vos appareils Atlantic via Cozytouch"
+    "en": "Warm rooms and hot water, exactly when your home needs them",
+    "fr": "Des pièces chaudes et de l'eau chaude, exactement quand votre maison en a besoin"
   },
   "category": [
     "climate"

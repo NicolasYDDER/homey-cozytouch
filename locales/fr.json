@@ -8,6 +8,7 @@
   },
   "errors": {
     "auth_failed": "Authentification échouée. Veuillez vérifier vos identifiants.",
+    "no_credentials": "Aucun compte Cozytouch enregistré. Ajoutez votre e-mail et votre mot de passe dans les réglages de l'application.",
     "connection_failed": "Impossible de se connecter à Cozytouch. Vérifiez votre connexion internet.",
     "command_failed": "Échec de l'envoi de la commande à l'appareil.",
     "no_protocol": "Aucun appareil trouvé sur les protocoles Cozytouch et Overkiz.",
