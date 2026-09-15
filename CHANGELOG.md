@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.3] - 2026-09-15
+
+### Fixed
+- **Brief "Carte indisponible" flashes in the Flow editor (picker and placed cards).** Each sync poll was calling `setCapabilityOptions` (min/max setpoint) and `setAvailable()` even when nothing had changed. Homey treats `setCapabilityOptions` as expensive and can rebuild device cards for a fraction of a second — long enough to show "Carte indisponible" / drop a device from the picker, too short to be a real API `setUnavailable` (which lasts until the next successful poll). Options are now applied only when min/max/step (etc.) actually differ, and `setAvailable()` only when the device was unavailable. Side effect: less Homey work per sync cycle (better poll performance). Poll failures and real `setUnavailable` calls are counted in the log (`Poll failed (#n)`, `setUnavailable (#n)`) so a short UI flash can be told apart from a connection error.
+
 ## [1.4.2] - 2026-09-15
 
 ### Added
