@@ -177,8 +177,9 @@ The app connects to both CozyTouch and Overkiz clouds and searches for compatibl
 ### Step 5 - Select Your Devices
 
 1. A list of compatible devices found on your account will appear
-2. **Check the box** next to each device you want to add
-3. Tap **Next** to confirm
+2. Devices **already added to Homey** are hidden from that list (including ones you renamed). If you added them before app version 1.3.7, Homey used to show them again under their original cloud name — that is fixed from 1.4.4.
+3. **Check the box** next to each device you want to add
+4. Tap **Next** to confirm
 
 ### Step 6 - Done!
 
@@ -543,7 +544,7 @@ THEN    Set Pass Cozytouch mode to Eco (for device: Hall Pass)
 
 ### Adding Devices from a Second Account
 
-When adding devices, log in with the other Cozytouch account if Homey shows the login form. Devices from different accounts can coexist; each keeps the credentials used when it was paired.
+The app keeps **one** Cozytouch account in Settings. To add devices from another account, save that account under App Configuration (or log in with it when Homey shows the pairing form), then pair. Switch the saved account back afterwards if you need the first one for syncing existing devices.
 
 ---
 
