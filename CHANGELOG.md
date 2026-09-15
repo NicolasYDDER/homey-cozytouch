@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2026-09-15
+
+### Fixed
+- **The hot water tank of an Alféa Extensa S Duo 8 now reads and controls correctly.** Reported from a user diagnostic log: the tank (Magellan `modelId` 1376, `productId` 47, model name "Calypso Split") answered on a capability block the app did not know, so it logged "None of the capabilities this app reads exist on this device" and every temperature/mode/boost read and write silently did nothing. Added a `productId`-specific block to `WATER_HEATER_CAP_IDS_BY_PRODUCT` (same mechanism as the AQUEO ACI HYB fix in 1.3.6), mapped from the reported capability IDs and cross-checked against [gduteil/cozytouch](https://github.com/gduteil/cozytouch). Away mode is not offered on this product: the only related capability it reports is a start/stop timestamp pair, not a boolean switch, and mapping it would silently write the wrong thing.
+
 ## [1.4.0] - 2026-09-13
 
 ### Added
