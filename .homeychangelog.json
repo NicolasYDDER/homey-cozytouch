@@ -1,4 +1,8 @@
 {
+  "1.4.3": {
+    "en": "Reduces brief “card unavailable” flashes in the Flow editor (device picker and cards already placed in a flow). Homey was being asked to refresh device options and availability on every sync even when nothing had changed; those updates now run only when needed. Sync cycles also do less work as a result. Real connection failures are still marked unavailable and counted in the app log.",
+    "fr": "Réduit les brefs affichages « Carte indisponible » dans l’éditeur de Flow (liste des appareils et cartes déjà posées). Homey était sollicité pour rafraîchir les options et la disponibilité à chaque synchronisation même sans changement ; ces mises à jour ne partent plus que lorsqu’elles sont nécessaires. Les cycles de sync font aussi moins de travail. Les vraies coupures de connexion restent marquées indisponibles et sont comptées dans le journal de l’application."
+  },
   "1.4.2": {
     "en": "The app log now records when a value read from your Cozytouch account actually changes (boost, away mode, setpoint...), not just once when a device is added. This is diagnostic-only and changes nothing you can see or do — it is here to make the next diagnostic report useful for tanks whose boost or setpoint does not seem to update.",
     "fr": "Le journal de l'application note désormais quand une valeur lue depuis votre compte Cozytouch change réellement (boost, mode absence, consigne...), et non plus une seule fois à l'ajout de l'appareil. Ceci ne concerne que le diagnostic et ne change rien de visible ou d'utilisable — c'est pour rendre utile le prochain rapport de diagnostic sur les ballons dont le boost ou la consigne ne semblent pas se mettre à jour."
