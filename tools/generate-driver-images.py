@@ -179,54 +179,94 @@ def towel_rack():
 
 
 def pass_cozytouch():
-    """Pass Cozytouch radio module: small wall box with a pairing button."""
+    """Pass Cozytouch: slim io-homecontrol radio module with mounting holes."""
     c = Canvas()
 
-    c.rect(285, 330, 715, 670, radius=48, fill=BODY, outline=EDGE, width=5)
-    # Pairing button
-    c.ellipse(430, 425, 570, 565, fill=WHITE, outline=EDGE, width=5)
-    c.ellipse(470, 465, 530, 525, fill=BODY_DARK, outline=DETAIL, width=4)
-    c.led(500, 615, 12)
-    # Radio waves off the top corner, for the wireless link to the heater
-    for r in (55, 95, 135):
-        c.draw.arc(
-            c._box(700 - r, 345 - r, 700 + r, 345 + r),
-            start=-75,
-            end=5,
-            fill=DETAIL,
-            width=5 * SUPERSAMPLE,
-        )
-    # Cable stub to the heater
-    c.rect(475, 665, 525, 760, radius=12, fill=BODY_DARK, outline=EDGE, width=4)
+    # Slim vertical body
+    c.rect(330, 140, 670, 860, radius=40, fill=BODY, outline=EDGE, width=5)
+    # Diagonal fixing holes (top-left / bottom-right)
+    c.ellipse(375, 195, 445, 265, fill=WHITE, outline=DETAIL, width=5)
+    c.ellipse(555, 735, 625, 805, fill=WHITE, outline=DETAIL, width=5)
+    # Embossed io-homecontrol plate
+    c.rect(400, 360, 600, 560, radius=28, fill=WHITE, outline=EDGE, width=5)
+    # Stylized "io": dotted i + o ring
+    c.ellipse(430, 400, 465, 435, fill=SCREEN, outline=None, width=0)
+    c.rect(440, 445, 455, 520, radius=7, fill=SCREEN, outline=None, width=0)
+    c.ellipse(495, 410, 565, 500, fill=WHITE, outline=SCREEN, width=6)
+    # homecontrol wordmark as a simple bar
+    c.line(430, 595, 570, 595, fill=DETAIL, width=5)
+    c.led(500, 680, 11)
 
-    c.ground_shadow(500, 790, 190, 13)
+    c.ground_shadow(500, 890, 190, 13)
     return c
 
 
 def zone_control():
-    """Shogun Zone Control: wall controller showing per-zone bars."""
+    """Shogun Zone Control: répartiteur + tall controller + square sonde stacked."""
     c = Canvas()
+    charcoal = SCREEN
+    port_inner = (70, 76, 84)
 
-    c.rect(230, 250, 770, 700, radius=40, fill=BODY, outline=EDGE, width=5)
-    # Screen
-    c.rect(280, 300, 720, 530, radius=20, fill=SCREEN)
-    # Three zone bars, the active one in brand red
-    bars = ((320, 150), (440, 105), (560, 60))
-    for i, (x, height) in enumerate(bars):
-        top = 490 - height
-        fill = ACCENT if i == 0 else (108, 118, 128)
-        c.rect(x, top, x + 80, 490, radius=8, fill=fill, outline=None, width=0)
-    c.line(300, 500, 700, 500, fill=(108, 118, 128), width=4)
-    # Buttons
-    c.ellipse(300, 570, 370, 640, fill=WHITE, outline=EDGE, width=5)
-    c.line(320, 605, 350, 605, fill=DETAIL, width=7)
-    c.ellipse(630, 570, 700, 640, fill=WHITE, outline=EDGE, width=5)
-    c.line(650, 605, 680, 605, fill=DETAIL, width=7)
-    c.line(665, 590, 665, 620, fill=DETAIL, width=7)
-    c.led(500, 605, 12)
+    # Répartiteur — silver lid / charcoal body / 3 circular duct collars
+    c.rect(40, 300, 610, 700, radius=28, fill=charcoal, outline=EDGE, width=5)
+    c.rect(40, 300, 610, 400, radius=28, fill=BODY, outline=EDGE, width=5)
+    c.line(60, 400, 590, 400, fill=EDGE, width=4)
 
-    c.ground_shadow(500, 730, 250, 14)
+    for cx in (145, 325, 505):
+        c.ellipse(cx - 75, 445, cx + 75, 595, fill=BODY_DARK, outline=DETAIL, width=5)
+        c.ellipse(cx - 54, 466, cx + 54, 574, fill=port_inner, outline=DETAIL, width=4)
+        c.line(cx - 46, 520, cx + 46, 520, fill=DETAIL, width=4)
+
+    c.rect(75, 700, 140, 760, radius=8, fill=BODY_DARK, outline=EDGE, width=4)
+    c.rect(510, 700, 575, 760, radius=8, fill=BODY_DARK, outline=EDGE, width=4)
+
+    # ── Tall wall controller (top right) ────────────────────────────
+    c.rect(700, 90, 940, 520, radius=26, fill=BODY, outline=EDGE, width=5)
+    # Square LCD centered in upper half
+    c.rect(755, 125, 885, 255, radius=12, fill=SCREEN)
+    # MENU — between screen and dial, upper-left
+    c.ellipse(720, 270, 765, 315, fill=WHITE, outline=EDGE, width=4)
+    # Scroll dial + center button
+    c.ellipse(755, 325, 885, 455, fill=WHITE, outline=EDGE, width=5)
+    c.ellipse(795, 365, 845, 415, fill=BODY, outline=DETAIL, width=4)
+    # Back button — lower-right of dial, with return arrow
+    c.ellipse(875, 435, 925, 485, fill=WHITE, outline=EDGE, width=4)
+    c.draw.arc(
+        c._box(886, 447, 914, 475),
+        start=200,
+        end=20,
+        fill=DETAIL,
+        width=4 * SUPERSAMPLE,
+    )
+    c.line(886, 453, 886, 467, fill=DETAIL, width=4)
+    c.line(886, 467, 896, 467, fill=DETAIL, width=4)
+    # io mark bottom-left
+    c.rect(720, 475, 765, 512, radius=8, fill=WHITE, outline=EDGE, width=3)
+    c.ellipse(728, 483, 742, 497, fill=SCREEN, outline=None, width=0)
+    c.ellipse(746, 485, 758, 505, fill=WHITE, outline=SCREEN, width=3)
+
+    # ── Square ambient sensor (bottom right) ────────────────────────
+    c.rect(700, 555, 940, 795, radius=22, fill=BODY, outline=EDGE, width=5)
+    # Screen centered upper half
+    c.rect(770, 585, 870, 655, radius=8, fill=SCREEN)
+    # House icon left of screen
+    c.rect(725, 598, 755, 640, radius=4, fill=WHITE, outline=DETAIL, width=3)
+    c.line(732, 628, 748, 628, fill=DETAIL, width=3)
+    # Round button right of screen
+    c.ellipse(885, 600, 920, 635, fill=WHITE, outline=EDGE, width=4)
+    # Round button left of split dial
+    c.ellipse(720, 690, 770, 740, fill=WHITE, outline=EDGE, width=4)
+    # Split up/down circular control
+    c.ellipse(790, 670, 900, 780, fill=WHITE, outline=EDGE, width=5)
+    c.line(800, 725, 890, 725, fill=DETAIL, width=4)
+    # Sensor vents bottom-left
+    for i in range(3):
+        x = 715 + i * 10
+        c.line(x, 765, x, 785, fill=DETAIL, width=3)
+
+    c.ground_shadow(500, 840, 430, 16)
     return c
+
 
 
 def heat_pump():

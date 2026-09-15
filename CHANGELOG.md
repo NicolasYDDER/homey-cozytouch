@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.5] - 2026-09-15
+
+### Changed
+- **Pass Cozytouch and Shogun Zone Control store images** now follow the real products (guideline [1.4](https://apps.developer.homey.app/app-store/guidelines#id-1.4.-images)): the Pass is the slim io-homecontrol wall module; Zone Control shows the air distributor with its tall controller and square ambient sensor. Regenerated via [`tools/generate-driver-images.py`](tools/generate-driver-images.py).
+- **All seven driver icons** redrawn to match those illustrations (guideline [1.6](https://apps.developer.homey.app/app-store/guidelines#id-1.6.-driver-icons)): `currentColor` line art, transparent background. Covered by `tests/driver-icons.test.js`.
+
 ## [1.4.4] - 2026-09-15
 
 ### Fixed
