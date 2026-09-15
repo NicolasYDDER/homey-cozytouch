@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.4] - 2026-09-15
+
+### Fixed
+- **Devices paired before 1.3.7 no longer reappear (and cannot be added twice) on a later pairing.** Homey's `list_devices` template filters already-paired devices by deep-equality of the whole `data` object. Until 1.3.7, pairing wrote `username`/`password` into that object; after the App Store fix, new candidates only carry identifiers, so Homey no longer matched them to existing devices (still holding the immutable credential copy). `list_devices` now drops candidates whose `data.id` is already on the driver (`lib/helpers/pairing.js`). Covered by `tests/pairing.test.js`.
+
 ## [1.4.3] - 2026-09-15
 
 ### Fixed
@@ -52,6 +57,7 @@ App Store certification round 1: everything here answers a point from the Homey 
 - **The account is stored in one place only.** The pairing flow used to copy `username` and `password` into every device's `data` object on top of the app settings, so the credentials appeared in anything that logged or exported a device. `data` now holds identifiers only, and `CozyTouchDevice` reads the account from app settings (`CozyTouchApp.getCredentials`). `tests/credentials.test.js` guards both.
 - A device paired by an earlier version still carries the old copy — `data` is immutable in Homey — so on first start it moves that account into app settings (`_resolveCredentials`) and never reads its own copy again.
 - Because devices no longer keep a fallback, a device that starts with no account in settings comes up unavailable with "No Cozytouch account saved" and starts itself as soon as one is saved, instead of waiting for an app restart. Clearing the account under Settings now warns that devices stop updating.
+- **Side effect (fixed in 1.4.4):** Homey's pairing list compares the whole `data` object, so pre-1.3.7 devices could reappear as addable until pairing started matching on `data.id` only.
 
 ### Removed
 - Unused `apiDelete()` helper in the settings page.

@@ -96,7 +96,7 @@ The app authenticates to **both** and discovers devices from each during pairing
 
 1. **Configuration**: User saves Cozytouch credentials in the App Configuration Page. On startup, the app restores sessions for both protocols.
 
-2. **Pairing**: Uses Homey's system `login_credentials` view. If credentials are already in app Settings, pairing skips the form and lists devices for that driver. Otherwise the user logs in; a successful login is saved to Settings. Discovery always queries both CozyTouch and Overkiz; each device is tagged with its protocol.
+2. **Pairing**: Uses Homey's system `login_credentials` view. If credentials are already in app Settings, pairing skips the form and lists devices for that driver. Otherwise the user logs in; a successful login is saved to Settings. Discovery always queries both CozyTouch and Overkiz; each device is tagged with its protocol. Already-paired devices are excluded by `data.id` (Homey's default full-`data` filter is not enough for devices paired before credentials left `data` — see Settings Storage).
 
 3. **Sync (global)**: One app setting `sync_interval` (default **60 s**, range 30–300). Each cycle:
    1. For each Overkiz account: `POST /setup/devices/states/refresh` (`refreshStates`) — asks the gateway/cloud to refresh device states (same family of call official apps use when opened).
@@ -152,6 +152,8 @@ The app provides a settings page accessible from **Homey Settings > Apps > Atlan
 Credentials are stored using `homey.settings` (encrypted local storage on the Homey Pro). The key is `credentials` with the structure `{ username, password }`.
 
 This is the **only** place the app keeps them. A paired device's `data` object holds identifiers only (`id`, `accountDeviceId`), so a device that gets logged or exported carries no credentials; `CozyTouchDevice` reads the account from app settings on init. Devices paired before 1.3.7 still hold a copy in their immutable `data` — the first start after the update moves it into app settings and the app stops reading it. Clearing the account therefore leaves devices unavailable until one is saved again, at which point they start themselves.
+
+Homey's built-in pairing list filters duplicates by comparing the **whole** `data` object. That broke for pre-1.3.7 devices (credentials still in `data` vs identifiers-only candidates), so they could show up again under the cloud default name and be added a second time. From 1.4.4 the driver excludes already-paired devices by matching `data.id` only (`lib/helpers/pairing.js`).
 
 ---
 
@@ -581,6 +583,7 @@ homey-cozytouch/
 │       ├── magellan-capabilities.js    # Capability payload: lookup, dump, API errors
 │       ├── overkiz-commands.js         # Which commands an endpoint advertises
 │       ├── overkiz-device.js           # Widget / controllableName detection
+│       ├── pairing.js                  # Exclude already-paired devices by data.id
 │       └── water-heater-modes.js       # Modes a tank accepts, per protocol
 │
 ├── settings/

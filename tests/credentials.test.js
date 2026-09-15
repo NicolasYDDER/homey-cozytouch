@@ -43,4 +43,11 @@ describe('credential storage', () => {
   it('migrates a legacy device data account into app settings once', () => {
     assert.match(deviceSource, /saveCredentials\(data\.username, data\.password\)/);
   });
+
+  it('excludes already-paired devices by data.id during list_devices', () => {
+    // Homey's built-in filter compares the whole data object; pre-1.3.7 devices
+    // still carry credentials there, so pairing must match on id instead.
+    assert.match(driverSource, /excludeAlreadyPaired/);
+    assert.match(driverSource, /helpers\/pairing/);
+  });
 });

@@ -1,4 +1,8 @@
 {
+  "1.4.4": {
+    "en": "Devices added before 1.3.7 no longer reappear when you add devices again. Homey was comparing the whole device identity object, which used to include your Cozytouch email and password; after those were moved to app settings only, already-paired devices looked “new” and could be added twice. Pairing now recognizes them by their stable id.",
+    "fr": "Les appareils ajoutés avant la 1.3.7 ne réapparaissent plus quand vous ajoutez des appareils à nouveau. Homey comparait tout l’objet d’identité de l’appareil, qui contenait encore l’e-mail et le mot de passe Cozytouch ; après leur déplacement dans les seuls réglages de l’application, les appareils déjà présents semblaient « nouveaux » et pouvaient être ajoutés deux fois. L’ajout les reconnaît désormais par leur identifiant stable."
+  },
   "1.4.3": {
     "en": "Reduces brief “card unavailable” flashes in the Flow editor (device picker and cards already placed in a flow). Homey was being asked to refresh device options and availability on every sync even when nothing had changed; those updates now run only when needed. Sync cycles also do less work as a result. Real connection failures are still marked unavailable and counted in the app log.",
     "fr": "Réduit les brefs affichages « Carte indisponible » dans l’éditeur de Flow (liste des appareils et cartes déjà posées). Homey était sollicité pour rafraîchir les options et la disponibilité à chaque synchronisation même sans changement ; ces mises à jour ne partent plus que lorsqu’elles sont nécessaires. Les cycles de sync font aussi moins de travail. Les vraies coupures de connexion restent marquées indisponibles et sont comptées dans le journal de l’application."
