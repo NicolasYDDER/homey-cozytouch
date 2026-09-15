@@ -1,4 +1,8 @@
 {
+  "1.4.2": {
+    "en": "The app log now records when a value read from your Cozytouch account actually changes (boost, away mode, setpoint...), not just once when a device is added. This is diagnostic-only and changes nothing you can see or do — it is here to make the next diagnostic report useful for tanks whose boost or setpoint does not seem to update.",
+    "fr": "Le journal de l'application note désormais quand une valeur lue depuis votre compte Cozytouch change réellement (boost, mode absence, consigne...), et non plus une seule fois à l'ajout de l'appareil. Ceci ne concerne que le diagnostic et ne change rien de visible ou d'utilisable — c'est pour rendre utile le prochain rapport de diagnostic sur les ballons dont le boost ou la consigne ne semblent pas se mettre à jour."
+  },
   "1.4.1": {
     "en": "Fixes the hot water tank of an Alféa Extensa S Duo 8, which showed no values and refused every command because it uses its own set of internal identifiers, distinct from every other tank this app already supports. Temperature, setpoint, mode and boost now work on this tank. It has no away mode: the only related signal it reports is a start/stop schedule, not an on/off switch.",
     "fr": "Corrige le ballon d'eau chaude d'un Alféa Extensa S Duo 8, qui n'affichait aucune valeur et refusait toutes les commandes car il utilise ses propres identifiants internes, différents de tous les autres ballons déjà pris en charge. La température, la consigne, le mode et le boost fonctionnent désormais sur ce ballon. Il n'a pas de mode absence : le seul signal correspondant qu'il expose est une programmation de début/fin, pas un simple interrupteur."

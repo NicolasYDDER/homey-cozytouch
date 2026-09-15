@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.2] - 2026-09-15
+
+### Added
+- **A Magellan device now logs a value the API reports back changing**, e.g. `[cozytouch_boost] API reports: false -> true`. Follows from issue #9 (AQUEO ACI HYB VM, `productId` 7): the only capability dump ever logged is a one-time snapshot at device init, so no existing diagnostic report could show whether a command sent from the Cozytouch app (boost, a setpoint change) was ever actually read back on Homey's side, or reverted. The log line only fires on an actual change, so it does not add a line on every 60s poll.
+
 ## [1.4.1] - 2026-09-15
 
 ### Fixed
