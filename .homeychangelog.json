@@ -1,4 +1,8 @@
 {
+  "1.4.5": {
+    "en": "Driver store images and icons now match the real devices: Pass Cozytouch is the slim io-homecontrol module, and Shogun Zone Control shows the air distributor with its wall controllers. The other driver icons are redrawn to match their product illustrations as well.",
+    "fr": "Les images et icônes des drivers correspondent désormais aux vrais appareils : le Pass Cozytouch est le module io-homecontrol fin, et le Shogun Zone Control montre le répartiteur d'air avec ses télécommandes murales. Les icônes des autres drivers sont aussi redessinées pour coller à leurs illustrations produit."
+  },
   "1.4.4": {
     "en": "Devices added before 1.3.7 no longer reappear when you add devices again. Homey was comparing the whole device identity object, which used to include your Cozytouch email and password; after those were moved to app settings only, already-paired devices looked “new” and could be added twice. Pairing now recognizes them by their stable id.",
     "fr": "Les appareils ajoutés avant la 1.3.7 ne réapparaissent plus quand vous ajoutez des appareils à nouveau. Homey comparait tout l’objet d’identité de l’appareil, qui contenait encore l’e-mail et le mot de passe Cozytouch ; après leur déplacement dans les seuls réglages de l’application, les appareils déjà présents semblaient « nouveaux » et pouvaient être ajoutés deux fois. L’ajout les reconnaît désormais par leur identifiant stable."
