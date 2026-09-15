@@ -192,6 +192,94 @@ describe('AQUEO ACI HYB capability profile (productId 7)', () => {
   });
 });
 
+// The DHW tank of an Alfea Extensa Duo (modelId 1376, productId 47) answers on
+// yet another block, distinct from both the defaults and the AQUEO one — a user
+// log showed it reporting none of the IDs the app used to look for.
+describe('Alfea Extensa Duo tank capability profile (productId 47)', () => {
+  // What the device reports, from the diagnostic dump attached to the user log.
+  const EXTENSA_CAPS = [
+    { capabilityId: 22, value: '55.0000000000000000000' },
+    { capabilityId: 86, value: '1' },
+    { capabilityId: 87, value: '2' },
+    { capabilityId: 111, value: '51.85000000000000000000' },
+    { capabilityId: 165, value: '0' },
+    { capabilityId: 226, value: '-' },
+    { capabilityId: 231, value: '55.0000000000000000000' },
+    { capabilityId: 105300, value: '65.0000000000000000000' },
+    { capabilityId: 105301, value: '50' },
+  ];
+
+  const fakeCtx = (extra = {}) => {
+    const ctx = {
+      writes: [],
+      values: {},
+      options: {},
+      reads: [],
+      store: { productId: 47, modelId: 1376 },
+      getCapabilities: async () => EXTENSA_CAPS,
+      getCapValue: (list, capId) => {
+        ctx.reads.push(capId);
+        return api.getCapabilityValue(list, capId);
+      },
+      setCapValue: async (capId, value) => {
+        ctx.writes.push([capId, value]);
+        if (extra.failWrites && extra.failWrites[capId]) throw extra.failWrites[capId];
+      },
+      setCapability: (name, value) => { ctx.values[name] = value; },
+      setCapabilityOptions: (name, opts) => { ctx.options[name] = opts; },
+      hasCapability: () => true,
+      log: () => {},
+    };
+    return ctx;
+  };
+
+  it('resolves the product block instead of the default IDs', () => {
+    const caps = waterHeaterCapIds(47);
+    assert.equal(caps.HEATING_MODE, 87);
+    assert.equal(caps.TARGET_TEMP, 231);
+    assert.equal(caps.TARGET_TEMP_ALT, 22);
+    assert.equal(caps.ON_OFF, 86);
+    assert.equal(caps.BOOST, 165);
+    assert.equal(caps.CURRENT_TEMP, 111);
+    assert.equal(caps.AWAY_MODE, null);
+    assert.equal(caps.MIN_TEMP, 105301);
+    assert.equal(caps.MAX_TEMP, 105300);
+  });
+
+  it('reads temperature, setpoint and boost from the product block', async () => {
+    const ctx = fakeCtx();
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.values.measure_temperature, 51.85);
+    assert.equal(ctx.values.target_temperature, 55);
+    assert.equal(ctx.values.cozytouch_boost, false);
+    assert.deepEqual(ctx.options.target_temperature, { min: 50, max: 65 });
+  });
+
+  it('never looks for an away capability this product does not have', async () => {
+    const ctx = fakeCtx();
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.reads.includes(226), false, 'read the timestamp-based away capability');
+    assert.equal('cozytouch_away_mode' in ctx.values, false);
+    await assert.rejects(() => new CozytouchHandler(ctx).setAwayMode(true), /no away capability/);
+  });
+
+  it('sets the mode through the on/off and heating-mode capabilities of this product', async () => {
+    const ctx = fakeCtx();
+    await new CozytouchHandler(ctx).setMode('manual');
+    assert.deepEqual(ctx.writes, [[86, '1'], [87, '0']]);
+  });
+
+  it('falls back to the mirrored setpoint when the first one is refused', async () => {
+    const refused = Object.assign(new Error('API request failed: 404'), {
+      statusCode: 404,
+      body: '{"type":"NoCapabilityImplementationFound"}',
+    });
+    const ctx = fakeCtx({ failWrites: { 231: refused } });
+    await new CozytouchHandler(ctx).setTargetTemperature(52);
+    assert.deepEqual(ctx.writes, [[231, 52], [22, 52]]);
+  });
+});
+
 // A Magellan tank whose on/off capability is mapped but refused by the product:
 // "There is no implementation for capability Id 3 on product Id 7".
 describe('Magellan water heater without an on/off capability', () => {
