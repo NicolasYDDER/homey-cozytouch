@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
   <!-- Ladder-style heated towel rail with bottom control box -->
-  <rect x="22" y="8" width="6" height="60" rx="3" stroke="currentColor" stroke-width="2.4"/>
-  <rect x="52" y="8" width="6" height="60" rx="3" stroke="currentColor" stroke-width="2.4"/>
+  <rect fill="none" x="22" y="8" width="6" height="60" rx="3" stroke="currentColor" stroke-width="2.4"/>
+  <rect fill="none" x="52" y="8" width="6" height="60" rx="3" stroke="currentColor" stroke-width="2.4"/>
   <!-- Rungs -->
-  <rect x="24" y="14" width="32" height="5" rx="2.5" stroke="currentColor" stroke-width="2"/>
-  <rect x="24" y="24" width="32" height="5" rx="2.5" stroke="currentColor" stroke-width="2"/>
-  <rect x="24" y="34" width="32" height="5" rx="2.5" stroke="currentColor" stroke-width="2"/>
-  <rect x="24" y="44" width="32" height="5" rx="2.5" stroke="currentColor" stroke-width="2"/>
-  <rect x="24" y="54" width="32" height="5" rx="2.5" stroke="currentColor" stroke-width="2"/>
+  <rect fill="none" x="24" y="14" width="32" height="5" rx="2.5" stroke="currentColor" stroke-width="2"/>
+  <rect fill="none" x="24" y="24" width="32" height="5" rx="2.5" stroke="currentColor" stroke-width="2"/>
+  <rect fill="none" x="24" y="34" width="32" height="5" rx="2.5" stroke="currentColor" stroke-width="2"/>
+  <rect fill="none" x="24" y="44" width="32" height="5" rx="2.5" stroke="currentColor" stroke-width="2"/>
+  <rect fill="none" x="24" y="54" width="32" height="5" rx="2.5" stroke="currentColor" stroke-width="2"/>
   <!-- Heating element box + LED -->
-  <rect x="14" y="52" width="10" height="14" rx="2.5" stroke="currentColor" stroke-width="2"/>
+  <rect fill="none" x="14" y="52" width="10" height="14" rx="2.5" stroke="currentColor" stroke-width="2"/>
   <circle cx="19" cy="59" r="1.8" fill="currentColor"/>
   <!-- Wall mounts -->
-  <rect x="58" y="18" width="8" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
-  <rect x="58" y="52" width="8" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
+  <rect fill="none" x="58" y="18" width="8" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
+  <rect fill="none" x="58" y="52" width="8" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
 </svg>

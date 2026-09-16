@@ -1,19 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
   <!-- Climate split: indoor head above, outdoor unit below -->
   <!-- Indoor head -->
-  <rect x="8" y="8" width="64" height="28" rx="6" stroke="currentColor" stroke-width="2.6"/>
-  <line x1="14" y1="16" x2="58" y2="16" stroke="currentColor" stroke-width="1.8"/>
-  <rect x="14" y="22" width="44" height="8" rx="2" stroke="currentColor" stroke-width="1.8"/>
-  <line x1="18" y1="25" x2="54" y2="25" stroke="currentColor" stroke-width="1.2"/>
-  <line x1="18" y1="28" x2="54" y2="28" stroke="currentColor" stroke-width="1.2"/>
+  <rect fill="none" x="8" y="8" width="64" height="28" rx="6" stroke="currentColor" stroke-width="2.6"/>
+  <line fill="none" x1="14" y1="16" x2="58" y2="16" stroke="currentColor" stroke-width="1.8"/>
+  <rect fill="none" x="14" y="22" width="44" height="8" rx="2" stroke="currentColor" stroke-width="1.8"/>
+  <line fill="none" x1="18" y1="25" x2="54" y2="25" stroke="currentColor" stroke-width="1.2"/>
+  <line fill="none" x1="18" y1="28" x2="54" y2="28" stroke="currentColor" stroke-width="1.2"/>
   <circle cx="62" cy="20" r="2" fill="currentColor"/>
   <!-- Outdoor unit -->
-  <rect x="20" y="46" width="40" height="26" rx="4" stroke="currentColor" stroke-width="2.6"/>
-  <circle cx="34" cy="59" r="7" stroke="currentColor" stroke-width="2"/>
-  <path d="M34 59 L29 56" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-  <path d="M34 59 L38 54" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-  <path d="M34 59 L38 64" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-  <line x1="48" y1="50" x2="48" y2="68" stroke="currentColor" stroke-width="1.6"/>
-  <line x1="52" y1="50" x2="52" y2="68" stroke="currentColor" stroke-width="1.6"/>
-  <line x1="56" y1="50" x2="56" y2="68" stroke="currentColor" stroke-width="1.6"/>
+  <rect fill="none" x="20" y="46" width="40" height="26" rx="4" stroke="currentColor" stroke-width="2.6"/>
+  <circle fill="none" cx="34" cy="59" r="7" stroke="currentColor" stroke-width="2"/>
+  <path fill="none" d="M34 59 L29 56" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  <path fill="none" d="M34 59 L38 54" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  <path fill="none" d="M34 59 L38 64" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  <line fill="none" x1="48" y1="50" x2="48" y2="68" stroke="currentColor" stroke-width="1.6"/>
+  <line fill="none" x1="52" y1="50" x2="52" y2="68" stroke="currentColor" stroke-width="1.6"/>
+  <line fill="none" x1="56" y1="50" x2="56" y2="68" stroke="currentColor" stroke-width="1.6"/>
 </svg>

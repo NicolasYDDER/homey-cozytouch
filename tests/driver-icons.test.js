@@ -12,6 +12,12 @@ const path = require('node:path');
 // zone_control hardcoded stroke="#000"/fill="#000" instead of following the rest
 // of the set with currentColor; nothing catches that at `homey app validate`
 // (it only checks the manifest, not icon content), so it is checked here.
+//
+// Homey mobile converts SVG → bitmap and does NOT inherit fill="none" from the
+// root <svg>. A stroked <rect>/<circle>/<path> without its own fill="none" is
+// painted solid black on the phone while desktop still looks fine — so every
+// stroked shape must set fill explicitly (none or currentColor for intentional
+// dots).
 const ROOT = path.join(__dirname, '..');
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8'));
 const appIcon = fs.readFileSync(path.join(ROOT, 'assets', 'icon.svg'), 'utf8');
@@ -46,6 +52,20 @@ describe('driver icons (App Store guideline 1.6)', () => {
           );
         }
         assert.doesNotMatch(svg, /<(linearGradient|radialGradient)/);
+      });
+
+      it('sets fill on every stroked shape (Homey mobile does not inherit svg fill="none")', () => {
+        const tags = [...svg.matchAll(/<(rect|circle|ellipse|path|line|polyline|polygon)\b[^>/]*(?:\/)?>/g)]
+          .map((m) => m[0]);
+        assert.ok(tags.length > 0, 'expected at least one shape element');
+        for (const tag of tags) {
+          if (!/\bstroke=/.test(tag)) continue;
+          assert.match(
+            tag,
+            /\bfill="(none|currentColor)"/,
+            `stroked shape missing explicit fill="none" (renders solid black on Homey mobile):\n${tag}`,
+          );
+        }
       });
 
       it('is not the app icon reused as a driver icon', () => {

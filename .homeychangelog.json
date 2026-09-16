@@ -1,4 +1,8 @@
 {
+  "1.4.6": {
+    "en": "Fixes driver icons showing as solid black shapes in the Homey mobile app. The phone does not inherit the SVG root fill, so each outline now sets fill=\"none\" explicitly",
+    "fr": "Corrige les icônes des drivers affichées en formes noires pleines dans l'application Homey mobile. Le téléphone n'hérite pas du fill SVG racine : chaque trait définit désormais fill=\"none\" explicitement"
+  },
   "1.4.5": {
     "en": "Driver store images and icons now match the real devices: Pass Cozytouch is the slim io-homecontrol module, and Shogun Zone Control shows the air distributor with its wall controllers. The other driver icons are redrawn to match their product illustrations as well.",
     "fr": "Les images et icônes des drivers correspondent désormais aux vrais appareils : le Pass Cozytouch est le module io-homecontrol fin, et le Shogun Zone Control montre le répartiteur d'air avec ses télécommandes murales. Les icônes des autres drivers sont aussi redessinées pour coller à leurs illustrations produit."
