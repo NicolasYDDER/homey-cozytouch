@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.6] - 2026-09-16
+
+### Fixed
+- **Driver icons no longer render as solid black shapes on Homey mobile.** Homey's phone SVG→bitmap path does not inherit `fill="none"` from the root `<svg>`, so every stroked shape now sets `fill="none"` explicitly (intentional dots keep `fill="currentColor"`). Regression covered by `tests/driver-icons.test.js`.
+
 ## [1.4.5] - 2026-09-15
 
 ### Changed

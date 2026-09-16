@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
   <!-- Pass Cozytouch: slim io-homecontrol module with diagonal mounting holes -->
-  <rect x="22" y="6" width="36" height="68" rx="6" stroke="currentColor" stroke-width="2.8"/>
-  <circle cx="32" cy="18" r="4.5" stroke="currentColor" stroke-width="2.2"/>
-  <circle cx="48" cy="62" r="4.5" stroke="currentColor" stroke-width="2.2"/>
-  <rect x="30" y="28" width="20" height="20" rx="4" stroke="currentColor" stroke-width="2.4"/>
+  <rect fill="none" x="22" y="6" width="36" height="68" rx="6" stroke="currentColor" stroke-width="2.8"/>
+  <circle fill="none" cx="32" cy="18" r="4.5" stroke="currentColor" stroke-width="2.2"/>
+  <circle fill="none" cx="48" cy="62" r="4.5" stroke="currentColor" stroke-width="2.2"/>
+  <rect fill="none" x="30" y="28" width="20" height="20" rx="4" stroke="currentColor" stroke-width="2.4"/>
   <!-- Stylized "io" -->
   <circle cx="36" cy="34" r="1.6" fill="currentColor"/>
   <rect x="34.4" y="37" width="3.2" height="7" rx="1.2" fill="currentColor"/>
-  <circle cx="45" cy="40" r="4.2" stroke="currentColor" stroke-width="2.2"/>
-  <line x1="32" y1="54" x2="48" y2="54" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+  <circle fill="none" cx="45" cy="40" r="4.2" stroke="currentColor" stroke-width="2.2"/>
+  <line fill="none" x1="32" y1="54" x2="48" y2="54" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
 </svg>
