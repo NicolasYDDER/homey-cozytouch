@@ -432,7 +432,7 @@ Handles electric towel dryers via both protocols.
 
 | Device Type | Model IDs (Magellan) | Overkiz controllableName | Known Products |
 |-------------|---------------------|--------------------------|----------------|
-| Towel Rack | 1381, 1382, 1386, 1388, 1543, 1546, 1547, 1551, 1622 | `io:AtlanticElectricalTowelDryer_IC3_IOComponent` | Kelud, Sauter Asama, Kaoli |
+| Towel Rack | 1381, 1382, 1386, 1388, 1389, 1543, 1546, 1547, 1551, 1622 | `io:AtlanticElectricalTowelDryer_IC3_IOComponent` | Kelud, Sauter Asama, Kaoli |
 
 **Magellan commands**: Cap 7 (HVAC mode: 0=off, 4=heat), Cap 184 (preset: 0=manual, 1=prog), Cap 40 (target temperature)
 
@@ -534,6 +534,14 @@ the same way, so an Extensa is not offered cool/dry/auto modes it cannot do.
 The heat pump is also announced on Magellan (`modelId` 212 for the Extensa Duo A.I.). It is deliberately
 **not** mapped in `MODEL_TYPES`: pairing it there would create a second tile for the same appliance, on a
 protocol whose capability IDs for this product are unknown. The Overkiz endpoints are the supported ones.
+
+**Known gap**: on at least one Alféa Extensa S Duo 8 account, the main unit is announced only on Magellan
+(`modelId` 2303 / 2327 seen in discovery), the same way the Calypso connecté's tank is Magellan-only (see
+above) — the Overkiz side either doesn't expose it or fails auth for that account. Until it is confirmed
+whether that's an account-side Overkiz issue or this product line genuinely has no Overkiz endpoint, and
+until a Magellan capability dump for 2303/2327 is captured, the main unit cannot be paired at all for those
+accounts. Its hot water tank (`modelId` 1376) already works via `water_heater` regardless — see
+[Water Heater — Alféa Extensa Duo tank](#water-heater--alféa-extensa-duo-tank-productid-47-modelid-1376).
 
 ### Ipala (heater driver)
 
