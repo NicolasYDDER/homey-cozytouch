@@ -771,6 +771,25 @@ Another product with its own block, distinct from both the default IDs and the A
 | 105301 / 105300 | Setpoint min / max | float | Range for cap 231 |
 | — | Away mode | — | **Not offered**: cap 226 is a start/stop timestamp pair, not a boolean switch |
 
+### Climate — Alféa Excellia / Extensa room thermostat (productId 26, modelId 557)
+
+Same per-product story as the two tanks above, on the climate side. An Alféa Excellia M DUO announces its room thermostat as modelId 557 ("ROOM_0"), which falls in the Takao AC range and so lands on the `climate` driver — but the product answers on the towel-rack block, not the AC one. None of 1, 2, 4, 8, 9 exist on it, and **cap 7 carries the mode, not a temperature**: read as the current temperature it reported the mode enum, so a room at 21.97 °C showed as 4 °C.
+
+Mapped from a user-submitted diagnostic log, cross-checked against the same five-device dump in [gduteil/cozytouch#63](https://github.com/gduteil/cozytouch/issues/63) (identical modelId/productId pairs) and against `TOWEL_RACK_CAP_IDS`, which already uses this block.
+
+| Cap ID | Name | Type | Description |
+|--------|------|------|-------------|
+| 7 | HVAC mode | int | 0=off, 4=heat — **not** the current temperature (same as towel racks) |
+| 40 | Target temperature | float | Heating setpoint; mirrored on cap 17 |
+| 117 | Current temperature | float | Room temperature reported by the wall thermostat (Navilink) |
+| 177 | Target temp cool | float | `target_cool_temperature`; unreachable on a heating-only unit |
+| 160 / 161 | Setpoint min / max | float | Same IDs as the default block |
+| — | Fan / swing | — | **Do not exist**: left on the default IDs, so reads return nothing and a write is refused |
+
+Reported but not exposed yet: 73 (available thermostat modes), 153 (heating status), 154 (zone name, e.g. «Chauffage»), 157/158 (setpoint override), 166 (system operating mode), 294 (setpoint step), 303 / 100320–100333 (weekly program).
+
+Because 557 stays classified as `AC`, the fan and swing pickers are still shown on such a device; they are inert. Reclassifying the modelId would change the tile of anyone with a genuine Takao AC, so it is left alone until a real AC on this modelId is confirmed.
+
 ### Climate Specific (Heat Pump / AC)
 
 | Cap ID | Name | Type | Description |

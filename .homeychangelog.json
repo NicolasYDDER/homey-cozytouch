@@ -1,4 +1,8 @@
 {
+  "1.4.8": {
+    "en": "Fixes the room temperature shown by the thermostat of an Alféa Excellia / Extensa heat pump: it read a mode indicator instead of the probe, so a room at 22 °C appeared as 4 °C. The setpoint, the heating mode and the on/off state of that thermostat now follow the appliance as well.",
+    "fr": "Corrige la température ambiante affichée par le thermostat d'une pompe à chaleur Alféa Excellia / Extensa : l'application lisait un indicateur de mode au lieu de la sonde, si bien qu'une pièce à 22 °C s'affichait à 4 °C. La consigne, le mode de chauffage et l'état marche/arrêt de ce thermostat suivent désormais l'appareil également."
+  },
   "1.4.7": {
     "en": "Fixes the app settings page sometimes showing the Overkiz connection as green even though it had failed to fully log in — the indicator and Test Connection now agree. Also recognizes the second channel of some two-zone towel dryers, previously listed as unsupported.",
     "fr": "Corrige la page de configuration qui affichait parfois la connexion Overkiz en vert alors que la connexion n'avait pas vraiment réussi — l'indicateur et le Test de connexion sont désormais cohérents. Reconnaît aussi le second canal de certains sèche-serviettes à deux zones, auparavant listé comme non supporté."
