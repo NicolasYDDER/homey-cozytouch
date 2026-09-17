@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const CozyTouchAPI = require('../lib/CozyTouchAPI');
 const {
   capabilityIdsOf,
+  describeAccount,
   describeCapabilities,
   findCapability,
   isCapabilityUnsupportedError,
@@ -68,6 +69,49 @@ describe('Magellan capability dump', () => {
   it('truncates a long payload instead of flooding the log', () => {
     const many = Array.from({ length: 5 }, (_, i) => ({ capabilityId: i, value: i }));
     assert.equal(describeCapabilities(many, 2), '0=0, 1=1, +3');
+  });
+});
+
+// The report the settings page hands over. It exists for the device the app
+// cannot pair: that one never reaches CozyTouchDevice, so nothing else in the
+// app ever prints its capabilities.
+describe('Magellan account report', () => {
+  const typeOf = (modelId) => new CozyTouchAPI({}).getDeviceType(modelId);
+
+  it('names each device by both IDs and dumps what it reports', () => {
+    const report = describeAccount([
+      {
+        name: 'TESC_0 DEFAULT',
+        modelId: 1388,
+        productId: 55,
+        capabilities: [{ capabilityId: 19, value: '30.0' }, { capabilityId: 109, value: '26.84' }],
+      },
+    ], typeOf, '1.4.9');
+
+    assert.equal(report, [
+      'Cozytouch (Magellan) — 1 device(s) — app 1.4.9',
+      '',
+      'TESC_0 DEFAULT | modelId 1388 | productId 55 | type TOWEL_RACK',
+      '  19=30.0, 109=26.84',
+    ].join('\n'));
+  });
+
+  // The whole point: an unmapped model is exactly the one worth reporting, so it
+  // must appear with its capabilities rather than be skipped as unknown.
+  it('includes a model no driver claims', () => {
+    const report = describeAccount([
+      { name: 'ALFEA EXTENSA S DUO', modelId: 2303, productId: 60, capabilities: [{ capabilityId: 117, value: '21.5' }] },
+    ], typeOf);
+
+    assert.match(report, /modelId 2303 \| productId 60 \| type UNKNOWN/);
+    assert.match(report, /117=21\.5/);
+    // No version passed: the header must not claim one.
+    assert.equal(report.split('\n')[0], 'Cozytouch (Magellan) — 1 device(s)');
+  });
+
+  it('stays readable for an account with no devices or a valueless device', () => {
+    assert.equal(describeAccount([], typeOf), 'Cozytouch (Magellan) — 0 device(s)');
+    assert.match(describeAccount([{ modelId: 1, productId: 2 }], typeOf), /\(unnamed\).*\n {2}\(empty\)/);
   });
 });
 

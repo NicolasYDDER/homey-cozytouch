@@ -281,6 +281,7 @@
     </div>
 
     <div class="alert alert-success" id="alert-success"></div>
+    <div class="alert alert-info" id="alert-info"></div>
     <div class="alert alert-error" id="alert-error"></div>
   </div>
 
@@ -338,6 +339,19 @@
         <div class="device-list" id="ovkz-devices" style="display:none"></div>
       </div>
     </div>
+
+    <!-- What a device the app cannot pair yet reports. Only way to add support
+         for it, and Test Connection is the only place it is reachable. -->
+    <details id="cozy-report-box" style="display:none; margin-top:16px">
+      <summary style="cursor:pointer; font-weight:600">Device details (for reporting an unsupported device)</summary>
+      <div class="status-detail" style="margin-top:8px">
+        If a device of yours is missing or shows no values, paste this into a GitHub issue —
+        it is what adding support for it needs. It lists your device names and technical
+        identifiers, so glance over it before posting publicly.
+      </div>
+      <textarea id="cozy-report" readonly rows="12"
+        style="width:100%; margin-top:8px; font-family:monospace; font-size:11px; white-space:pre"></textarea>
+    </details>
   </div>
 
   <!-- Info Card -->
@@ -376,14 +390,17 @@
 
     // ── UI helpers ───────────────────────────────────────────────
 
+    // 'info' is used when one protocol worked and the other did not: green would
+    // claim a success the status boxes below contradict, red would deny devices
+    // that do work.
     function showAlert(type, message, prefix) {
-      const successId = prefix ? prefix + '-success' : 'alert-success';
-      const errorId = prefix ? prefix + '-error' : 'alert-error';
-      const successEl = document.getElementById(successId);
-      const errorEl = document.getElementById(errorId);
-      if (successEl) successEl.style.display = 'none';
-      if (errorEl) errorEl.style.display = 'none';
-      const el = document.getElementById(type === 'success' ? successId : errorId);
+      const idFor = (kind) => (prefix ? prefix + '-' + kind : 'alert-' + kind);
+      ['success', 'info', 'error'].forEach((kind) => {
+        const box = document.getElementById(idFor(kind));
+        if (box) box.style.display = 'none';
+      });
+      const kind = (type === 'success' || type === 'info') ? type : 'error';
+      const el = document.getElementById(idFor(kind));
       if (!el) return;
       el.textContent = message;
       el.style.display = 'block';
@@ -514,12 +531,17 @@
             document.getElementById('cozy-devices').innerHTML = renderDeviceTable(result.cozytouch.deviceList);
             document.getElementById('cozy-devices').style.display = 'block';
           }
+          if (result.cozytouch.report) {
+            document.getElementById('cozy-report').value = result.cozytouch.report;
+            document.getElementById('cozy-report-box').style.display = 'block';
+          }
         } else {
           setDot('cozy-dot', 'red');
           document.getElementById('cozy-status').innerHTML =
             '<strong>Status:</strong> Failed<br>' +
             '<strong>Error:</strong> ' + (result.cozytouch.error || 'Unknown');
           document.getElementById('cozy-devices').style.display = 'none';
+          document.getElementById('cozy-report-box').style.display = 'none';
         }
 
         // Update Overkiz status
@@ -540,9 +562,19 @@
           document.getElementById('ovkz-devices').style.display = 'none';
         }
 
-        const total = result.cozytouch.devices + result.overkiz.devices;
-        if (result.cozytouch.success || result.overkiz.success) {
-          showAlert('success', 'Connection successful! Found ' + total + ' device(s) across both protocols.');
+        // Each protocol is a separate account on Atlantic's side: plenty of
+        // accounts exist on one and not on the other, and saying "successful
+        // across both protocols" because one answered is how a working setup
+        // ended up looking half-broken.
+        const describe = (name, res) => name + ': ' + (res.success ? res.devices + ' device(s)' : 'failed');
+        const summary = describe('Cozytouch', result.cozytouch) + ' · ' + describe('Overkiz', result.overkiz) + '.';
+
+        if (result.cozytouch.success && result.overkiz.success) {
+          showAlert('success', 'Connected on both protocols. ' + summary);
+        } else if (result.cozytouch.success || result.overkiz.success) {
+          showAlert('info', 'Connected on one protocol. ' + summary
+            + ' A protocol your account is not registered on cannot be fixed with credentials —'
+            + ' the devices announced by the other one still work.');
         } else {
           showAlert('error', 'Both protocols failed. Check your credentials.');
         }
