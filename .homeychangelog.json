@@ -1,4 +1,8 @@
 {
+  "1.4.7": {
+    "en": "Fixes the app settings page sometimes showing the Overkiz connection as green even though it had failed to fully log in — the indicator and Test Connection now agree. Also recognizes the second channel of some two-zone towel dryers, previously listed as unsupported.",
+    "fr": "Corrige la page de configuration qui affichait parfois la connexion Overkiz en vert alors que la connexion n'avait pas vraiment réussi — l'indicateur et le Test de connexion sont désormais cohérents. Reconnaît aussi le second canal de certains sèche-serviettes à deux zones, auparavant listé comme non supporté."
+  },
   "1.4.6": {
     "en": "Fixes driver icons showing as solid black shapes in the Homey mobile app. The phone does not inherit the SVG root fill, so each outline now sets fill=\"none\" explicitly",
     "fr": "Corrige les icônes des drivers affichées en formes noires pleines dans l'application Homey mobile. Le téléphone n'hérite pas du fill SVG racine : chaque trait définit désormais fill=\"none\" explicitement"
