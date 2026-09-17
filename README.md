@@ -440,6 +440,16 @@ Handles electric towel dryers via both protocols.
 
 **Capabilities**: target temperature, current temperature, heating mode (off/manual/program), on/off
 
+**Open question — `modelId` 1388 / 1389 (`TESC_0`, `TESC_1`)**: these were mapped here because they appear
+next to towel-dryer models, but on an Alféa heat pump account `productId` 55 answers with none of the IDs
+above — only `19`, `109`, `218`, `106000`, so the tile shows nothing and warns. In the reference table
+(`mathieuletyrant/cozytouch-hacs`, `capability_table.py`, no per-type override for either ID) `19` is
+`temperature_setpoint`, `109` is **`boiler_water_temperature`** and `218` is a wifi diagnostic, not a mode.
+A circuit whose temperature is boiler water and which reports no mode capability at all does not look like a
+towel dryer, so no capability block is mapped for it: reading `109` into `measure_temperature` would show
+boiler water as room temperature — the same mistake fixed for `productId` 26 in 1.4.8. Whether `TESC` is a
+towel channel on some appliances and a heating circuit on others needs a dump from a device where it works.
+
 ### Water Heater Driver
 
 | Device Type | Model IDs (Magellan) | Overkiz controllableName | Known Products |
@@ -540,7 +550,12 @@ protocol whose capability IDs for this product are unknown. The Overkiz endpoint
 above) — the Overkiz side either doesn't expose it or fails auth for that account. Until it is confirmed
 whether that's an account-side Overkiz issue or this product line genuinely has no Overkiz endpoint, and
 until a Magellan capability dump for 2303/2327 is captured, the main unit cannot be paired at all for those
-accounts. Its hot water tank (`modelId` 1376) already works via `water_heater` regardless — see
+accounts. That dump no longer needs a successful pairing: **Test Connection** prints it for every device on
+the account, unmapped ones included — see
+[A device was added but shows no values](#a-device-was-added-but-shows-no-values-cozytouch--magellan).
+One such account reports the Overkiz side as *"no such user account"* rather than a credential failure, which
+would mean the account exists only on Magellan and no amount of re-entering credentials can reach Overkiz.
+Its hot water tank (`modelId` 1376) already works via `water_heater` regardless — see
 [Water Heater — Alféa Extensa Duo tank](#water-heater--alféa-extensa-duo-tank-productid-47-modelid-1376).
 
 ### Ipala (heater driver)
@@ -959,6 +974,27 @@ Send that dump line (diagnostic report or `homey app log`) in an issue — it is
 ### My device is not discovered
 - Only devices with known `modelId` / Overkiz `controllableName` mappings are shown. Check [Compatible Devices](#compatible-devices).
 - To add a new model, see [Adding Support for New Devices](#adding-support-for-new-devices).
+
+All of the above only covers a device that **pairs**: the dump comes from `CozyTouchDevice`, which an
+unclaimed `modelId` never reaches. That was the blocker on every unmapped product — the capability list
+needed to add support for it was only obtainable from a device that already worked.
+
+**App settings → Test Connection** now closes that loop. `setupviewv2` carries each device's capabilities
+alongside its identity, so the settings page prints, for every device on the account, paired or not:
+
+```
+Cozytouch (Magellan) — 7 device(s) — app 1.4.9
+
+TESC_0 DEFAULT | modelId 1388 | productId 55 | type TOWEL_RACK
+  19=30.00000000000000000000, 109=26.84000000000000000000, 218=0, 106000=1
+```
+
+`type UNKNOWN` marks a `modelId` absent from `MODEL_TYPES` — the ones that cannot pair at all. Both IDs are
+printed because capability blocks are keyed on `productId`, not on the model family. This is a superset of
+the pairing error's `describeDiscoveredDevices()` line, which names devices without their capabilities.
+
+The report contains device names and identifiers, so the settings page says to glance over it before posting
+it publicly.
 
 ---
 

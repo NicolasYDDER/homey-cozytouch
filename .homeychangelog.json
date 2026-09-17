@@ -1,4 +1,8 @@
 {
+  "1.4.9": {
+    "en": "Test Connection now lists every device on your Cozytouch account with the technical details needed to add support for it, including devices this app cannot add yet — copy it into a GitHub issue to get your device supported. It also no longer announces success on both protocols when only one of them answered: many accounts exist on Cozytouch and not on Overkiz, which is normal and does not stop your devices from working.",
+    "fr": "Le Test de connexion liste désormais tous les appareils de votre compte Cozytouch avec les informations techniques nécessaires pour les prendre en charge, y compris ceux que l'application ne peut pas encore ajouter — copiez-le dans une issue GitHub pour faire supporter votre appareil. Il n'annonce plus non plus une connexion réussie sur les deux protocoles quand un seul a répondu : beaucoup de comptes existent sur Cozytouch et pas sur Overkiz, c'est normal et cela n'empêche pas vos appareils de fonctionner."
+  },
   "1.4.8": {
     "en": "Fixes the room temperature shown by the thermostat of an Alféa Excellia / Extensa heat pump: it read a mode indicator instead of the probe, so a room at 22 °C appeared as 4 °C. The setpoint, the heating mode and the on/off state of that thermostat now follow the appliance as well.",
     "fr": "Corrige la température ambiante affichée par le thermostat d'une pompe à chaleur Alféa Excellia / Extensa : l'application lisait un indicateur de mode au lieu de la sonde, si bien qu'une pièce à 22 °C s'affichait à 4 °C. La consigne, le mode de chauffage et l'état marche/arrêt de ce thermostat suivent désormais l'appareil également."

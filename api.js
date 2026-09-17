@@ -2,6 +2,14 @@
 
 const CozyTouchAPI = require('./lib/CozyTouchAPI');
 const OverkizAPI = require('./lib/OverkizAPI');
+const { describeAccount } = require('./lib/helpers/magellan-capabilities');
+
+// Version of the app, so a pasted device report says which release produced it.
+// Read defensively: it is only decoration on the report, never worth throwing.
+function appVersion(homey) {
+  const manifest = (homey && homey.manifest) || (homey && homey.app && homey.app.manifest);
+  return (manifest && manifest.version) || null;
+}
 
 module.exports = {
 
@@ -79,8 +87,14 @@ module.exports = {
       results.cozytouch.deviceList = devices.map((d) => ({
         name: d.name,
         modelId: d.modelId,
+        productId: d.productId,
         type: cozyApi.getDeviceType(d.modelId),
       }));
+      results.cozytouch.report = describeAccount(
+        devices,
+        (modelId) => cozyApi.getDeviceType(modelId),
+        appVersion(homey),
+      );
     } catch (err) {
       results.cozytouch.error = err.message;
     }
