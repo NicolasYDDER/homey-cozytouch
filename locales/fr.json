@@ -4,7 +4,9 @@
       "title": "Connexion à Cozytouch",
       "subtitle": "Entrez vos identifiants de compte Atlantic Cozytouch"
     },
-    "no_devices": "Aucun appareil compatible trouvé dans votre compte Cozytouch"
+    "no_devices": "Aucun appareil compatible trouvé dans votre compte Cozytouch",
+    "try_other_drivers": "Ajoutez-les depuis un autre type d'appareil :",
+    "unsupported": "Pas encore pris en charge :"
   },
   "errors": {
     "auth_failed": "Authentification échouée. Veuillez vérifier vos identifiants.",

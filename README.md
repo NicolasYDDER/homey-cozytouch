@@ -440,15 +440,22 @@ Handles electric towel dryers via both protocols.
 
 **Capabilities**: target temperature, current temperature, heating mode (off/manual/program), on/off
 
-**Open question — `modelId` 1388 / 1389 (`TESC_0`, `TESC_1`)**: these were mapped here because they appear
-next to towel-dryer models, but on an Alféa heat pump account `productId` 55 answers with none of the IDs
-above — only `19`, `109`, `218`, `106000`, so the tile shows nothing and warns. In the reference table
-(`mathieuletyrant/cozytouch-hacs`, `capability_table.py`, no per-type override for either ID) `19` is
-`temperature_setpoint`, `109` is **`boiler_water_temperature`** and `218` is a wifi diagnostic, not a mode.
-A circuit whose temperature is boiler water and which reports no mode capability at all does not look like a
-towel dryer, so no capability block is mapped for it: reading `109` into `measure_temperature` would show
-boiler water as room temperature — the same mistake fixed for `productId` 26 in 1.4.8. Whether `TESC` is a
-towel channel on some appliances and a heating circuit on others needs a dump from a device where it works.
+**Known gap — `modelId` 1388 / 1389 (`TESC_0`, `TESC_1`) are not towel dryers**: they were mapped here
+because they appear next to towel-dryer models, but on an Alféa heat pump account `productId` 55 / 56 answer
+with none of the IDs above — only `19`, `109`, `218`, `106000`, so the tile shows nothing and warns. In the
+reference table (`mathieuletyrant/cozytouch-hacs`, `capability_table.py`, no per-type override for either ID)
+`19` is `temperature_setpoint`, `109` is **`boiler_water_temperature`** and `218` is a wifi diagnostic, not a
+mode. Two further pieces of evidence say these are the **heating circuits** of the `ROOM_x` zones:
+
+- the setpoints track the zones. On one account `TESC_0` reads `19=0.0` while `ROOM_0` is off (`7=0`) and
+  `TESC_1` reads `19=23.27` while `ROOM_1` is in heat (`7=4`) — a circuit water setpoint, not a room one.
+- 1388 and 1389 are **absent** from that project's 1583-entry `model_catalogue.py`, while every genuine towel
+  dryer above (1381, 1382, 1386, 1543, 1546, 1547, 1551, 1622) is named there. They belong to the same
+  endpoint/role namespace as 556–570 and 1376, not to the appliance-model namespace.
+
+No capability block is mapped for them: reading `109` into `measure_temperature` would show boiler water as
+room temperature — the same mistake fixed for `productId` 26 in 1.4.8. Until they stop being offered on this
+driver, a pairing list may still show them; adding one produces a device with no values.
 
 ### Water Heater Driver
 
@@ -545,17 +552,28 @@ The heat pump is also announced on Magellan (`modelId` 212 for the Extensa Duo A
 **not** mapped in `MODEL_TYPES`: pairing it there would create a second tile for the same appliance, on a
 protocol whose capability IDs for this product are unknown. The Overkiz endpoints are the supported ones.
 
-**Known gap**: on at least one Alféa Extensa S Duo 8 account, the main unit is announced only on Magellan
-(`modelId` 2303 / 2327 seen in discovery), the same way the Calypso connecté's tank is Magellan-only (see
-above) — the Overkiz side either doesn't expose it or fails auth for that account. Until it is confirmed
-whether that's an account-side Overkiz issue or this product line genuinely has no Overkiz endpoint, and
-until a Magellan capability dump for 2303/2327 is captured, the main unit cannot be paired at all for those
-accounts. That dump no longer needs a successful pairing: **Test Connection** prints it for every device on
-the account, unmapped ones included — see
-[A device was added but shows no values](#a-device-was-added-but-shows-no-values-cozytouch--magellan).
-One such account reports the Overkiz side as *"no such user account"* rather than a credential failure, which
-would mean the account exists only on Magellan and no amount of re-entering credentials can reach Overkiz.
-Its hot water tank (`modelId` 1376) already works via `water_heater` regardless — see
+**Known gap — Alféa Extensa S Duo 8 main unit (`modelId` 2303 / 2327)**: on at least one such account the
+appliance is announced only on Magellan, the same way the Calypso connecté's tank is Magellan-only (see
+above). That account reports the Overkiz side as *"no such user account"* rather than a credential failure,
+so it exists only on Magellan and no amount of re-entering credentials can reach Overkiz.
+
+The Magellan dump for 2303/2327 has since been captured (**Test Connection** prints it for every device on the
+account, unmapped ones included — see
+[A device was added but shows no values](#a-device-was-added-but-shows-no-values-cozytouch--magellan)), and it
+says **there is nothing thermostatic on those two endpoints**:
+
+- `2303` / `productId` 54 — outside temperature (`119`), water temperature (`109`), two energy counters
+  (`57`, `59`, in Wh; the `164` bitmask advertises electricity-for-heating, electricity-for-DHW and both
+  production counters), wifi signal (`179`), serial/model (`88`, `94`, `335`) and an away-mode switch (`152`,
+  with its timestamp pair on `222`). No cap 7, no cap 40.
+- `2327` / `productId` 58 — pump start/hour counters (`25`, `26`, `28`, `29`), water pressure (`100`), boiler
+  water and exhaust temperature (`109`, `116`). Diagnostics only.
+
+What the owner actually controls lives on the endpoints, and those already pair: `ROOM_0` / `ROOM_1` under
+`climate`, `DHW_0` under `water_heater`. A future sensor-only device could expose the appliance's outside
+temperature, water pressure, energy counters and away mode; there is nothing else to expose.
+
+Its hot water tank (`modelId` 1376) works via `water_heater` — see
 [Water Heater — Alféa Extensa Duo tank](#water-heater--alféa-extensa-duo-tank-productid-47-modelid-1376).
 
 ### Ipala (heater driver)
@@ -786,24 +804,28 @@ Another product with its own block, distinct from both the default IDs and the A
 | 105301 / 105300 | Setpoint min / max | float | Range for cap 231 |
 | — | Away mode | — | **Not offered**: cap 226 is a start/stop timestamp pair, not a boolean switch |
 
-### Climate — Alféa Excellia / Extensa room thermostat (productId 26, modelId 557)
+### Climate — Alféa Excellia / Extensa heating zones (productId 26 / 27, modelId 557 / 558)
 
-Same per-product story as the two tanks above, on the climate side. An Alféa Excellia M DUO announces its room thermostat as modelId 557 ("ROOM_0"), which falls in the Takao AC range and so lands on the `climate` driver — but the product answers on the towel-rack block, not the AC one. None of 1, 2, 4, 8, 9 exist on it, and **cap 7 carries the mode, not a temperature**: read as the current temperature it reported the mode enum, so a room at 21.97 °C showed as 4 °C.
+Same per-product story as the two tanks above, on the climate side. These are not air conditioners: they are the heating **zones** of an Alféa heat pump — `ROOM_0` (modelId 557) and `ROOM_1` (modelId 558) — which fall in the range `MODEL_TYPES` calls `AC` and so land on the `climate` driver. They answer on the towel-rack block, not the AC one. None of 1, 2, 4, 8, 9 exist on them, and **cap 7 carries the mode, not a temperature**: read as the current temperature it reported the mode enum, so a room at 21.97 °C showed as 4 °C on `ROOM_0` (1.4.8), and a zone in heat mode showed a flat 4 °C on `ROOM_1` (1.4.10).
 
-Mapped from a user-submitted diagnostic log, cross-checked against the same five-device dump in [gduteil/cozytouch#63](https://github.com/gduteil/cozytouch/issues/63) (identical modelId/productId pairs) and against `TOWEL_RACK_CAP_IDS`, which already uses this block.
+Mapped from two user-submitted reports — an Alféa Excellia M DUO diagnostic log and an Alféa Extensa S Duo 8 Test Connection report — cross-checked against the same dump in [gduteil/cozytouch#63](https://github.com/gduteil/cozytouch/issues/63) (identical modelId/productId pairs) and against `TOWEL_RACK_CAP_IDS`, which already uses this block.
 
 | Cap ID | Name | Type | Description |
 |--------|------|------|-------------|
 | 7 | HVAC mode | int | 0=off, 4=heat — **not** the current temperature (same as towel racks) |
-| 40 | Target temperature | float | Heating setpoint; mirrored on cap 17 |
-| 117 | Current temperature | float | Room temperature reported by the wall thermostat (Navilink) |
+| 40 | Target temperature | float | Heating setpoint; cap 17 carries the *applied* one (7 °C frost protection when off) |
+| 117 / 118 | Current temperature | float | Room temperature, z-indexed per zone: 117 on `ROOM_0`, 118 on `ROOM_1` |
 | 177 | Target temp cool | float | `target_cool_temperature`; unreachable on a heating-only unit |
 | 160 / 161 | Setpoint min / max | float | Same IDs as the default block |
 | — | Fan / swing | — | **Do not exist**: left on the default IDs, so reads return nothing and a write is refused |
 
-Reported but not exposed yet: 73 (available thermostat modes), 153 (heating status), 154 (zone name, e.g. «Chauffage»), 157/158 (setpoint override), 166 (system operating mode), 294 (setpoint step), 303 / 100320–100333 (weekly program).
+**No room probe means no temperature.** 117/118 are reported only when a room sensor is installed. The Excellia account sends `117=21.97`; the Extensa S account, on the same `productId` 26, sends neither 117 nor 118 — it is weather-compensated, driven by the outside probe (cap 119 on the appliance) and a per-zone heating curve (cap 192: 65 °C for its radiator zone, 35 °C for its underfloor zone). Such a device leaves `measure_temperature` empty. That is correct: an empty tile, not a wrong one.
 
-Because 557 stays classified as `AC`, the fan and swing pickers are still shown on such a device; they are inert. Reclassifying the modelId would change the tile of anyone with a genuine Takao AC, so it is left alone until a real AC on this modelId is confirmed.
+Reported but not exposed yet: 73 (available thermostat modes), 153 (heating status), 154 (zone name, e.g. «Chauffage», «Pièces de vie»), 157/158 (setpoint override), 166 (system operating mode — a bitmask, `21` = off|heat, **not** 21 °C), 181 (service in progress, mirrors cap 7), 294 (setpoint step), 303 / 100320–100333 (weekly program), 352–357 (presence/absence setpoints).
+
+`ROOM_2`–`ROOM_4` (modelIds 559/560/561) are the same kind of endpoint and will need the same block, but their `productId`s have not been observed yet — guessing a key would only move the bug.
+
+Because 557/558 stay classified as `AC`, the fan and swing pickers are still shown on such a device; they are inert. Reclassifying the modelIds would change the tile of anyone with a genuine Takao AC, so they are left alone until a real AC on those modelIds is confirmed.
 
 ### Climate Specific (Heat Pump / AC)
 
@@ -973,6 +995,20 @@ Send that dump line (diagnostic report or `homey app log`) in an issue — it is
 
 ### My device is not discovered
 - Only devices with known `modelId` / Overkiz `controllableName` mappings are shown. Check [Compatible Devices](#compatible-devices).
+- **Check you are on the right device type first.** Pairing is per driver, and an appliance's endpoints are
+  spread across several of them: an Alféa heat pump's zones pair under *Heat Pump / AC*, its tank under *Water
+  Heater*, and *Heat Pump (Alféa / Pass APC)* is Overkiz-only — on a Magellan-only account it finds nothing
+  even though the rest of the account works. When a driver finds nothing it now names the device types that
+  *would* pair what was discovered, and lists separately what no driver supports:
+
+  ```
+  No compatible devices found in your Cozytouch account — Add these from another device type instead:
+  Water Heater (DHW_0 DEFAULT), Heat Pump / AC (ROOM_0, ROOM_1), Towel Rack (TESC_0 DEFAULT, TESC_1 DEFAULT)
+  — Not supported yet: Alfea Extensa S (modelId 2303 / productId 54), Alfea Extensa S (modelId 2327 / productId 58)
+  ```
+
+  The app log carries the same two lists uncapped, plus every discovered device with its `modelId` /
+  `productId`.
 - To add a new model, see [Adding Support for New Devices](#adding-support-for-new-devices).
 
 All of the above only covers a device that **pairs**: the dump comes from `CozyTouchDevice`, which an

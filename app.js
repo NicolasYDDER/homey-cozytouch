@@ -14,7 +14,13 @@ const SYNC_INTERVAL_MAX = 300;
 class CozyTouchApp extends Homey.App {
 
   async onInit() {
-    this.log('Atlantic Cozytouch is starting...');
+    // The version belongs in the first log line: a submitted diagnostic report
+    // is otherwise impossible to tie to a release, and every capability mapping
+    // question starts with "which version produced this?".
+    const version = (this.manifest && this.manifest.version)
+      || (this.homey.manifest && this.homey.manifest.version)
+      || '?';
+    this.log(`Atlantic Cozytouch ${version} is starting...`);
 
     // Store API instances per account (keyed by username + protocol)
     this._cozyInstances = {};
@@ -240,7 +246,10 @@ class CozyTouchApp extends Homey.App {
       this.log(`[Cozytouch] Found ${cozyDevices.length} device(s):`);
       cozyDevices.forEach((dev) => {
         dev._protocol = 'cozytouch';
-        this.log(`  - "${dev.name}" | deviceId=${dev.deviceId} | modelId=${dev.modelId} | type=${cozyApi.getDeviceType(dev.modelId)}`);
+        // productId, not just modelId: capability IDs are per product, so it is
+        // the key a per-product override block is written against (see
+        // CLIMATE_CAP_IDS_BY_PRODUCT). A log without it cannot be acted on.
+        this.log(`  - "${dev.name}" | deviceId=${dev.deviceId} | modelId=${dev.modelId} | productId=${dev.productId} | type=${cozyApi.getDeviceType(dev.modelId)}`);
         allDevices.push(dev);
       });
     } catch (err) {
