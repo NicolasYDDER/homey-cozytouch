@@ -4,7 +4,9 @@
       "title": "Connect to Cozytouch",
       "subtitle": "Enter your Atlantic Cozytouch account credentials"
     },
-    "no_devices": "No compatible devices found in your Cozytouch account"
+    "no_devices": "No compatible devices found in your Cozytouch account",
+    "try_other_drivers": "Add these from another device type instead:",
+    "unsupported": "Not supported yet:"
   },
   "errors": {
     "auth_failed": "Authentication failed. Please check your credentials.",

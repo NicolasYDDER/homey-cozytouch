@@ -32,13 +32,36 @@ describe('Magellan climate capability IDs per product', () => {
     { capabilityId: 218, value: '0' },
   ];
 
-  const fakeCtx = (store) => {
+  // ROOM_1 of an Alféa Extensa S Duo 8 (Test Connection report, app 1.4.9). Same
+  // block as ROOM_0 one productId up, with one difference that matters: this
+  // installation is weather-compensated and has no room probe, so it reports
+  // neither 117 nor 118 — capability 7 is still the mode, and still 4.
+  const ROOM_1_CAPS = [
+    { capabilityId: 7, value: '4' },
+    { capabilityId: 17, value: '20.0' },
+    { capabilityId: 40, value: '20.0' },
+    { capabilityId: 73, value: '2' },
+    { capabilityId: 153, value: '0' },
+    { capabilityId: 154, value: 'Pièces de vie' },
+    { capabilityId: 160, value: '10.0' },
+    { capabilityId: 161, value: '35.0' },
+    { capabilityId: 162, value: '10.0' },
+    { capabilityId: 163, value: '35.0' },
+    { capabilityId: 166, value: '21' },
+    { capabilityId: 177, value: '25.0' },
+    { capabilityId: 181, value: '4' },
+    { capabilityId: 184, value: '0' },
+    { capabilityId: 192, value: '35.0' },
+    { capabilityId: 218, value: '0' },
+  ];
+
+  const fakeCtx = (store, caps = ROOM_0_CAPS) => {
     const ctx = {
       writes: [],
       values: {},
       options: {},
       store,
-      getCapabilities: async () => ROOM_0_CAPS,
+      getCapabilities: async () => caps,
       getCapValue: (list, capId) => api.getCapabilityValue(list, capId),
       setCapValue: async (capId, value) => { ctx.writes.push([capId, value]); },
       setCapability: (name, value) => { ctx.values[name] = value; },
@@ -49,8 +72,8 @@ describe('Magellan climate capability IDs per product', () => {
     return ctx;
   };
 
-  const handlerFor = (store) => {
-    const ctx = fakeCtx(store);
+  const handlerFor = (store, caps) => {
+    const ctx = fakeCtx(store, caps);
     return [new CozytouchHandler(ctx, api.getHvacModes(store.modelId)), ctx];
   };
 
@@ -63,6 +86,16 @@ describe('Magellan climate capability IDs per product', () => {
     // Not overridden: the defaults already match what the product reports.
     assert.equal(caps.MIN_TEMP_HEAT, 160);
     assert.equal(caps.MAX_TEMP_HEAT, 161);
+  });
+
+  it('gives ROOM_1 the same block with zone 2 temperature', () => {
+    const caps = climateCapIds(27);
+    assert.equal(caps.HVAC_MODE, 7);
+    assert.equal(caps.TARGET_TEMP_HEAT, 40);
+    assert.equal(caps.TARGET_TEMP_COOL, 177);
+    // 117 is zone 1's probe, 118 is zone 2's.
+    assert.equal(caps.CURRENT_TEMP, 118);
+    assert.equal(climateCapIds(26).CURRENT_TEMP, 117);
   });
 
   it('keeps the default IDs for every other product', () => {
@@ -97,6 +130,26 @@ describe('Magellan climate capability IDs per product', () => {
     await handler.setMode('heat');
 
     assert.deepEqual(ctx.writes, [[7, '4']]);
+  });
+
+  it('leaves the temperature empty rather than wrong on a probeless ROOM_1', async () => {
+    const [handler, ctx] = handlerFor({ productId: 27, modelId: 558 }, ROOM_1_CAPS);
+    await handler.updateState();
+
+    // Regression: on the defaults this read capability 7 and showed the mode as
+    // a 4 °C room. No probe means no value — an empty tile, not a wrong one.
+    assert.equal(ctx.values.measure_temperature, undefined);
+    assert.equal(ctx.values.target_temperature, 20);
+    assert.equal(ctx.values.cozytouch_hvac_mode, 'heat');
+    assert.equal(ctx.values.onoff, true);
+  });
+
+  it('still reads zone 2 temperature when the probe is there', async () => {
+    const withProbe = [...ROOM_1_CAPS, { capabilityId: 118, value: '20.84000000000000000000' }];
+    const [handler, ctx] = handlerFor({ productId: 27, modelId: 558 }, withProbe);
+    await handler.updateState();
+
+    assert.equal(ctx.values.measure_temperature, 20.84);
   });
 
   it('leaves a real air conditioner on the default IDs', async () => {
