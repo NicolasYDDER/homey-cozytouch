@@ -3,6 +3,7 @@
 const CozyTouchAPI = require('./lib/CozyTouchAPI');
 const OverkizAPI = require('./lib/OverkizAPI');
 const { describeAccount } = require('./lib/helpers/magellan-capabilities');
+const { describeOverkizAccount } = require('./lib/helpers/discovery-report');
 
 // Version of the app, so a pasted device report says which release produced it.
 // Read defensively: it is only decoration on the report, never worth throwing.
@@ -112,8 +113,18 @@ module.exports = {
       results.overkiz.deviceList = devices.map((d) => ({
         name: d.label,
         uiClass: d.uiClass,
+        // The identifier Overkiz support is keyed on. uiClass alone cannot tell
+        // an Alféa Pass APC heating zone from a plain electrical heater, so a
+        // table without it is not enough to act on.
+        controllableName: d.controllableName || null,
+        widget: d.widget || null,
         type: overkizApi.getDeviceType(d),
       }));
+      results.overkiz.report = describeOverkizAccount(
+        devices,
+        (dev) => overkizApi.getDeviceType(dev),
+        appVersion(homey),
+      );
     } catch (err) {
       results.overkiz.error = err.message;
     }

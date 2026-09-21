@@ -3,6 +3,7 @@
 const Homey = require('homey');
 const CozyTouchAPI = require('./lib/CozyTouchAPI');
 const OverkizAPI = require('./lib/OverkizAPI');
+const { withFreshSession } = require('./lib/helpers/session-retry');
 
 // One app setting: delay between each sync cycle for every device.
 // Cycle = Overkiz refreshStates (if any) → poll all devices.
@@ -206,8 +207,12 @@ class CozyTouchApp extends Homey.App {
    */
   getCozyTouchApi({ username, password, deviceId }) {
     const key = username;
-    if (this._cozyInstances[key] && this._cozyInstances[key].isAuthenticated()) {
-      return this._cozyInstances[key];
+    const cached = this._cozyInstances[key];
+    // Credentials are compared as well as the flag: a cached instance survives a
+    // password change with the old one still in it, and re-authenticating it
+    // would then fail with a password the user has already fixed.
+    if (cached && cached.isAuthenticated() && cached.usesCredentials(username, password)) {
+      return cached;
     }
     const api = new CozyTouchAPI({ username, password, deviceId, log: this.log.bind(this) });
     this._cozyInstances[key] = api;
@@ -219,8 +224,9 @@ class CozyTouchApp extends Homey.App {
    */
   getOverkizApi({ username, password }) {
     const key = username;
-    if (this._overkizInstances[key] && this._overkizInstances[key].isAuthenticated()) {
-      return this._overkizInstances[key];
+    const cached = this._overkizInstances[key];
+    if (cached && cached.isAuthenticated() && cached.usesCredentials(username, password)) {
+      return cached;
     }
     const api = new OverkizAPI({ username, password, log: this.log.bind(this) });
     this._overkizInstances[key] = api;
@@ -233,15 +239,18 @@ class CozyTouchApp extends Homey.App {
    */
   async discoverDevices({ username, password }) {
     const allDevices = [];
+    // Which protocols could not be read at all. Failing on one of the two is
+    // ordinary — many accounts exist on Cozytouch and not on Overkiz — so only
+    // both failing means nothing is known about the account.
+    const failures = [];
 
     // ── Protocol 1: Cozytouch / Magellan ────────────────────────
     try {
       const cozyApi = this.getCozyTouchApi({ username, password, deviceId: '' });
-      if (!cozyApi.isAuthenticated()) {
-        await cozyApi.authenticate();
-      }
-      await cozyApi.getSetup();
-      const cozyDevices = cozyApi.getDevices();
+      const cozyDevices = await withFreshSession(cozyApi, async () => {
+        await cozyApi.getSetup();
+        return cozyApi.getDevices();
+      }, (msg) => this.log(`[Cozytouch] ${msg}`));
 
       this.log(`[Cozytouch] Found ${cozyDevices.length} device(s):`);
       cozyDevices.forEach((dev) => {
@@ -254,16 +263,16 @@ class CozyTouchApp extends Homey.App {
       });
     } catch (err) {
       this.log(`[Cozytouch] Discovery failed: ${err.message}`);
+      failures.push(`Cozytouch: ${err.message}`);
     }
 
     // ── Protocol 2: Overkiz ─────────────────────────────────────
     try {
       const overkizApi = this.getOverkizApi({ username, password });
-      if (!overkizApi.isAuthenticated()) {
-        await overkizApi.authenticate();
-      }
-      await overkizApi.getSetup();
-      const overkizDevices = await overkizApi.getDevices();
+      const overkizDevices = await withFreshSession(overkizApi, async () => {
+        await overkizApi.getSetup();
+        return overkizApi.getDevices();
+      }, (msg) => this.log(`[Overkiz] ${msg}`));
 
       this.log(`[Overkiz] Found ${overkizDevices.length} device(s):`);
       overkizDevices.forEach((dev) => {
@@ -276,14 +285,32 @@ class CozyTouchApp extends Homey.App {
       });
     } catch (err) {
       this.log(`[Overkiz] Discovery failed: ${err.message}`);
+      failures.push(`Overkiz: ${err.message}`);
     }
 
     if (allDevices.length === 0) {
-      throw new Error('No devices found on either Cozytouch or Overkiz protocols');
+      throw this._noDiscoveryError(failures);
     }
 
     this.log(`Total: ${allDevices.length} device(s) across both protocols`);
     return allDevices;
+  }
+
+  /**
+   * Nothing was discovered, and which of the two reasons it is matters. An
+   * account that answered and holds nothing this app can use is a support
+   * question; two protocols that both refused to answer say nothing about the
+   * account at all. Reported as the same thing — one hardcoded, unlocalized
+   * "No devices found on either Cozytouch or Overkiz protocols" — it sent a user
+   * hunting for an unsupported device while the real fault was a dead session on
+   * an account with thirteen devices on it.
+   */
+  _noDiscoveryError(failures) {
+    if (failures.length < 2) {
+      return new Error(this.homey.__('errors.no_protocol'));
+    }
+    this.error(`Neither protocol could be read: ${failures.join(' | ')}`);
+    return new Error(this.homey.__('errors.discovery_failed'));
   }
 
   _registerFlowCards() {

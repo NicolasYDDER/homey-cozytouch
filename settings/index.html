@@ -531,17 +531,12 @@
             document.getElementById('cozy-devices').innerHTML = renderDeviceTable(result.cozytouch.deviceList);
             document.getElementById('cozy-devices').style.display = 'block';
           }
-          if (result.cozytouch.report) {
-            document.getElementById('cozy-report').value = result.cozytouch.report;
-            document.getElementById('cozy-report-box').style.display = 'block';
-          }
         } else {
           setDot('cozy-dot', 'red');
           document.getElementById('cozy-status').innerHTML =
             '<strong>Status:</strong> Failed<br>' +
             '<strong>Error:</strong> ' + (result.cozytouch.error || 'Unknown');
           document.getElementById('cozy-devices').style.display = 'none';
-          document.getElementById('cozy-report-box').style.display = 'none';
         }
 
         // Update Overkiz status
@@ -561,6 +556,14 @@
             '<strong>Error:</strong> ' + (result.overkiz.error || 'Unknown');
           document.getElementById('ovkz-devices').style.display = 'none';
         }
+
+        // One report covering both protocols, from whichever of the two
+        // answered. Keyed off the Magellan half alone, the box stayed hidden on
+        // an account whose devices all sit on Overkiz — which is exactly the
+        // account that cannot be diagnosed any other way.
+        const reports = [result.cozytouch.report, result.overkiz.report].filter(Boolean);
+        document.getElementById('cozy-report').value = reports.join('\n\n');
+        document.getElementById('cozy-report-box').style.display = reports.length > 0 ? 'block' : 'none';
 
         // Each protocol is a separate account on Atlantic's side: plenty of
         // accounts exist on one and not on the other, and saying "successful

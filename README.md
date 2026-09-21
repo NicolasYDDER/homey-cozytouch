@@ -614,6 +614,44 @@ Adjustable-setpoint radiators stay on the `heater` driver (no dedicated driver).
 |-----------|-------|
 | 562-570 | AC controller modules - detected during discovery but not yet fully mapped |
 
+### Alféa Extensa Duo A.I. 5 R32 (modelId 212, Not Yet Mapped)
+
+Reported by a user whose account announces this appliance as **one** Magellan device rather than as the
+`ROOM_x` / `DHW_0` / `TESC_x` / `GENERATOR_0` endpoint set another Extensa account announces — so none of the
+per-endpoint blocks above apply to it. `modelId 212` is absent from `MODEL_TYPES`, it answers `type UNKNOWN`, and
+no driver claims it. `211` (Loria Duo R32 advanced) is its neighbour in the table, not a substitute.
+
+What it reports (`productId 2`, app 1.4.10, abridged):
+
+```
+Alfea Extensa Duo A.I. 5 R32 | modelId 212 | productId 2 | type UNKNOWN
+  1=0, 3=2, 4=0, 7=0, 8=3, 9=0, 17=18.0, 19=null, 22=40, 23=52, 39=40, 41=19.0, 73=2, 86=-, 87=-,
+  96=24.0, 97=26.0, 109=31.40625, 111=51.46875, 116=36.640625, 117=25.0, 119=19.3, 154=Plancher,
+  165=-, 169=100.0, 171=35.0, 172=18.0, 184=0, 188=3, 100022 absent, 100406=51501240
+```
+
+Not added to `MODEL_TYPES` yet, deliberately — `CLIMATE_CAP_IDS` would be wrong for it in a way that pairing
+cannot detect:
+
+- **Cap 2 (`TARGET_TEMP_HEAT`) does not exist on this product**, and neither do 160–163 (the setpoint limits).
+  Classified as a heat pump it would pair with a target-temperature tile that reads empty and 404s on write.
+- The defaults that *are* present are not obviously the right ones. Cap 1 is `heating_mode` on boilers and
+  `hvac_mode` on climate devices; `7` carries the mode rather than a temperature on the `ROOM_x` blocks, and
+  here `1=0` and `7=0` both. `73=2` is a third candidate. Getting this wrong is the 1.4.8 bug.
+- The setpoint is likewise ambiguous: `22`/`39`=40 and `171`=35.0 read as circuit-water setpoints (`154` is
+  `Plancher` — underfloor), while `41`=19.0 and `17`=18.0 read as room setpoints.
+- `100022` (`supported_system_operating_modes`), the bitmask the mode picker should be built from, is **not**
+  reported by this product, so the mode list cannot be derived from the payload either.
+
+Confidently readable already: `119`=19.3 outside temperature, `109`=31.4 circuit water, `111`=51.5 tank water,
+`117`=25.0 room temperature zone 1, `23`=52 / `22`=40 setpoints, `172`=18.0 away-mode temperature.
+`86`/`87`/`165` (DHW on/off, DHW mode, boost) are `null` on this product despite it being a Duo with a tank.
+
+Pinning the rest needs one report taken **after** changing a known value in the Cozytouch app — see
+[Adding Support for New Devices](#adding-support-for-new-devices). The account also holds 12 Overkiz devices,
+which on a Pass APC stack is the more likely place to support this appliance; that is what the Overkiz half of
+Test Connection was added for in 1.4.11.
+
 ---
 
 ## Architecture Overview
@@ -1052,6 +1090,37 @@ reached `Poll failed (#8)` with nothing wrong with it, and a submitted log read 
 (#n in a row)` counts consecutive failures only, so the number means "this device is broken right now" rather
 than "this app has been running a while".
 
+### Adding a device says the account is empty, and Test Connection says it is not
+
+Fixed in 1.4.11. The same eight-hour token expiry as above, on the one code path that had no recovery for it.
+
+`isAuthenticated()` on both APIs reports only that a token was obtained *at some point* — `CozyTouchAPI.authenticate()`
+discards the `expires_in` it is handed — and `discoverDevices()` guarded its login behind exactly that check. So
+an expired token was treated as a live session, `getSetup()` answered 401 on both protocols, each failure was
+swallowed into one `log` line, and pairing ended on a hardcoded, unlocalized *"No devices found on either
+Cozytouch or Overkiz protocols"*.
+
+It hits **new users specifically**, which is why it survived several releases:
+
+- On a Homey with paired devices the poll cycle renews the token every ~8 h on its way past a 401
+  (`CozyTouchDevice._handlePollError`), so discovery always found a fresh one.
+- On a Homey with *no* paired device there is no poll cycle, so nothing ever renews it. An Extensa Duo owner
+  installed the app, came back the next day, and reached discovery holding a 38-hour-old token.
+- `getCozyTouchApi()` / `getOverkizApi()` hand back the cached instance for as long as it claims to be
+  authenticated, and nothing cleared the token on 401 — so the poisoned instance was sticky until an app restart.
+- **Test Connection gave a false all-clear.** It builds a fresh API instance and authenticates unconditionally,
+  never touching the cached ones. It reported 13 devices, twice, while pairing stayed broken — which is why this
+  was reported as an integration problem with the appliance rather than as a login problem.
+
+Since 1.4.11 each protocol's discovery runs through `withFreshSession()` (`lib/helpers/session-retry.js`): a 401
+drops the session explicitly (`invalidateSession()`), logs in again and retries once. The retry is capped at one,
+so genuinely wrong credentials cannot loop. The two outcomes are also no longer reported as the same thing —
+an account that answered and holds nothing this app can use keeps 1.4.10's pairing guidance
+(`errors.no_protocol`), while two protocols that both refused to answer say so (`errors.discovery_failed`), in
+the user's own language.
+
+On 1.4.10 and earlier the workaround is to restart the app and pair within the next few hours.
+
 ### Homey setpoint/mode wrong after using the wall remote
 - Check the Cozytouch app **without** changing anything: if it is also wrong until you wait/refresh, the cloud is behind — see [Known Limitations](#known-limitations).
 - After Cozytouch shows the correct value, Homey should catch up on the next sync cycle (`sync_interval`).
@@ -1118,6 +1187,24 @@ TESC_0 DEFAULT | modelId 1388 | productId 55 | type UNKNOWN
 `type UNKNOWN` marks a `modelId` absent from `MODEL_TYPES` — the ones that cannot pair at all. Both IDs are
 printed because capability blocks are keyed on `productId`, not on the model family. This is a superset of
 the pairing error's `describeDiscoveredDevices()` line, which names devices without their capabilities.
+
+Since 1.4.11 the Overkiz half of the account is reported the same way (`describeOverkizAccount()`), which it
+was not before: it listed only label, `uiClass` and type, and `uiClass` is not an identifier support can be
+keyed on — `HeatingSystem` covers both an Alféa Pass APC heating zone and a plain electrical heater. An Extensa
+Duo owner sent a report showing twelve Overkiz devices and not one actionable line. `controllableName`,
+`widget`, the `deviceURL` and each device's `core:` / `io:` states are now included:
+
+```
+Overkiz — 12 device(s) — app 1.4.11
+
+Zone 1 | io:AtlanticPassAPCHeatingZoneComponent | uiClass HeatingSystem | widget AtlanticPassAPCHeatingZone | type HEATER
+  io://1234-5678-9012/8912345
+  core:TargetTemperatureState=20.5, core:OnOffState=on
+```
+
+Both halves land in the one textarea, shown whenever *either* protocol answered — keyed off the Magellan half
+alone, the box stayed hidden on an account whose devices all sit on Overkiz, which is precisely the account
+that cannot be diagnosed any other way.
 
 The report contains device names and identifiers, so the settings page says to glance over it before posting
 it publicly.
