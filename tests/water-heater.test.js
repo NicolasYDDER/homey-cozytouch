@@ -255,6 +255,34 @@ describe('Alfea Extensa Duo tank capability profile (productId 47)', () => {
     assert.deepEqual(ctx.options.target_temperature, { min: 50, max: 65 });
   });
 
+  // This tank reports 2 on capability 87, a value this app has no name for —
+  // upstream's reference table names only 0, 3 and 4 for this model too, so it
+  // cannot be named without guessing. Dropped in silence, the picker kept
+  // whatever it last held and showed a mode the tank was not in for three days.
+  it('says an unnamed mode out loud instead of leaving a stale one on the tile', async () => {
+    const ctx = fakeCtx();
+    const logs = [];
+    ctx.log = (line) => logs.push(line);
+    const handler = new CozytouchHandler(ctx);
+    await handler.updateState();
+
+    assert.equal('cozytouch_heating_mode' in ctx.values, false, 'guessed a name for mode 2');
+    assert.equal(logs.length, 1);
+    assert.match(logs[0], /Heating mode 2 on capability 87 has no name/);
+
+    // Once per value: this runs on every poll, and a line a minute would bury
+    // the log it is meant to make readable.
+    await handler.updateState();
+    assert.equal(logs.length, 1);
+  });
+
+  it('still names the modes it does know on this tank', async () => {
+    const ctx = fakeCtx();
+    ctx.getCapabilities = async () => [{ capabilityId: 86, value: '1' }, { capabilityId: 87, value: '3' }];
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.values.cozytouch_heating_mode, 'eco_plus');
+  });
+
   it('never looks for an away capability this product does not have', async () => {
     const ctx = fakeCtx();
     await new CozytouchHandler(ctx).updateState();

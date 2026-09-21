@@ -55,24 +55,39 @@ class ClimateCozytouchHandler {
   async setFanMode(value) {
     const apiVal = FAN_MODE_TO_API[value];
     if (apiVal !== undefined) {
-      await this.ctx.setCapValue(this.caps.FAN_MODE, apiVal);
+      await this._write(this.caps.FAN_MODE, apiVal, 'fan speed');
     }
   }
 
   async setSwingMode(value) {
     const apiVal = SWING_MODE_TO_API[value];
     if (apiVal !== undefined) {
-      await this.ctx.setCapValue(this.caps.SWING_MODE, apiVal);
+      await this._write(this.caps.SWING_MODE, apiVal, 'swing');
     }
+  }
+
+  /**
+   * A capability the product does not have has no ID to write to. That is the
+   * normal case for a heating zone's fan and swing: the tile is not offered at
+   * all, so this only guards a Flow card aimed at one.
+   */
+  async _write(capId, value, what) {
+    if (!capId) {
+      throw new Error(`This device has no ${what} control`);
+    }
+    await this.ctx.setCapValue(capId, value);
   }
 
   async updateState() {
     const caps = await this.ctx.getCapabilities();
+    // A capability the product does not have is not read at all, so it does not
+    // count as a value this app failed to find (see _reportCapabilityCoverage).
+    const read = (capId) => (capId ? this.ctx.getCapValue(caps, capId) : null);
 
-    const currentTemp = this.ctx.getCapValue(caps, this.caps.CURRENT_TEMP);
+    const currentTemp = read(this.caps.CURRENT_TEMP);
     if (currentTemp !== null) this.ctx.setCapability('measure_temperature', parseFloat(currentTemp));
 
-    const hvacMode = this.ctx.getCapValue(caps, this.caps.HVAC_MODE);
+    const hvacMode = read(this.caps.HVAC_MODE);
     if (hvacMode !== null) {
       const modeStr = this._hvacModes[parseInt(hvacMode, 10)];
       if (modeStr) {
@@ -83,11 +98,11 @@ class ClimateCozytouchHandler {
     }
 
     const isCooling = this._currentHvacMode === 'cool' || this._currentHvacMode === 'dry';
-    const targetTemp = this.ctx.getCapValue(caps, isCooling ? this.caps.TARGET_TEMP_COOL : this.caps.TARGET_TEMP_HEAT);
+    const targetTemp = read(isCooling ? this.caps.TARGET_TEMP_COOL : this.caps.TARGET_TEMP_HEAT);
     if (targetTemp !== null) this.ctx.setCapability('target_temperature', parseFloat(targetTemp));
 
     if (this.ctx.hasCapability('cozytouch_fan_mode')) {
-      const fanMode = this.ctx.getCapValue(caps, this.caps.FAN_MODE);
+      const fanMode = read(this.caps.FAN_MODE);
       if (fanMode !== null) {
         const fanStr = API_TO_FAN_MODE[parseInt(fanMode, 10)];
         if (fanStr) this.ctx.setCapability('cozytouch_fan_mode', fanStr);
@@ -95,7 +110,7 @@ class ClimateCozytouchHandler {
     }
 
     if (this.ctx.hasCapability('cozytouch_swing_mode')) {
-      const swingMode = this.ctx.getCapValue(caps, this.caps.SWING_MODE);
+      const swingMode = read(this.caps.SWING_MODE);
       if (swingMode !== null) {
         const swingStr = API_TO_SWING_MODE[parseInt(swingMode, 10)];
         if (swingStr) this.ctx.setCapability('cozytouch_swing_mode', swingStr);
@@ -104,8 +119,8 @@ class ClimateCozytouchHandler {
 
     const minCapId = isCooling ? this.caps.MIN_TEMP_COOL : this.caps.MIN_TEMP_HEAT;
     const maxCapId = isCooling ? this.caps.MAX_TEMP_COOL : this.caps.MAX_TEMP_HEAT;
-    const minTemp = this.ctx.getCapValue(caps, minCapId);
-    const maxTemp = this.ctx.getCapValue(caps, maxCapId);
+    const minTemp = read(minCapId);
+    const maxTemp = read(maxCapId);
     if (minTemp !== null && maxTemp !== null) {
       this.ctx.setCapabilityOptions('target_temperature', {
         min: parseFloat(minTemp), max: parseFloat(maxTemp),

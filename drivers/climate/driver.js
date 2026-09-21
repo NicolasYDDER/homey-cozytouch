@@ -7,6 +7,11 @@ const {
   isZoneControlDevice,
   isPassApcHeatPumpDevice,
 } = require('../../lib/helpers/overkiz-device');
+const { climateCapIds } = require('../../lib/constants/cozytouch-mappings');
+const {
+  mappedCapabilityIds,
+  reportsMappedCapability,
+} = require('../../lib/helpers/capability-support');
 
 class ClimateDriver extends CozyTouchDriver {
 
@@ -20,7 +25,8 @@ class ClimateDriver extends CozyTouchDriver {
       }
       const cozyApi = new CozyTouchAPI({});
       const type = cozyApi.getDeviceType(dev.modelId);
-      return type === 'HEAT_PUMP' || type === 'AC';
+      if (type !== 'HEAT_PUMP' && type !== 'AC') return false;
+      return reportsMappedCapability(dev, mappedCapabilityIds(climateCapIds(dev.productId)));
     });
   }
 
@@ -31,8 +37,14 @@ class ClimateDriver extends CozyTouchDriver {
     const hvacModes = cozyApi.getHvacModes(dev.modelId);
 
     const capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_hvac_mode', 'onoff'];
-    if (type === 'AC') {
+    // Only where the product answers on them. The AC range holds real air
+    // conditioners *and* the heating zones of an Alféa heat pump, and a zone has
+    // no fan and no louvre: its block sets both to null.
+    const caps = climateCapIds(dev.productId);
+    if (type === 'AC' && caps.FAN_MODE) {
       capabilities.push('cozytouch_fan_mode');
+    }
+    if (type === 'AC' && caps.SWING_MODE) {
       capabilities.push('cozytouch_swing_mode');
     }
 

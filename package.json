@@ -1,6 +1,6 @@
 {
   "name": "com.atlantic.cozytouch",
-  "version": "1.4.10",
+  "version": "1.4.11",
   "license": "Apache-2.0",
   "main": "app.js",
   "scripts": {

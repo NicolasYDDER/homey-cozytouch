@@ -117,6 +117,8 @@ class WaterHeaterCozytouchHandler {
       const modeStr = API_TO_HEATER_MODE[parseInt(mode, 10)];
       if (modeStr) {
         this.ctx.setCapability('cozytouch_heating_mode', isOn ? modeStr : 'off');
+      } else {
+        this._reportUnmappedMode(mode);
       }
     }
 
@@ -134,6 +136,26 @@ class WaterHeaterCozytouchHandler {
     }
 
     this._applySetpointRange(read(this.caps.MIN_TEMP), read(this.caps.MAX_TEMP));
+  }
+
+  /**
+   * A mode value this app has no name for. It used to be dropped without a word,
+   * which left the picker showing whatever it last held: an Alféa Extensa tank
+   * reports 2 on capability 87 and went three days displaying a mode it was not
+   * in, with nothing in the log to say so.
+   *
+   * Not guessed into a name. The mode values of capability 87 are per model, and
+   * the reference table (mathieuletyrant/cozytouch-hacs) names 0, 3 and 4 for
+   * this one too; 2 is unnamed there as well. What the tank does answer is which
+   * modes it has — capability 105011 `supported_dhw_modes`, a bitmask — and
+   * reading that is the fix. Until then, say the value out loud so one log is
+   * enough to add it.
+   */
+  _reportUnmappedMode(value) {
+    if (this._unmappedModeLogged === value) return;
+    this._unmappedModeLogged = value;
+    const known = Object.keys(API_TO_HEATER_MODE).join(', ');
+    this.ctx.log(`Heating mode ${value} on capability ${this.caps.HEATING_MODE} has no name in this app (known: ${known}); leaving the mode tile as it was`);
   }
 
   _applySetpointRange(minTemp, maxTemp) {

@@ -13,7 +13,7 @@ const {
 // The account that motivated this: an Alféa Extensa S Duo 8 announced only over
 // Magellan. Its owner picked the "Heat Pump (Alféa / Pass APC)" tile — the one
 // whose name matches the appliance — which is Overkiz-only, and was told no
-// compatible device existed while five of these seven pair elsewhere.
+// compatible device existed while three of these seven pair elsewhere.
 const EXTENSA_ACCOUNT = [
   { _protocol: 'cozytouch', name: 'Alfea Extensa S', modelId: 2303, productId: 54 },
   { _protocol: 'cozytouch', name: 'TESC_0 DEFAULT', modelId: 1388, productId: 55 },
@@ -31,23 +31,26 @@ const claimsModels = (name, modelIds) => ({
 
 describe('driver claims', () => {
   it('names the device type that would pair each device', () => {
+    // What the drivers of this account actually claim: the Towel Rack driver no
+    // longer answers for TESC_0/TESC_1, which are the heating circuits of the
+    // two rooms and pair into nothing.
     const { claimed, unclaimed } = groupByClaimingDriver(EXTENSA_ACCOUNT, [
       claimsModels('Heat Pump / AC', [557, 558]),
       claimsModels('Water Heater', [1376]),
-      claimsModels('Towel Rack', [1388, 1389]),
+      claimsModels('Towel Rack', []),
     ]);
 
     // Grouped in the order the drivers were passed, not the order the account
-    // announced them: that is the order of the tiles the user is looking at.
+    // announced them: that is the order of the tiles the user is looking at. A
+    // driver that claims nothing on this account is left out entirely.
     assert.deepEqual(claimed, [
       { driver: 'Heat Pump / AC', devices: ['ROOM_0', 'ROOM_1'] },
       { driver: 'Water Heater', devices: ['DHW_0 DEFAULT'] },
-      { driver: 'Towel Rack', devices: ['TESC_0 DEFAULT', 'TESC_1 DEFAULT'] },
     ]);
-    // The two endpoints of the appliance itself: nothing claims them. They come
-    // back as devices, so the caller can name them with the modelId a report
-    // needs rather than the bare name a user recognizes.
-    assert.deepEqual(unclaimed.map((dev) => dev.modelId), [2303, 2327]);
+    // The two endpoints of the appliance and the two heating circuits: nothing
+    // claims them. They come back as devices, so the caller can name them with
+    // the modelId a report needs rather than the bare name a user recognizes.
+    assert.deepEqual(unclaimed.map((dev) => dev.modelId), [2303, 1388, 1389, 2327]);
   });
 
   it('lists a device claimed by two device types under both', () => {

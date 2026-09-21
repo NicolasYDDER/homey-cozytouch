@@ -9,6 +9,11 @@ const {
   isAdjustableSetpointElectricalHeater,
   isPassApcHeatPumpDevice,
 } = require('../../lib/helpers/overkiz-device');
+const { HEATER_CAP_IDS } = require('../../lib/constants/cozytouch-mappings');
+const {
+  mappedCapabilityIds,
+  reportsMappedCapability,
+} = require('../../lib/helpers/capability-support');
 
 class HeaterDriver extends CozyTouchDriver {
 
@@ -26,7 +31,8 @@ class HeaterDriver extends CozyTouchDriver {
       }
       const cozyApi = new CozyTouchAPI({});
       const type = cozyApi.getDeviceType(dev.modelId);
-      return type === 'GAZ_BOILER' || type === 'THERMOSTAT';
+      if (type !== 'GAZ_BOILER' && type !== 'THERMOSTAT') return false;
+      return reportsMappedCapability(dev, mappedCapabilityIds(HEATER_CAP_IDS));
     });
   }
 

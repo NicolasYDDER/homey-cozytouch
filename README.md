@@ -432,7 +432,7 @@ Handles electric towel dryers via both protocols.
 
 | Device Type | Model IDs (Magellan) | Overkiz controllableName | Known Products |
 |-------------|---------------------|--------------------------|----------------|
-| Towel Rack | 1381, 1382, 1386, 1388, 1389, 1543, 1546, 1547, 1551, 1622 | `io:AtlanticElectricalTowelDryer_IC3_IOComponent` | Kelud, Sauter Asama, Kaoli |
+| Towel Rack | 1381, 1382, 1386, 1543, 1546, 1547, 1551, 1622 | `io:AtlanticElectricalTowelDryer_IC3_IOComponent` | Kelud, Sauter Asama, Kaoli |
 
 **Magellan commands**: Cap 7 (HVAC mode: 0=off, 4=heat), Cap 184 (preset: 0=manual, 1=prog), Cap 40 (target temperature)
 
@@ -440,22 +440,35 @@ Handles electric towel dryers via both protocols.
 
 **Capabilities**: target temperature, current temperature, heating mode (off/manual/program), on/off
 
-**Known gap — `modelId` 1388 / 1389 (`TESC_0`, `TESC_1`) are not towel dryers**: they were mapped here
+**`modelId` 1388 / 1389 (`TESC_0`, `TESC_1`) are not towel dryers — removed in 1.4.11.** They were mapped here
 because they appear next to towel-dryer models, but on an Alféa heat pump account `productId` 55 / 56 answer
-with none of the IDs above — only `19`, `109`, `218`, `106000`, so the tile shows nothing and warns. In the
-reference table (`mathieuletyrant/cozytouch-hacs`, `capability_table.py`, no per-type override for either ID)
-`19` is `temperature_setpoint`, `109` is **`boiler_water_temperature`** and `218` is a wifi diagnostic, not a
-mode. Two further pieces of evidence say these are the **heating circuits** of the `ROOM_x` zones:
+with none of the IDs above — only `19`, `109`, `218`, `106000`, so the tile showed nothing and warned. 1.4.10
+made it worse: the new pairing guidance *recommended* the Towel Rack tile for them. They are the **heating
+circuits** of the `ROOM_x` zones, on four independent pieces of evidence:
 
+- the endpoint prefix names them. Upstream maps `TESC` to **`("Heating circuit", 54)`**
+  (`mathieuletyrant/cozytouch-hacs`, `model.py`) — the same `MODEL_NAMES` table that names `DHW` and `ROOM`.
+- `106000` is `circuit_driven_by_room`, and both report **1**: the setpoint of this circuit is held by a room,
+  so it is not a thing to control on its own. Upstream's `apply_capabilities` deliberately creates **no
+  device** for such a circuit, because it would duplicate the room.
 - the setpoints track the zones. On one account `TESC_0` reads `19=0.0` while `ROOM_0` is off (`7=0`) and
   `TESC_1` reads `19=23.27` while `ROOM_1` is in heat (`7=4`) — a circuit water setpoint, not a room one.
+  `109` is `boiler_water_temperature` **per circuit** and differs between the two (22.47 vs 22.02).
 - 1388 and 1389 are **absent** from that project's 1583-entry `model_catalogue.py`, while every genuine towel
   dryer above (1381, 1382, 1386, 1543, 1546, 1547, 1551, 1622) is named there. They belong to the same
   endpoint/role namespace as 556–570 and 1376, not to the appliance-model namespace.
 
 No capability block is mapped for them: reading `109` into `measure_temperature` would show boiler water as
-room temperature — the same mistake fixed for `productId` 26 in 1.4.8. Until they stop being offered on this
-driver, a pairing list may still show them; adding one produces a device with no values.
+room temperature — the same mistake fixed for `productId` 26 in 1.4.8. What the owner controls is the room,
+which pairs under `climate`. Devices added under Towel Rack before 1.4.11 are not removed automatically;
+delete them by hand.
+
+Beyond the model list, pairing on this driver — and on `climate`, `heater` and `water_heater` — now also
+checks that a Magellan device reports at least one of the capability IDs the driver reads
+(`lib/helpers/capability-support.js`). A model that slips through classification no longer becomes a device
+with nothing on any tile. The check is deliberately permissive: an Overkiz device, a device that announced no
+capability list, or a driver that maps no IDs all pass, since a device that was never judged has only gone
+unseen.
 
 ### Water Heater Driver
 
@@ -567,7 +580,10 @@ says **there is nothing thermostatic on those two endpoints**:
   production counters), wifi signal (`179`), serial/model (`88`, `94`, `335`) and an away-mode switch (`152`,
   with its timestamp pair on `222`). No cap 7, no cap 40.
 - `2327` / `productId` 58 — pump start/hour counters (`25`, `26`, `28`, `29`), water pressure (`100`), boiler
-  water and exhaust temperature (`109`, `116`). Diagnostics only.
+  water and exhaust temperature (`109`, `116`). Diagnostics only. Upstream's `PRODUCT_ID_RUNS` gives
+  `productId` 58 to `modelId` 1391 as well, which `MODEL_TYPES` knows as `GENERATOR_0` — so this second
+  "Alfea Extensa S" endpoint is the **generator** (the heat pump's own hydraulic module), which is exactly what
+  that capability set describes.
 
 What the owner actually controls lives on the endpoints, and those already pair: `ROOM_0` / `ROOM_1` under
 `climate`, `DHW_0` under `water_heater`. A future sensor-only device could expose the appliance's outside
@@ -804,7 +820,20 @@ Another product with its own block, distinct from both the default IDs and the A
 | 105301 / 105300 | Setpoint min / max | float | Range for cap 231 |
 | — | Away mode | — | **Not offered**: cap 226 is a start/stop timestamp pair, not a boolean switch |
 
-### Climate — Alféa Excellia / Extensa heating zones (productId 26 / 27, modelId 557 / 558)
+Since 1.4.11 the away tile is not created at all on this product, and is removed from a tank paired before
+then. Offered anyway, the toggle answered *"This Cozytouch water heater has no away capability"* every time it
+was touched. Overkiz tanks keep theirs — they all have one, through their own handler.
+
+**Cap 87 reports `2` on this tank, and nothing names it.** The app knows 0, 3 and 4; upstream's reference
+table names only those three for modelId 1376 as well, so 2 cannot be named without guessing. Until 1.4.11 the
+value was dropped in silence, which left the mode picker showing whatever it last held — one tank spent three
+days displaying a mode it was not in, with nothing in the log to say so. It is now logged once per distinct
+value, so a single diagnostic report is enough to add it. The real fix is to read cap `105011`
+(`supported_dhw_modes`, a bitmask) instead of assuming the value set: this tank reports `32001` =
+manual|boost|absence|scheduled_absence|antilegionella|smart_grid|on_off — **no auto, no prog**, which means the
+mode picker currently offers modes the tank itself says it does not have.
+
+### Climate — Alféa Excellia / Extensa heating zones (productId 26–30, modelId 557–561)
 
 Same per-product story as the two tanks above, on the climate side. These are not air conditioners: they are the heating **zones** of an Alféa heat pump — `ROOM_0` (modelId 557) and `ROOM_1` (modelId 558) — which fall in the range `MODEL_TYPES` calls `AC` and so land on the `climate` driver. They answer on the towel-rack block, not the AC one. None of 1, 2, 4, 8, 9 exist on them, and **cap 7 carries the mode, not a temperature**: read as the current temperature it reported the mode enum, so a room at 21.97 °C showed as 4 °C on `ROOM_0` (1.4.8), and a zone in heat mode showed a flat 4 °C on `ROOM_1` (1.4.10).
 
@@ -817,15 +846,33 @@ Mapped from two user-submitted reports — an Alféa Excellia M DUO diagnostic l
 | 117 / 118 | Current temperature | float | Room temperature, z-indexed per zone: 117 on `ROOM_0`, 118 on `ROOM_1` |
 | 177 | Target temp cool | float | `target_cool_temperature`; unreachable on a heating-only unit |
 | 160 / 161 | Setpoint min / max | float | Same IDs as the default block |
-| — | Fan / swing | — | **Do not exist**: left on the default IDs, so reads return nothing and a write is refused |
+| — | Fan / swing | — | **Do not exist**: mapped to `null` since 1.4.11, so no tile is offered |
 
 **No room probe means no temperature.** 117/118 are reported only when a room sensor is installed. The Excellia account sends `117=21.97`; the Extensa S account, on the same `productId` 26, sends neither 117 nor 118 — it is weather-compensated, driven by the outside probe (cap 119 on the appliance) and a per-zone heating curve (cap 192: 65 °C for its radiator zone, 35 °C for its underfloor zone). Such a device leaves `measure_temperature` empty. That is correct: an empty tile, not a wrong one.
 
 Reported but not exposed yet: 73 (available thermostat modes), 153 (heating status), 154 (zone name, e.g. «Chauffage», «Pièces de vie»), 157/158 (setpoint override), 166 (system operating mode — a bitmask, `21` = off|heat, **not** 21 °C), 181 (service in progress, mirrors cap 7), 294 (setpoint step), 303 / 100320–100333 (weekly program), 352–357 (presence/absence setpoints).
 
-`ROOM_2`–`ROOM_4` (modelIds 559/560/561) are the same kind of endpoint and will need the same block, but their `productId`s have not been observed yet — guessing a key would only move the bug.
+**`ROOM_2`–`ROOM_4` (modelIds 559/560/561) map to `productId` 28/29/30**, from the vendor's own model catalogue
+(the generated `PRODUCT_ID_RUNS` table in `mathieuletyrant/cozytouch-hacs`, `model_product_ids.py`, which also
+confirms every `productId` observed on a real account: 557→26, 558→27, 1376→47, 1388→55, 1389→56, 2303→54,
+2327→58). They get the same block as 26/27 **minus the temperature**: 117 and 118 are
+`thermostat_temperature_z1`/`_z2` and the series stops there — 119 is the outside probe, not zone 3 — so a
+third zone leaves `measure_temperature` unmapped, which reads as an empty tile. On the AC default (cap 7) it
+would have reported the mode enum as a temperature: the 1.4.8 bug, on a three-zone house.
 
-Because 557/558 stay classified as `AC`, the fan and swing pickers are still shown on such a device; they are inert. Reclassifying the modelIds would change the tile of anyone with a genuine Takao AC, so they are left alone until a real AC on those modelIds is confirmed.
+**No fan and no swing, confirmed by the devices themselves.** Cap `100022`
+(`supported_system_operating_modes`) reads `29` on these zones. Against upstream's `HVAC_MODE_BITS` — 1=off,
+6=auto, 8=cool, 16=heat, 128=fan, 256=dry — that is off|auto|heat with **neither the fan nor the dry bit**. Both
+are mapped to `null` since 1.4.11, so no picker is offered and a zone paired earlier has its two pickers removed
+at startup.
+
+557–561 stay classified as `AC`: reclassifying the modelIds would change the tile of anyone with a genuine Takao
+AC, and would need a capability migration on every paired device. The per-product blocks make the
+classification harmless.
+
+Still unfixed (candidates for a later release): the hvac mode picker offers cool, dry and fan_only on these
+zones, which cap `100022` plus cap `73` (`available_thermostat_modes` = 2, heating only) both say they do not
+have.
 
 ### Climate Specific (Heat Pump / AC)
 
@@ -878,6 +925,34 @@ Varies by model. Below are the known mappings:
 | 4 | Heat |
 | 7 | Fan Only |
 | 8 | Dry |
+
+On an Alféa `ROOM_x` zone these same modelIds are a heating zone, and cap 7 — not cap 1 — carries the mode with
+only `0=off` / `4=heat`. See [Climate — Alféa Excellia / Extensa heating zones](#climate--alféa-excellia--extensa-heating-zones-productid-2630-modelid-557561).
+
+### Named from the vendor's own tables (not all mapped yet)
+
+Cross-referenced from [`mathieuletyrant/cozytouch-hacs`](https://github.com/mathieuletyrant/cozytouch-hacs)
+(`capability_table.py`, `const.py`, `model.py`), which carries names for the numeric IDs. Listed here because
+they are what the next fixes are built from, and because two of this app's own names look wrong against them.
+
+| Cap ID | Upstream name | Notes |
+|--------|---------------|-------|
+| 19 | `temperature_setpoint` | On a `TESC_x` circuit, the *circuit water* setpoint held by its room |
+| 109 | `boiler_water_temperature` | **Per circuit**, not one value per appliance: the two `TESC_x` differ |
+| 119 | `outside_temperature` | The appliance's outside probe — **not** a third zone's room probe |
+| 106000 | `circuit_driven_by_room` | `1` = this circuit's setpoint is held by a room, so it is not a device |
+| 100022 | `supported_system_operating_modes` | Bitmask: 1=off, 6=auto, 8=cool, 16=heat, 128=fan, 256=dry |
+| 105011 / 168 | `supported_dhw_modes` | Bitmask of the modes a tank actually has |
+| 252 / 253 | `target_temperature_max` / `_min` | The Extensa tank reports 60.0 / 47.0 here |
+| 164 | `energy_consumption_supported` | This app calls it `MODE_STATUS` on towel racks — likely misnamed |
+| 172 | `away_mode_temperature` | This app calls it `ECO_TEMP` on towel racks — likely misnamed |
+
+Unmapped and unnamed on both sides: 15, 17, 75, 192, 100100, 105301.
+
+**Known discrepancy — the Extensa tank's setpoint slider.** The app reads its range from `105301`/`105300`
+(50–65 °C); the tank also reports `253`/`252` = 47.0/60.0, and `105300` is `water_temperature_limit`, a safety
+ceiling rather than a settable maximum. The slider is therefore likely wrong at both ends. Not changed yet:
+it needs a second account to confirm which pair a product actually honours.
 
 ---
 
@@ -967,6 +1042,16 @@ Calling Overkiz too aggressively can hit quotas (`QUOTA_EXCEEDED`). Prefer a mod
 - The Atlantic API (`apis.groupe-atlantic.com`) may be temporarily down.
 - Tokens expire; the app auto-refreshes on HTTP 401, but a restart may help.
 
+### A diagnostic log full of `Poll failed` lines
+
+A Cozytouch access token lives about eight hours, so roughly three times a day the first poll after expiry
+returns 401 and is recovered half a second later by re-authenticating. Until 1.4.11 that was logged as an
+error **before** the recovery was attempted, against a counter that never reset — a perfectly healthy device
+reached `Poll failed (#8)` with nothing wrong with it, and a submitted log read as a failing app. A recovered
+401 is now one info line, `Access token had expired; re-authenticated and polled again`, and `Poll failed
+(#n in a row)` counts consecutive failures only, so the number means "this device is broken right now" rather
+than "this app has been running a while".
+
 ### Homey setpoint/mode wrong after using the wall remote
 - Check the Cozytouch app **without** changing anything: if it is also wrong until you wait/refresh, the cloud is behind — see [Known Limitations](#known-limitations).
 - After Cozytouch shows the correct value, Homey should catch up on the next sync cycle (`sync_interval`).
@@ -1003,9 +1088,14 @@ Send that dump line (diagnostic report or `homey app log`) in an issue — it is
 
   ```
   No compatible devices found in your Cozytouch account — Add these from another device type instead:
-  Water Heater (DHW_0 DEFAULT), Heat Pump / AC (ROOM_0, ROOM_1), Towel Rack (TESC_0 DEFAULT, TESC_1 DEFAULT)
-  — Not supported yet: Alfea Extensa S (modelId 2303 / productId 54), Alfea Extensa S (modelId 2327 / productId 58)
+  Water Heater (DHW_0 DEFAULT), Heat Pump / AC (ROOM_0, ROOM_1)
+  — Not supported yet: Alfea Extensa S (modelId 2303 / productId 54), TESC_0 DEFAULT (modelId 1388 /
+  productId 55), TESC_1 DEFAULT (modelId 1389 / productId 56), Alfea Extensa S (modelId 2327 / productId 58)
   ```
+
+  A device the guidance names has to actually work once added, or the advice is worse than none. Up to 1.4.10
+  this list recommended *Towel Rack* for `TESC_0` / `TESC_1`, which added two devices with nothing on any tile;
+  they now appear on the "not supported yet" side, where they belong.
 
   The app log carries the same two lists uncapped, plus every discovered device with its `modelId` /
   `productId`.
@@ -1019,9 +1109,9 @@ needed to add support for it was only obtainable from a device that already work
 alongside its identity, so the settings page prints, for every device on the account, paired or not:
 
 ```
-Cozytouch (Magellan) — 7 device(s) — app 1.4.9
+Cozytouch (Magellan) — 7 device(s) — app 1.4.11
 
-TESC_0 DEFAULT | modelId 1388 | productId 55 | type TOWEL_RACK
+TESC_0 DEFAULT | modelId 1388 | productId 55 | type UNKNOWN
   19=30.00000000000000000000, 109=26.84000000000000000000, 218=0, 106000=1
 ```
 
