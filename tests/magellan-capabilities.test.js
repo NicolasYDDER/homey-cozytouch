@@ -81,19 +81,37 @@ describe('Magellan account report', () => {
   it('names each device by both IDs and dumps what it reports', () => {
     const report = describeAccount([
       {
-        name: 'TESC_0 DEFAULT',
-        modelId: 1388,
-        productId: 55,
-        capabilities: [{ capabilityId: 19, value: '30.0' }, { capabilityId: 109, value: '26.84' }],
+        name: 'DHW_0 DEFAULT',
+        modelId: 1376,
+        productId: 47,
+        capabilities: [{ capabilityId: 87, value: '2' }, { capabilityId: 111, value: '53.42' }],
       },
     ], typeOf, '1.4.9');
 
     assert.equal(report, [
       'Cozytouch (Magellan) — 1 device(s) — app 1.4.9',
       '',
-      'TESC_0 DEFAULT | modelId 1388 | productId 55 | type TOWEL_RACK',
-      '  19=30.0, 109=26.84',
+      'DHW_0 DEFAULT | modelId 1376 | productId 47 | type WATER_HEATER',
+      '  87=2, 111=53.42',
     ].join('\n'));
+  });
+
+  // TESC_0/TESC_1 used to answer TOWEL_RACK, which paired them into two towel
+  // dryers with no value on any tile. They are the heating circuits of the
+  // ROOM_x zones and no driver claims them — the report is now the only place
+  // they appear, which is what it is for.
+  it('reports a heating circuit as unclaimed rather than as a towel rack', () => {
+    const report = describeAccount([
+      {
+        name: 'TESC_0 DEFAULT',
+        modelId: 1388,
+        productId: 55,
+        capabilities: [{ capabilityId: 19, value: '30.0' }, { capabilityId: 109, value: '26.84' }],
+      },
+    ], typeOf, '1.4.11');
+
+    assert.match(report, /modelId 1388 \| productId 55 \| type UNKNOWN/);
+    assert.match(report, /19=30\.0, 109=26\.84/);
   });
 
   // The whole point: an unmapped model is exactly the one worth reporting, so it

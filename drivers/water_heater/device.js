@@ -47,6 +47,13 @@ class WaterHeaterDevice extends CozyTouchDevice {
     if (this.hasCapability('onoff')) {
       await this.removeCapability('onoff');
     }
+    // Away is per product on Magellan, and the Alféa Extensa tank has no away
+    // switch at all: a tank paired before 1.4.11 carries a toggle that can only
+    // return an error. Overkiz tanks all have one, through their own handler.
+    if (!this._hasAwayCommand() && this.hasCapability('cozytouch_away_mode')) {
+      this.log('Removing cozytouch_away_mode: this product has no away capability');
+      await this.removeCapability('cozytouch_away_mode');
+    }
 
     // Water heater mode picker, which differs per protocol: Magellan tanks
     // (Calypso connecté) do prog but not auto, MBL devices (Atlantic Égéo) have
@@ -86,8 +93,10 @@ class WaterHeaterDevice extends CozyTouchDevice {
     this._registerCapability('cozytouch_heating_mode', withRefresh((value) =>
       this._handler.setMode(value)));
 
-    this._registerCapability('cozytouch_away_mode', withRefresh((value) =>
-      this._handler.setAwayMode(value)));
+    if (this.hasCapability('cozytouch_away_mode')) {
+      this._registerCapability('cozytouch_away_mode', withRefresh((value) =>
+        this._handler.setAwayMode(value)));
+    }
 
     if (this.hasCapability('cozytouch_boost')) {
       this._registerCapability('cozytouch_boost', withRefresh((value) =>
@@ -143,6 +152,19 @@ class WaterHeaterDevice extends CozyTouchDevice {
       ));
     }
     return true;
+  }
+
+  /**
+   * Whether the tank has an away control this app can drive. Magellan answers
+   * per product: the Alféa Extensa tank (productId 47) reports away as a
+   * start/stop timestamp pair on capability 226 rather than a switch, so its
+   * block leaves AWAY_MODE unmapped. Every Overkiz tank has one, through a
+   * handler of its own.
+   */
+  _hasAwayCommand() {
+    const store = this.getStore() || {};
+    if ((store.protocol || 'cozytouch') !== 'cozytouch') return true;
+    return Boolean(waterHeaterCapIds(store.productId).AWAY_MODE);
   }
 
   _supportedModes() {

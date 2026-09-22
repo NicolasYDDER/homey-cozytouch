@@ -9,6 +9,11 @@ const {
   isZoneControlDevice,
   isPassApcHeatPumpDevice,
 } = require('../../lib/helpers/overkiz-device');
+const { TOWEL_RACK_CAP_IDS } = require('../../lib/constants/cozytouch-mappings');
+const {
+  mappedCapabilityIds,
+  reportsMappedCapability,
+} = require('../../lib/helpers/capability-support');
 
 class TowelRackDriver extends CozyTouchDriver {
 
@@ -28,8 +33,8 @@ class TowelRackDriver extends CozyTouchDriver {
         return type === 'TOWEL_RACK' || type === 'HEATER';
       }
       const cozyApi = new CozyTouchAPI({});
-      const type = cozyApi.getDeviceType(dev.modelId);
-      return type === 'TOWEL_RACK';
+      if (cozyApi.getDeviceType(dev.modelId) !== 'TOWEL_RACK') return false;
+      return reportsMappedCapability(dev, mappedCapabilityIds(TOWEL_RACK_CAP_IDS));
     });
   }
 

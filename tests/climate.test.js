@@ -58,11 +58,15 @@ describe('Magellan climate capability IDs per product', () => {
   const fakeCtx = (store, caps = ROOM_0_CAPS) => {
     const ctx = {
       writes: [],
+      reads: [],
       values: {},
       options: {},
       store,
       getCapabilities: async () => caps,
-      getCapValue: (list, capId) => api.getCapabilityValue(list, capId),
+      getCapValue: (list, capId) => {
+        ctx.reads.push(capId);
+        return api.getCapabilityValue(list, capId);
+      },
       setCapValue: async (capId, value) => { ctx.writes.push([capId, value]); },
       setCapability: (name, value) => { ctx.values[name] = value; },
       setCapabilityOptions: (name, opts) => { ctx.options[name] = opts; },
@@ -159,5 +163,56 @@ describe('Magellan climate capability IDs per product', () => {
     // Capability 7 is the current temperature for the products this block was
     // built from, so the payload above reads back as 4 there — unchanged.
     assert.equal(ctx.values.measure_temperature, 4);
+  });
+
+  // A heating zone has no fan and no louvre. Both sat on the AC defaults, so the
+  // pickers were offered and every touch came back "no implementation for
+  // capability Id 9 on product Id 27".
+  it('maps no fan and no swing on a heating zone', () => {
+    for (const productId of [26, 27, 28, 29, 30]) {
+      const caps = climateCapIds(productId);
+      assert.equal(caps.FAN_MODE, null, `productId ${productId} has no fan`);
+      assert.equal(caps.SWING_MODE, null, `productId ${productId} has no louvre`);
+    }
+    // A real air conditioner keeps both.
+    assert.equal(climateCapIds(99).FAN_MODE, 4);
+    assert.equal(climateCapIds(99).SWING_MODE, 9);
+  });
+
+  // ROOM_2..ROOM_4 (modelIds 559-561) come from upstream's productId table. The
+  // probe series is 117 for zone 1 and 118 for zone 2 and stops there — 119 is
+  // the outside temperature — so a third zone gets no temperature rather than
+  // the mode enum read as one.
+  it('extends the zone block past zone 2 without inventing a probe', () => {
+    for (const productId of [28, 29, 30]) {
+      const caps = climateCapIds(productId);
+      assert.equal(caps.HVAC_MODE, 7, `productId ${productId} reads its mode on 7`);
+      assert.equal(caps.TARGET_TEMP_HEAT, 40);
+      assert.equal(caps.TARGET_TEMP_COOL, 177);
+      assert.equal(caps.CURRENT_TEMP, null);
+    }
+  });
+
+  it('shows nothing rather than the mode on a third zone, and still reads the rest', async () => {
+    const room2 = ROOM_1_CAPS.map((c) => (c.capabilityId === 154 ? { ...c, value: 'Chambres' } : c));
+    const [handler, ctx] = handlerFor({ productId: 28, modelId: 559 }, room2);
+    await handler.updateState();
+
+    assert.equal(ctx.values.measure_temperature, undefined);
+    assert.equal(ctx.values.target_temperature, 20);
+    assert.equal(ctx.values.cozytouch_hvac_mode, 'heat');
+    // An unmapped capability is not looked up at all, so it never counts as a
+    // value the app failed to find (which is what raises the tile warning).
+    assert.ok(!ctx.reads.includes(null) && !ctx.reads.includes(undefined));
+    assert.ok(!ctx.reads.includes(119), 'the outside probe is not read as a room');
+  });
+
+  it('refuses a fan or swing command aimed at a zone instead of writing nowhere', async () => {
+    const [handler, ctx] = handlerFor({ productId: 27, modelId: 558 }, ROOM_1_CAPS);
+
+    // The tiles are not offered, so only a Flow card can still reach these.
+    await assert.rejects(() => handler.setFanMode('high'), /no fan speed control/);
+    await assert.rejects(() => handler.setSwingMode('down'), /no swing control/);
+    assert.deepEqual(ctx.writes, []);
   });
 });

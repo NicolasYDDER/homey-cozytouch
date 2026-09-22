@@ -6,9 +6,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const CozyTouchAPI = require('../lib/CozyTouchAPI');
+const OverkizAPI = require('../lib/OverkizAPI');
 const { supportedWaterHeaterModes } = require('../lib/helpers/water-heater-modes');
 const { waterHeaterCapIds } = require('../lib/constants/cozytouch-mappings');
-const { describeDiscoveredDevices } = require('../lib/helpers/discovery-report');
+const { describeDiscoveredDevices, describeOverkizAccount } = require('../lib/helpers/discovery-report');
 
 const CozytouchHandler = require('../drivers/water_heater/handlers/cozytouch');
 const OverkizHandler = require('../drivers/water_heater/handlers/overkiz');
@@ -255,6 +256,34 @@ describe('Alfea Extensa Duo tank capability profile (productId 47)', () => {
     assert.deepEqual(ctx.options.target_temperature, { min: 50, max: 65 });
   });
 
+  // This tank reports 2 on capability 87, a value this app has no name for —
+  // upstream's reference table names only 0, 3 and 4 for this model too, so it
+  // cannot be named without guessing. Dropped in silence, the picker kept
+  // whatever it last held and showed a mode the tank was not in for three days.
+  it('says an unnamed mode out loud instead of leaving a stale one on the tile', async () => {
+    const ctx = fakeCtx();
+    const logs = [];
+    ctx.log = (line) => logs.push(line);
+    const handler = new CozytouchHandler(ctx);
+    await handler.updateState();
+
+    assert.equal('cozytouch_heating_mode' in ctx.values, false, 'guessed a name for mode 2');
+    assert.equal(logs.length, 1);
+    assert.match(logs[0], /Heating mode 2 on capability 87 has no name/);
+
+    // Once per value: this runs on every poll, and a line a minute would bury
+    // the log it is meant to make readable.
+    await handler.updateState();
+    assert.equal(logs.length, 1);
+  });
+
+  it('still names the modes it does know on this tank', async () => {
+    const ctx = fakeCtx();
+    ctx.getCapabilities = async () => [{ capabilityId: 86, value: '1' }, { capabilityId: 87, value: '3' }];
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.values.cozytouch_heating_mode, 'eco_plus');
+  });
+
   it('never looks for an away capability this product does not have', async () => {
     const ctx = fakeCtx();
     await new CozytouchHandler(ctx).updateState();
@@ -388,5 +417,55 @@ describe('discovery report', () => {
     assert.equal(describeDiscoveredDevices(many, 2), 'Device 0 (modelId 100), Device 1 (modelId 101), +3');
     assert.equal(describeDiscoveredDevices([]), '');
     assert.equal(describeDiscoveredDevices(undefined), '');
+  });
+});
+
+describe('Overkiz account report', () => {
+  const typeOf = (dev) => new OverkizAPI({ log: () => {} }).getDeviceType(dev);
+
+  // An Extensa Duo owner's Test Connection reported twelve Overkiz devices as
+  // twelve rows of label + uiClass, which cannot be mapped: uiClass HeatingSystem
+  // covers both a Pass APC zone and a plain electrical heater.
+  it('names each device with the controllableName support is keyed on', () => {
+    const report = describeOverkizAccount([
+      {
+        label: 'Zone 1',
+        deviceURL: 'io://1234-5678-9012/8912345',
+        uiClass: 'HeatingSystem',
+        controllableName: 'io:AtlanticPassAPCHeatingZoneComponent',
+        widget: 'AtlanticPassAPCHeatingZone',
+        states: [
+          { name: 'core:TargetTemperatureState', value: 20.5 },
+          { name: 'core:OnOffState', value: 'on' },
+        ],
+      },
+    ], typeOf, '1.4.11');
+
+    assert.match(report, /^Overkiz — 1 device\(s\) — app 1\.4\.11$/m);
+    assert.match(report, /Zone 1 \| io:AtlanticPassAPCHeatingZoneComponent \| uiClass HeatingSystem \| widget AtlanticPassAPCHeatingZone \| type HEATER/);
+    assert.match(report, /io:\/\/1234-5678-9012\/8912345/);
+    assert.match(report, /core:TargetTemperatureState=20\.5, core:OnOffState=on/);
+  });
+
+  it('says so rather than going quiet when a device names nothing', () => {
+    const report = describeOverkizAccount([{ uiClass: 'HeatingSystem' }], typeOf);
+    assert.match(report, /\(unnamed\) \| \(no controllableName\) \| uiClass HeatingSystem \| widget \?/);
+    assert.match(report, /\(no deviceURL\)/);
+    assert.match(report, /\(no states\)/);
+  });
+
+  it('caps a long state list and flattens the values that are objects', () => {
+    const states = Array.from({ length: 45 }, (_, i) => ({ name: `core:State${i}`, value: i }));
+    states[0] = { name: 'core:Schedule', value: { monday: ['06:00', '22:00'] } };
+    const report = describeOverkizAccount([{ label: 'Busy', states }], typeOf);
+
+    assert.match(report, /core:Schedule=\{"monday":\["06:00","22:00"\]\}/);
+    assert.match(report, /\+5$/m);
+    assert.equal(report.includes('core:State40='), false, 'printed past the cap');
+  });
+
+  it('reports an empty account and survives a missing list', () => {
+    assert.equal(describeOverkizAccount([], typeOf), 'Overkiz — 0 device(s)');
+    assert.equal(describeOverkizAccount(undefined, typeOf), 'Overkiz — 0 device(s)');
   });
 });
