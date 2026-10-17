@@ -413,7 +413,7 @@ The following devices have been validated with real hardware:
 | **Shogun Zone Control** | Main unit + heating/cooling zones | Overkiz | `zone_control` | Fully working (HVAC mode, zone temps/modes, on/off, tile heat/cool) |
 | **Sauter / Thermor Ipala** | Adjustable-setpoint radiator | Overkiz | `heater` | Fully working (mode, temperature, on/off) |
 
-Added from user reports, not yet validated on real hardware: **Atlantic Alféa Extensa Duo A.I. 5 R32** (Magellan `modelId` 212, paired under `heat_pump` + `water_heater` — see the Pass APC heat pump section below) and **Calypso connecté 240L** (Magellan `modelId` 1658, paired under `water_heater` — its gateway answers on Cozytouch/Magellan only, the Overkiz side returns `No such user account`). See [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5). Also **Alféa Extensa S Duo 8**'s hot water tank (Magellan `modelId` 1376, productId 47, paired under `water_heater`), whose Cozytouch/Magellan capability block differs from every other tank mapped so far — see [Water Heater — Alféa Extensa Duo tank](#water-heater--alféa-extensa-duo-tank-productid-47-modelid-1376) below.
+Added from user reports, not yet validated on real hardware: **Atlantic Alféa Extensa Duo A.I. 5 R32** (Magellan `modelId` 212, paired under `heat_pump` + `water_heater` — see the Pass APC heat pump section below) and **Calypso connecté 240L** (Magellan `modelId` 1658, `productId` 62, paired under `water_heater` — its gateway answers on Cozytouch/Magellan only, the Overkiz side returns `No such user account`; own capability block since 1.4.12, see [Water Heater — Calypso connecté](#water-heater--calypso-connecté-productid-62-modelid-1658) below). See [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5). Also **Alféa Extensa S Duo 8**'s hot water tank (Magellan `modelId` 1376, productId 47, paired under `water_heater`), whose Cozytouch/Magellan capability block differs from every other tank mapped so far — see [Water Heater — Alféa Extensa Duo tank](#water-heater--alféa-extensa-duo-tank-productid-47-modelid-1376) below.
 
 ### Heater / Boiler Driver
 
@@ -486,7 +486,7 @@ unseen.
 
 > **Note**: The CETHI_V4 water heater has no real on/off command. "Off" is simulated via away mode. Shower count is only controllable from the Cozytouch phone app.
 
-**Magellan capabilities, AQUEO ACI HYB (productId 7 — modelId 389 / 390)**: this product answers on **none** of the IDs above. Its own block is Cap 87 (mode: 0=manual, 3=eco+, 4=prog), Cap 231 (target temperature, mirrored on Cap 22), Cap 266 (tank top temperature; 265 middle, 267 bottom), Cap 165 (boost), Cap 227 (away: 0=off, 1=on, 2=booked), Cap 105301/105304 (setpoint range). It has **no on/off capability at all**: the tank is always on and driven by its mode, so the mode picker offers Manual / Eco / Program without Off.
+**Magellan capabilities, AQUEO ACI HYB (productId 7 — modelId 389 / 390)**: this product answers on **none** of the IDs above. Its own block is Cap 87 (mode: 0=manual, 3=eco+, 4=prog), Cap 231 (target temperature, mirrored on Cap 22), Cap 266 (tank top temperature; 264 bottom, 265 middle, 267 average), Cap 165 (boost), Cap 227 (away: 0=off, 1=on, 2=booked), Cap 105301/105304 (setpoint range). It has **no on/off capability at all**: the tank is always on and driven by its mode, so the mode picker offers Manual / Eco / Program without Off.
 
 **Magellan capabilities, Alféa Extensa Duo tank (productId 47 — modelId 1376, "Calypso Split")**: also answers on none of the default IDs. Cap 87 (mode: 0=manual, 3=eco+, 4=prog), Cap 231 (target temperature, mirrored on Cap 22), Cap 111 (current tank temperature), Cap 86 (on/off), Cap 165 (boost), Cap 105301/105300 (setpoint min/max). Away mode (Cap 226) is a start/stop timestamp pair on this product, not a switch, so it is not offered.
 
@@ -837,7 +837,7 @@ This product shares **no** capability ID with the table above. IDs mapped from t
 | 87 | Heating mode | int | 0=manual, 3=eco+, 4=prog (same values as cap 1) |
 | 231 | Target temperature | float | Setpoint; mirrored on cap 22 (`target_temperature_dhw`) |
 | 105301 / 105304 | Setpoint min / max | float | Range for cap 231 (cap 160/161 absent on this product) |
-| 266 | Tank top temperature | float | Used as the device's current temperature (265 middle, 267 bottom, 264 condenser) |
+| 266 | Tank top temperature | float | Used as the device's current temperature (264 bottom, 265 middle, 267 average) |
 | 165 | Boost | bool | Boost toggle (same ID as towel racks) |
 | 227 | Away mode | int | 0=off, 1=on, 2=booked but not started; timestamps in cap 226 |
 | — | On/off | — | **Does not exist**: the tank is always on, its mode drives it |
@@ -870,6 +870,28 @@ value, so a single diagnostic report is enough to add it. The real fix is to rea
 (`supported_dhw_modes`, a bitmask) instead of assuming the value set: this tank reports `32001` =
 manual|boost|absence|scheduled_absence|antilegionella|smart_grid|on_off — **no auto, no prog**, which means the
 mode picker currently offers modes the tank itself says it does not have.
+
+### Water Heater — Calypso connecté (productId 62, modelId 1658)
+
+Same family as the two blocks above, and the same symptom: the generic IDs (1, 2, 3, 5, 7, 10, 160, 161) do not exist on this product, so a tank paired before 1.4.12 showed no temperature, no mode, no boost or away state, and every command was refused. Mapped from a user-submitted diagnostic log (the tank reports 84 capabilities), cross-checked against [gduteil/cozytouch](https://github.com/gduteil/cozytouch).
+
+| Cap ID | Name | Type | Description |
+|--------|------|------|-------------|
+| 87 | Heating mode | int | 0=manual, 3=eco+, 4=prog (same values as cap 1) |
+| 231 | Target temperature | float | Setpoint; mirrored on cap 22 (`target_temperature_dhw`) |
+| 253 / 252 | Setpoint min / max | float | The Cozytouch app's own user target bounds (50 / 62 on the reported tank; 105301 / 105300 hold the same values) |
+| 265 | Tank middle temperature | float | Used as the device's current temperature — see below |
+| 165 | Boost | bool | Boost toggle |
+| 227 | Away mode | int | 0=off, 1=on, 2=booked but not started; timestamps in cap 226 |
+| — | On/off | — | **Not offered**: see below |
+
+**Current temperature.** The tank reports a middle probe (265) and the tank average (267) but no top probe (266). The middle one is the hottest reading it has, which is what comes out of the tap; 267 is the average over all probes, and stays available if that turns out to be the better tile. Other models filed under productId 62 that do report a top probe still read the middle one.
+
+**No Off.** Cap 86 (`domestic_hot_water`) is reported, but `supported_dhw_modes` (cap `105011`, a bitmask) reads `16133` = manual|auto|boost|scheduled_boost|absence|scheduled_absence|antilegionella|smart_grid — no `on_off` bit, unlike the Extensa Duo tank's `32001`. Mapped, Off would only be a command the tank refuses, and cap 86 would be written ahead of every mode change. If a tank of this product turns out to switch off, mapping `ON_OFF: 86` is a one-line change.
+
+**Mode picker.** Like the Extensa Duo tank, it still offers Manual / Eco / Program, while `105011` lists `auto` and no `prog`. Which mode value 87 reports for each bit is not established (the reported tank is in `0`, manual), so the picker is not narrowed yet.
+
+Reported but not exposed yet: 59 (energy, in Wh), 99 (electric backup running), 179 (Wi-Fi signal), 258 (tank capacity, L), 268/270 (V40 water available/capacity), 271 (hot water available, %), 245–251 (weekly program), 234 (boost setpoint).
 
 ### Climate — Alféa Excellia / Extensa heating zones (productId 26–30, modelId 557–561)
 
