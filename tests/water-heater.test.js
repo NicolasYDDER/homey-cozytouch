@@ -309,6 +309,129 @@ describe('Alfea Extensa Duo tank capability profile (productId 47)', () => {
   });
 });
 
+// The Calypso connecté (modelId 1658, productId 62): a user log showed it
+// reporting none of the IDs the app looked for (7, 2, 3, 1, 5, 10, 160, 161), so
+// the tile stayed empty and every command was refused. Its block is the same
+// family as the two above, with no top probe and no usable on/off.
+describe('Calypso connecté capability profile (productId 62)', () => {
+  // What the device reports, from the diagnostic dump attached to the user log.
+  const CALYPSO_CAPS = [
+    { capabilityId: 22, value: '50.00000000000000000000' },
+    { capabilityId: 86, value: '1' },
+    { capabilityId: 87, value: '0' },
+    { capabilityId: 165, value: '0' },
+    { capabilityId: 226, value: '[0,0]' },
+    { capabilityId: 227, value: '0' },
+    { capabilityId: 231, value: '50.00000000000000000000' },
+    { capabilityId: 252, value: '62.0000000000000000000' },
+    { capabilityId: 253, value: '50.0000000000000000000' },
+    { capabilityId: 265, value: '58.30000000000000000000' },
+    { capabilityId: 267, value: '55.7300000000000000000' },
+    { capabilityId: 105011, value: '16133' },
+    { capabilityId: 105300, value: '62.0000000000000000000' },
+    { capabilityId: 105301, value: '50' },
+  ];
+
+  const fakeCtx = (extra = {}) => {
+    const ctx = {
+      writes: [],
+      values: {},
+      options: {},
+      reads: [],
+      store: { productId: 62, modelId: 1658 },
+      getCapabilities: async () => CALYPSO_CAPS,
+      getCapValue: (list, capId) => {
+        ctx.reads.push(capId);
+        return api.getCapabilityValue(list, capId);
+      },
+      setCapValue: async (capId, value) => {
+        ctx.writes.push([capId, value]);
+        if (extra.failWrites && extra.failWrites[capId]) throw extra.failWrites[capId];
+      },
+      setCapability: (name, value) => { ctx.values[name] = value; },
+      setCapabilityOptions: (name, opts) => { ctx.options[name] = opts; },
+      hasCapability: () => true,
+      log: () => {},
+    };
+    return ctx;
+  };
+
+  it('resolves the product block instead of the default IDs', () => {
+    const caps = waterHeaterCapIds(62);
+    assert.equal(caps.HEATING_MODE, 87);
+    assert.equal(caps.TARGET_TEMP, 231);
+    assert.equal(caps.TARGET_TEMP_ALT, 22);
+    assert.equal(caps.ON_OFF, null);
+    assert.equal(caps.BOOST, 165);
+    assert.equal(caps.AWAY_MODE, 227);
+    assert.equal(caps.CURRENT_TEMP, 265);
+    assert.equal(caps.MIN_TEMP, 253);
+    assert.equal(caps.MAX_TEMP, 252);
+  });
+
+  it('maps only capabilities the device reports', () => {
+    const reported = new Set(CALYPSO_CAPS.map((c) => c.capabilityId));
+    for (const [name, id] of Object.entries(waterHeaterCapIds(62))) {
+      if (id === null || name === 'ECO') continue;
+      assert.ok(reported.has(id), `${name} reads capability ${id}, which this tank does not report`);
+    }
+  });
+
+  it('reads temperature, setpoint, mode, boost and away from the product block', async () => {
+    const ctx = fakeCtx();
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.values.measure_temperature, 58.3);
+    assert.equal(ctx.values.target_temperature, 50);
+    assert.equal(ctx.values.cozytouch_heating_mode, 'manual');
+    assert.equal(ctx.values.cozytouch_boost, false);
+    assert.equal(ctx.values.cozytouch_away_mode, false);
+    assert.deepEqual(ctx.options.target_temperature, { min: 50, max: 62 });
+  });
+
+  it('shows away and boost when the tank reports them on', async () => {
+    const ctx = fakeCtx();
+    ctx.getCapabilities = async () => [
+      { capabilityId: 87, value: '4' },
+      { capabilityId: 165, value: '1' },
+      { capabilityId: 227, value: '2' },
+    ];
+    await new CozytouchHandler(ctx).updateState();
+    assert.equal(ctx.values.cozytouch_heating_mode, 'prog');
+    assert.equal(ctx.values.cozytouch_boost, true);
+    assert.equal(ctx.values.cozytouch_away_mode, true);
+  });
+
+  it('writes each control to the capability this product implements', async () => {
+    const ctx = fakeCtx();
+    const handler = new CozytouchHandler(ctx);
+    await handler.setMode('eco_plus');
+    await handler.setBoost(true);
+    await handler.setAwayMode(true);
+    await handler.setTargetTemperature(55);
+    assert.deepEqual(ctx.writes, [[87, '3'], [165, '1'], [227, '1'], [231, 55]]);
+  });
+
+  it('sends the mode alone: cap 86 is never written', async () => {
+    const ctx = fakeCtx();
+    await new CozytouchHandler(ctx).setMode('manual');
+    assert.deepEqual(ctx.writes, [[87, '0']]);
+  });
+
+  it('offers Manual, Eco and Program but not Off', () => {
+    const hasOnOff = Boolean(waterHeaterCapIds(62).ON_OFF);
+    assert.deepEqual(
+      supportedWaterHeaterModes({ protocol: 'cozytouch', hasOnOff }),
+      ['manual', 'eco_plus', 'prog'],
+    );
+  });
+
+  it('refuses Off with a readable error rather than writing a capability it lacks', async () => {
+    const ctx = fakeCtx();
+    await assert.rejects(() => new CozytouchHandler(ctx).setMode('off'), /no off command/);
+    assert.deepEqual(ctx.writes, []);
+  });
+});
+
 // A Magellan tank whose on/off capability is mapped but refused by the product:
 // "There is no implementation for capability Id 3 on product Id 7".
 describe('Magellan water heater without an on/off capability', () => {
