@@ -8,6 +8,8 @@ const {
   mappedCapabilityIds,
   reportsMappedCapability,
 } = require('../../lib/helpers/capability-support');
+const { isPassApcDhw } = require('../../lib/helpers/overkiz-device');
+const { passApcDhwCapabilities } = require('../../lib/helpers/pass-apc-dhw');
 
 class WaterHeaterDriver extends CozyTouchDriver {
 
@@ -38,7 +40,12 @@ class WaterHeaterDriver extends CozyTouchDriver {
 
   _mapOverkizDevice(dev) {
     const base = super._mapOverkizDevice(dev);
-    base.capabilities = ['target_temperature', 'measure_temperature', 'cozytouch_heating_mode', 'cozytouch_away_mode'];
+    // The tank of a Pass APC heat pump publishes no tank temperature and no
+    // absence control: offering the standard four gave it a permanently empty
+    // temperature tile and an away toggle that could only fail.
+    base.capabilities = isPassApcDhw(dev)
+      ? passApcDhwCapabilities(dev)
+      : ['target_temperature', 'measure_temperature', 'cozytouch_heating_mode', 'cozytouch_away_mode'];
     return base;
   }
 

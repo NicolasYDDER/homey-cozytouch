@@ -14,6 +14,7 @@ const { describeDiscoveredDevices, describeOverkizAccount } = require('../lib/he
 const CozytouchHandler = require('../drivers/water_heater/handlers/cozytouch');
 const OverkizHandler = require('../drivers/water_heater/handlers/overkiz');
 const OverkizMblHandler = require('../drivers/water_heater/handlers/overkiz-mbl');
+const OverkizPassApcHandler = require('../drivers/water_heater/handlers/overkiz-pass-apc');
 
 const ROOT = path.join(__dirname, '..');
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8'));
@@ -57,6 +58,7 @@ describe('water heater handler surface', () => {
     cozytouch: CozytouchHandler,
     overkiz: OverkizHandler,
     'overkiz-mbl': OverkizMblHandler,
+    'overkiz-pass-apc': OverkizPassApcHandler,
   })) {
     it(`${name} implements every method the driver calls`, () => {
       const handler = new Handler({});
