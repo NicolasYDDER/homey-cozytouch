@@ -12,6 +12,7 @@ const {
 const { waterHeaterCapIds } = require('../../lib/constants/cozytouch-mappings');
 const { isPassApcDhw } = require('../../lib/helpers/overkiz-device');
 const { pickCommand } = require('../../lib/helpers/overkiz-commands');
+const { passApcDhwHasAway } = require('../../lib/helpers/pass-apc-dhw');
 
 const POST_COMMAND_REFRESH_DELAY_MS = 3000;
 
@@ -49,7 +50,9 @@ class WaterHeaterDevice extends CozyTouchDevice {
     }
     // Away is per product on Magellan, and the Alféa Extensa tank has no away
     // switch at all: a tank paired before 1.4.11 carries a toggle that can only
-    // return an error. Overkiz tanks all have one, through their own handler.
+    // return an error. The same goes for the tank of a Pass APC heat pump on
+    // Overkiz, which advertises no absence command — switching it off is what
+    // away means there. Other Overkiz tanks have one, through their own handler.
     if (!this._hasAwayCommand() && this.hasCapability('cozytouch_away_mode')) {
       this.log('Removing cozytouch_away_mode: this product has no away capability');
       await this.removeCapability('cozytouch_away_mode');
@@ -73,8 +76,8 @@ class WaterHeaterDevice extends CozyTouchDevice {
     if (isMblWidget(store)) {
       return new WaterHeaterOverkizMblHandler(ctx);
     }
-    // Tank of a Pass APC heat pump (Alféa Duo): same DHW mode values as a
-    // standalone Overkiz tank, different command names.
+    // Tank of a Pass APC heat pump (Alféa Duo): an on/off switch, a boost and an
+    // eco/comfort setpoint rather than a mode picker.
     if (isPassApcDhw(store)) {
       return new WaterHeaterOverkizPassApcHandler(ctx);
     }
@@ -131,6 +134,7 @@ class WaterHeaterDevice extends CozyTouchDevice {
     return {
       protocol,
       isMbl: isMblWidget(store),
+      isPassApc: protocol === 'overkiz' && isPassApcDhw(store),
       hasOnOff: this._hasOnOffCommand(store, protocol),
     };
   }
@@ -158,12 +162,17 @@ class WaterHeaterDevice extends CozyTouchDevice {
    * Whether the tank has an away control this app can drive. Magellan answers
    * per product: the Alféa Extensa tank (productId 47) reports away as a
    * start/stop timestamp pair on capability 226 rather than a switch, so its
-   * block leaves AWAY_MODE unmapped. Every Overkiz tank has one, through a
-   * handler of its own.
+   * block leaves AWAY_MODE unmapped. Overkiz tanks have one through a handler of
+   * their own — except the tank of a Pass APC heat pump, which advertises no
+   * absence command. A tank that advertised no commands at all (paired before
+   * they were stored) keeps the tile it has: not knowing is not the same as not
+   * having.
    */
   _hasAwayCommand() {
     const store = this.getStore() || {};
-    if ((store.protocol || 'cozytouch') !== 'cozytouch') return true;
+    if ((store.protocol || 'cozytouch') !== 'cozytouch') {
+      return !isPassApcDhw(store) || passApcDhwHasAway(store.overkizCommands) !== false;
+    }
     return Boolean(waterHeaterCapIds(store.productId).AWAY_MODE);
   }
 
