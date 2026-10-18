@@ -413,7 +413,7 @@ The following devices have been validated with real hardware:
 | **Shogun Zone Control** | Main unit + heating/cooling zones | Overkiz | `zone_control` | Fully working (HVAC mode, zone temps/modes, on/off, tile heat/cool) |
 | **Sauter / Thermor Ipala** | Adjustable-setpoint radiator | Overkiz | `heater` | Fully working (mode, temperature, on/off); energy, active level and comfort periods since 1.5.0, not yet verified on hardware |
 
-Added from user reports, not yet validated on real hardware: **Atlantic Alféa Extensa Duo A.I. 5 R32** (Magellan `modelId` 212, paired under `heat_pump` + `water_heater` — see the Pass APC heat pump section below) and **Calypso connecté 240L** (Magellan `modelId` 1658, `productId` 62, paired under `water_heater` — its gateway answers on Cozytouch/Magellan only, the Overkiz side returns `No such user account`; own capability block since 1.4.12, see [Water Heater — Calypso connecté](#water-heater--calypso-connecté-productid-62-modelid-1658) below). See [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5). Also **Alféa Extensa S Duo 8**'s hot water tank (Magellan `modelId` 1376, productId 47, paired under `water_heater`), whose Cozytouch/Magellan capability block differs from every other tank mapped so far — see [Water Heater — Alféa Extensa Duo tank](#water-heater--alféa-extensa-duo-tank-productid-47-modelid-1376) below.
+Added from user reports, only partly validated on real hardware: **Atlantic Alféa Extensa Duo A.I. 5 R32** (Magellan `modelId` 212; supported through its Overkiz endpoints, paired under `heat_pump` for the heating circuit and outside probe, and under `water_heater` for the tank — see the Pass APC heat pump section below. A first hardware report in 1.4.11 confirmed the endpoints are detected; the tank's controls were reworked in 1.4.13 from it) and **Calypso connecté 240L** (Magellan `modelId` 1658, `productId` 62, paired under `water_heater` — its gateway answers on Cozytouch/Magellan only, the Overkiz side returns `No such user account`; own capability block since 1.4.12, see [Water Heater — Calypso connecté](#water-heater--calypso-connecté-productid-62-modelid-1658) below). See [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5). Also **Alféa Extensa S Duo 8**'s hot water tank (Magellan `modelId` 1376, productId 47, paired under `water_heater`), whose Cozytouch/Magellan capability block differs from every other tank mapped so far — see [Water Heater — Alféa Extensa Duo tank](#water-heater--alféa-extensa-duo-tank-productid-47-modelid-1376) below.
 
 ### Heater / Boiler Driver
 
@@ -541,7 +541,7 @@ siblings are linked by name, never by a fixed offset:
 |------|-----------------------------------|--------|------------------|
 | Main unit | `AtlanticPassAPCHeatPumpMainComponent` / `AtlanticPassAPCHeatPump` | `heat_pump` | System mode (`cozytouch_hvac_mode`), on/off, outside temperature |
 | Heating circuit | `AtlanticPassAPCHeating[AndCooling]ZoneComponent` / `AtlanticPassAPCHeatingZone`, `AtlanticPassAPCHeatingAndCoolingZone` | `heat_pump` | Setpoint, circuit mode (off/manual/prog), on/off |
-| Hot water tank (Duo) | `AtlanticPassAPCDHWComponent` / `AtlanticPassAPCDHW` | `water_heater` | DHW mode, setpoint, boost, away |
+| Hot water tank (Duo) | `AtlanticPassAPCDHWComponent` / `AtlanticPassAPCDHW` | `water_heater` | On/off (Off / Auto), eco-or-comfort setpoint, boost — see [below](#hot-water-tank-of-a-duo-atlanticpassapcdhwcomponent) |
 | Outside probe | `AtlanticPassAPCOutsideTemperatureSensor` | — | Read by the main unit, not paired |
 | Circuit probe | `AtlanticPassAPCZoneTemperatureSensor` | — | Read by its circuit, not paired |
 | Energy sensor | `TotalElectricalEnergyConsumptionSensor` | — | Not exposed yet |
@@ -560,6 +560,41 @@ the command names — one circuit takes `setHeatingTargetTemperature`, another o
 pairing time and picks the first name the device actually accepts; a control whose command is missing fails
 with a message naming it instead of sending something the heat pump refuses. Cooling support is detected
 the same way, so an Extensa is not offered cool/dry/auto modes it cannot do.
+
+#### Hot water tank of a Duo (`AtlanticPassAPCDHWComponent`)
+
+Added from the **Water Heater** tile, not the Heat Pump one. The Heat Pump tile pairs the main unit and the
+heating circuits and finds something, so it never says the tank exists — a user who adds a Duo from there sees
+a heating circuit and an outside temperature and no hot water. This is also why the 1.4.10 "try another device
+type" guidance, which only runs when a driver finds nothing, does not catch it.
+
+What an Extensa Duo A.I. 5 R32 reports for it (Test Connection, app 1.4.11):
+
+```
+io:PassAPCDHWConfigurationState=cumulated   io:PassAPCDHWModeState=peakAndOffPeakScheduling
+io:PassAPCDHWProfileState=eco               core:DHWDerogationAvailabilityState=available
+core:ComfortTargetDHWTemperatureState=52    core:EcoTargetDHWTemperatureState=40
+core:TargetDHWTemperatureState=40           core:BoostOnOffState=off    core:DHWOnOffState=on
+```
+
+It is not an Overkiz tank like the Calypso, and until 1.4.13 it was driven as one. What it has is an on/off
+switch, a boost, and **two setpoints of which the tank publishes the one in force** as
+`TargetDHWTemperatureState` — 40 here, because the profile is `eco` (the comfort setpoint is 52). It has no
+tank temperature, no absence state, and a "mode" that names a scheduling type rather than a Manual / Eco /
+Auto choice. Home Assistant's Overkiz integration drives the same component the same way (on/off + boost,
+eco/comfort setpoint) and is the one public reference for what these tanks accept.
+
+| Tile | Behaviour since 1.4.13 |
+|------|------------------------|
+| Mode picker | **Off / Auto** only. Off is `setDHWOnOffState off`; Auto switches the tank on and leaves it on its own schedule. Manual, Eco and Program do not exist on this tank and are refused with a readable error rather than sent as `setPassAPCDHWMode` values nothing shows it takes |
+| Target temperature | Reads `TargetDHWTemperatureState`. Writes the **eco** setpoint in eco profile and the **comfort** one otherwise (always comfort during boost), then asks the tank to republish it with the `refresh…TargetDHWTemperature` commands it advertises. Writing the setpoint the tile is not showing was why the slider snapped back |
+| Boost | `core:BoostOnOffState` / `setBoostOnOffState` |
+| Temperature | **Not offered.** The component publishes no tank temperature, and an empty tile reads as a broken sensor. The only candidate is Magellan cap `111` (49.9 °C in the same report), not confirmed to be the tank |
+| Away | **Not offered** unless the tank advertises an absence command; switching the tank off is what away means on it. Removed at init from a tank paired earlier that has none |
+
+The mode, profile and configuration have no tile, so the app log carries them once per distinct combination:
+`Tank reports mode "peakAndOffPeakScheduling", profile "eco", configuration "cumulated"`. Command names are
+picked from what the tank advertises, as everywhere on Overkiz; Test Connection now lists them (see below).
 
 The heat pump is also announced on Magellan (`modelId` 212 for the Extensa Duo A.I.). It is deliberately
 **not** mapped in `MODEL_TYPES`: pairing it there would create a second tile for the same appliance, on a
@@ -663,14 +698,25 @@ cannot detect:
 - `100022` (`supported_system_operating_modes`), the bitmask the mode picker should be built from, is **not**
   reported by this product, so the mode list cannot be derived from the payload either.
 
-Confidently readable already: `119`=19.3 outside temperature, `109`=31.4 circuit water, `111`=51.5 tank water,
-`117`=25.0 room temperature zone 1, `23`=52 / `22`=40 setpoints, `172`=18.0 away-mode temperature.
 `86`/`87`/`165` (DHW on/off, DHW mode, boost) are `null` on this product despite it being a Duo with a tank.
 
-Pinning the rest needs one report taken **after** changing a known value in the Cozytouch app — see
-[Adding Support for New Devices](#adding-support-for-new-devices). The account also holds 12 Overkiz devices,
-which on a Pass APC stack is the more likely place to support this appliance; that is what the Overkiz half of
-Test Connection was added for in 1.4.11.
+**Settled by the Overkiz report (1.4.11).** The same Test Connection printed this appliance's Overkiz
+endpoints, and the two protocols agree to the digit, which pins the Magellan IDs without a second capture:
+
+| Magellan cap | Value | Overkiz endpoint | Value |
+|--------------|-------|------------------|-------|
+| `117` | 26.3 | `AtlanticPassAPCZoneTemperatureSensor` `core:TemperatureState` | 26.3 — room probe, zone 1 |
+| `119` | 22.5 | `AtlanticPassAPCOutsideTemperatureSensor` `core:TemperatureState` | 22.5 — outside probe |
+| `57` / `59` / `60` | 4000 / 14000 / 17000 | heating / DHW / total `ElectricEnergyConsumptionState` | 4000 / 14000 / 17000 |
+| `23` / `22` | 52 / 40 | `ComfortTargetDHWTemperatureState` / `EcoTargetDHWTemperatureState` | 52 / 40 |
+| `154` | `Plancher` | `core:NameState` of the heating circuit | `Plancher` |
+
+Not confirmed: `111` (51.5 → 49.9 °C between two reports). By analogy with productId 47, where it is the tank
+temperature, it probably is — and it is the only place this appliance's tank temperature exists at all, since
+the Overkiz tank publishes none. Using it would mean reading a Magellan capability on behalf of an Overkiz
+device (matched on cap `88` = `core:ProductModelNameState`), which has not been done.
+
+So the supported route for this appliance is Overkiz, and `modelId 212` stays out of `MODEL_TYPES`.
 
 ---
 
@@ -1211,6 +1257,10 @@ Send that dump line (diagnostic report or `homey app log`) in an issue — it is
 
   The app log carries the same two lists uncapped, plus every discovered device with its `modelId` /
   `productId`.
+- **An Alféa Duo's hot water is added from *Water Heater*, not *Heat Pump*.** The heat pump tile pairs the
+  heating circuit and the outside probe and says nothing about the tank, so a Duo owner who adds it from there
+  sees no hot water at all. Add **Water Heater** and look for the `…#2` endpoint
+  (`AtlanticPassAPCDHWComponent`).
 - To add a new model, see [Adding Support for New Devices](#adding-support-for-new-devices).
 
 All of the above only covers a device that **pairs**: the dump comes from `CozyTouchDevice`, which an
@@ -1235,14 +1285,18 @@ Since 1.4.11 the Overkiz half of the account is reported the same way (`describe
 was not before: it listed only label, `uiClass` and type, and `uiClass` is not an identifier support can be
 keyed on — `HeatingSystem` covers both an Alféa Pass APC heating zone and a plain electrical heater. An Extensa
 Duo owner sent a report showing twelve Overkiz devices and not one actionable line. `controllableName`,
-`widget`, the `deviceURL` and each device's `core:` / `io:` states are now included:
+`widget`, the `deviceURL` and each device's `core:` / `io:` states are now included — and, since 1.4.13, the
+**commands** it accepts (`definition.commands`), because states say what a product reports and only the
+command list says what it can be told. Every Overkiz handler picks its commands from that list, so without it
+a mapping can only be checked against another integration's idea of the product:
 
 ```
-Overkiz — 12 device(s) — app 1.4.11
+Overkiz — 12 device(s) — app 1.4.13
 
 Zone 1 | io:AtlanticPassAPCHeatingZoneComponent | uiClass HeatingSystem | widget AtlanticPassAPCHeatingZone | type HEATER
   io://1234-5678-9012/8912345
   core:TargetTemperatureState=20.5, core:OnOffState=on
+  commands: setPassAPCHeatingMode, setDerogatedTargetTemperature, refreshTargetTemperature
 ```
 
 Both halves land in the one textarea, shown whenever *either* protocol answered — keyed off the Magellan half

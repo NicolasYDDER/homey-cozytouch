@@ -1,74 +1,38 @@
 'use strict';
 
-const {
-  OVERKIZ_DHW_TO_MODE,
-  MODE_TO_OVERKIZ_DHW,
-  getStateValue,
-} = require('../../../lib/constants/overkiz-mappings');
 const { pickCommand } = require('../../../lib/helpers/overkiz-commands');
+const {
+  DHW_COMMANDS,
+  DHW_STATES,
+  firstStateValue,
+  isOn,
+  activeSetpoint,
+  describeTankSchedule,
+} = require('../../../lib/helpers/pass-apc-dhw');
 
 /**
  * Overkiz handler for the hot water tank of a Pass APC heat pump
  * (AtlanticPassAPCDHWComponent) — the tank of an Alféa Duo, driven by the heat
  * pump itself rather than by its own controller.
  *
- * Mode values are the usual Overkiz DHW ones (autoMode / manualEcoActive /
- * manualEcoInactive), but the command names differ per product: the tank of a
- * Duo takes setPassAPCDHWMode where a standalone tank takes setDHWMode. Every
- * command below is therefore picked from what the device advertises, and a
- * control the tank does not have fails with a message saying so instead of
- * sending something the heat pump refuses.
+ * Its controls are an on/off switch, a boost and a setpoint, not the
+ * Manual/Eco/Auto picker of a standalone tank: the "mode" it reports names a
+ * scheduling type (peakAndOffPeakScheduling), which this app neither names nor
+ * writes. See lib/helpers/pass-apc-dhw.js for what the tank reports.
+ *
+ * Every command is picked from what the device advertises, and a control the
+ * tank does not have fails with a message saying so instead of sending something
+ * the heat pump refuses.
  */
-
-// Accepted command names, most specific first.
-const DHW_COMMANDS = {
-  SET_MODE: ['setPassAPCDHWMode', 'setDHWMode'],
-  SET_TARGET_TEMP: [
-    'setTargetDHWTemperature',
-    'setComfortTargetDHWTemperature',
-    'setWaterTargetTemperature',
-    'setTargetTemperature',
-  ],
-  SET_ON_OFF: ['setDHWOnOffState'],
-  SET_BOOST: ['setBoostOnOffState', 'setBoostMode'],
-  SET_ABSENCE: ['setAbsenceMode', 'setDHWAbsenceMode'],
-};
-
-const DHW_STATES = {
-  MODE: ['io:PassAPCDHWModeState', 'io:DHWModeState', 'core:DHWModeState'],
-  ON_OFF: ['core:DHWOnOffState'],
-  TARGET_TEMP: [
-    'core:TargetDHWTemperatureState',
-    'core:ComfortTargetDHWTemperatureState',
-    'core:WaterTargetTemperatureState',
-    'core:TargetTemperatureState',
-  ],
-  CURRENT_TEMP: [
-    'core:DHWTemperatureState',
-    'io:MiddleWaterTemperatureState',
-    'core:BottomTankWaterTemperatureState',
-    'core:TemperatureState',
-  ],
-  BOOST: ['core:BoostOnOffState', 'io:DHWBoostModeState'],
-  ABSENCE: ['core:DHWAbsenceModeState', 'io:DHWAbsenceModeState'],
-};
-
-/** First of `names` the tank reports a value for. */
-function firstStateValue(states, names) {
-  for (const name of names) {
-    const value = getStateValue(states, name);
-    if (value !== null && value !== undefined) return value;
-  }
-  return null;
-}
-
-function isOn(value) {
-  return value === 'on' || value === true || value === 1 || value === 'prog';
-}
 
 class WaterHeaterOverkizPassApcHandler {
 
-  constructor(ctx) { this.ctx = ctx; }
+  constructor(ctx) {
+    this.ctx = ctx;
+    // Schedule descriptions already written to the log, so a tank that sits in
+    // one state does not repeat it on every poll.
+    this._loggedSchedules = new Set();
+  }
 
   _command(candidates, { required = true } = {}) {
     const name = pickCommand(this.ctx.store.overkizCommands, candidates);
@@ -78,10 +42,53 @@ class WaterHeaterOverkizPassApcHandler {
     return name;
   }
 
-  async setTargetTemperature(value) {
-    await this.ctx.executeCommand(this._command(DHW_COMMANDS.SET_TARGET_TEMP), [value]);
+  _advertises(commandName) {
+    const supported = this.ctx.store.overkizCommands;
+    return Array.isArray(supported) && supported.includes(commandName);
   }
 
+  /**
+   * Writes the setpoint the tile is showing — the eco one in eco profile, the
+   * comfort one otherwise — then asks the tank to re-publish it. Without the
+   * second step the cloud keeps answering with the old value until the next
+   * state refresh, and the slider snaps back for up to a sync interval.
+   */
+  async setTargetTemperature(value) {
+    const states = await this.ctx.getDeviceState();
+    const eco = activeSetpoint(states) === 'eco';
+
+    const setter = this._command(
+      eco
+        ? [...DHW_COMMANDS.SET_ECO_TARGET, ...DHW_COMMANDS.SET_TARGET_TEMP]
+        : [...DHW_COMMANDS.SET_COMFORT_TARGET, ...DHW_COMMANDS.SET_TARGET_TEMP],
+    );
+    await this.ctx.executeCommand(setter, [value]);
+
+    await this._refresh([
+      eco ? DHW_COMMANDS.REFRESH_ECO_TARGET : DHW_COMMANDS.REFRESH_COMFORT_TARGET,
+      DHW_COMMANDS.REFRESH_TARGET,
+    ]);
+  }
+
+  /**
+   * Best effort, and only for commands the tank advertises: the setpoint is
+   * already sent, so a refresh it declines must not turn that into an error.
+   */
+  async _refresh(commandNames) {
+    for (const name of commandNames) {
+      if (!this._advertises(name)) continue;
+      try {
+        await this.ctx.executeCommand(name, []);
+      } catch (err) {
+        this.ctx.log(`${name} failed (the setpoint itself was sent): ${err.message}`);
+      }
+    }
+  }
+
+  /**
+   * Off switches the tank off; Auto switches it on and lets it follow its own
+   * schedule. Nothing else exists to pick.
+   */
   async setMode(mode) {
     if (mode === 'off') {
       await this.ctx.executeCommand(this._command(DHW_COMMANDS.SET_ON_OFF), ['off']);
@@ -89,19 +96,15 @@ class WaterHeaterOverkizPassApcHandler {
       return;
     }
 
-    const dhwMode = MODE_TO_OVERKIZ_DHW[mode];
-    if (!dhwMode) {
-      throw new Error(`Unsupported water heater mode: ${mode}`);
+    if (mode === 'auto') {
+      // A tank with no on/off command is always on: Auto is already true.
+      const onOff = this._command(DHW_COMMANDS.SET_ON_OFF, { required: false });
+      if (onOff) await this.ctx.executeCommand(onOff, ['on']);
+      this.ctx.setCapability('cozytouch_heating_mode', 'auto');
+      return;
     }
 
-    // A tank left off ignores the mode change, so bring it back on first.
-    const onOff = this._command(DHW_COMMANDS.SET_ON_OFF, { required: false });
-    if (onOff) {
-      await this.ctx.executeCommand(onOff, ['on']);
-    }
-    await this.ctx.executeCommand(this._command(DHW_COMMANDS.SET_MODE), [dhwMode]);
-
-    this.ctx.setCapability('cozytouch_heating_mode', mode);
+    throw new Error(`Unsupported water heater mode: ${mode}`);
   }
 
   async setBoost(value) {
@@ -115,6 +118,8 @@ class WaterHeaterOverkizPassApcHandler {
   async updateState() {
     const states = await this.ctx.getDeviceState();
 
+    this._noteSchedule(states);
+
     const currentTemp = firstStateValue(states, DHW_STATES.CURRENT_TEMP);
     if (currentTemp !== null) this.ctx.setCapability('measure_temperature', parseFloat(currentTemp));
 
@@ -123,23 +128,26 @@ class WaterHeaterOverkizPassApcHandler {
 
     this.ctx.setCapability('cozytouch_boost', isOn(firstStateValue(states, DHW_STATES.BOOST)));
 
+    // Only a tank that has an absence control reports one.
     const absence = firstStateValue(states, DHW_STATES.ABSENCE);
-    const isAway = isOn(absence);
-    this.ctx.setCapability('cozytouch_away_mode', isAway);
+    const isAway = absence !== null && isOn(absence);
+    if (absence !== null) this.ctx.setCapability('cozytouch_away_mode', isAway);
 
     const onOff = firstStateValue(states, DHW_STATES.ON_OFF);
-    if (onOff !== null && !isOn(onOff)) {
-      this.ctx.setCapability('cozytouch_heating_mode', 'off');
-      return;
-    }
-    if (isAway) {
-      this.ctx.setCapability('cozytouch_heating_mode', 'off');
-      return;
-    }
+    if (onOff === null && !isAway) return;
+    this.ctx.setCapability('cozytouch_heating_mode', isAway || !isOn(onOff) ? 'off' : 'auto');
+  }
 
-    const dhwMode = firstStateValue(states, DHW_STATES.MODE);
-    const mode = OVERKIZ_DHW_TO_MODE[dhwMode];
-    if (mode) this.ctx.setCapability('cozytouch_heating_mode', mode);
+  /**
+   * The mode, profile and configuration have no tile, so the log is the only
+   * place they show up — once per distinct combination, which is what a support
+   * report needs to name them.
+   */
+  _noteSchedule(states) {
+    const description = describeTankSchedule(states);
+    if (description === null || this._loggedSchedules.has(description)) return;
+    this._loggedSchedules.add(description);
+    this.ctx.log(`Tank reports ${description}. This tank is driven by its on/off switch and boost; these are not named in the app.`);
   }
 
 }
