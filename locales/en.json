@@ -20,7 +20,9 @@
     "mode_not_supported": "This device does not support that heating mode.",
     "boost_not_supported": "This device does not support boost mode.",
     "capability_not_supported": "This control does not exist on this device model.",
-    "capabilities_unmapped": "This model is not fully supported yet: none of the values the app reads exist on it. Send a diagnostic report so support can be added."
+    "capabilities_unmapped": "This model is not fully supported yet: none of the values the app reads exist on it. Send a diagnostic report so support can be added.",
+    "schedule_not_supported": "This device has no weekly comfort schedule to change.",
+    "schedule_failed": "Comfort periods not changed:"
   },
   "settings": {
     "sync_interval": "Update interval (seconds)"

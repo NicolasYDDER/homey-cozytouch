@@ -411,7 +411,7 @@ The following devices have been validated with real hardware:
 | **Atlantic Calypso** (Ballon Thermodynamique) | Thermodynamic water heater | Overkiz | `water_heater` | Fully working (mode, temperature, boost, away) |
 | **Atlantic Pass Cozytouch** (ref. 602251) | Wall module | Overkiz | `pass_cozytouch` | Fully working (heating level, on/off) |
 | **Shogun Zone Control** | Main unit + heating/cooling zones | Overkiz | `zone_control` | Fully working (HVAC mode, zone temps/modes, on/off, tile heat/cool) |
-| **Sauter / Thermor Ipala** | Adjustable-setpoint radiator | Overkiz | `heater` | Fully working (mode, temperature, on/off) |
+| **Sauter / Thermor Ipala** | Adjustable-setpoint radiator | Overkiz | `heater` | Fully working (mode, temperature, on/off); energy, active level and comfort periods since 1.5.0, not yet verified on hardware |
 
 Added from user reports, not yet validated on real hardware: **Atlantic Alféa Extensa Duo A.I. 5 R32** (Magellan `modelId` 212, paired under `heat_pump` + `water_heater` — see the Pass APC heat pump section below) and **Calypso connecté 240L** (Magellan `modelId` 1658, `productId` 62, paired under `water_heater` — its gateway answers on Cozytouch/Magellan only, the Overkiz side returns `No such user account`; own capability block since 1.4.12, see [Water Heater — Calypso connecté](#water-heater--calypso-connecté-productid-62-modelid-1658) below). See [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5). Also **Alféa Extensa S Duo 8**'s hot water tank (Magellan `modelId` 1376, productId 47, paired under `water_heater`), whose Cozytouch/Magellan capability block differs from every other tank mapped so far — see [Water Heater — Alféa Extensa Duo tank](#water-heater--alféa-extensa-duo-tank-productid-47-modelid-1376) below.
 
@@ -600,7 +600,27 @@ Adjustable-setpoint radiators stay on the `heater` driver (no dedicated driver).
 |-------------|--------------------------|----------------|
 | Adjustable setpoint heater | `io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent` | Sauter / Thermor Ipala |
 
-**Capabilities**: target temperature, measure temperature, heating mode, on/off
+**Capabilities**: target temperature, measure temperature, heating mode, on/off, plus the three below, which are added to the device the first time the radiator reports the data behind them (so a radiator paired by an earlier version gets them without being re-added).
+
+The Overkiz stack of one Ipala is five endpoints; the app reads three of them:
+
+| Endpoint | Component | Used for |
+|----------|-----------|----------|
+| `#1` | `AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent` | Mode, setpoint, level, rated power, working rate, weekly schedule |
+| `#2` | `io:TemperatureInCelciusIOSystemDeviceSensor` | Room temperature |
+| `#5` | `io:CumulatedElectricalEnergyConsumptionIOSystemDeviceSensor` | Energy counter |
+
+(`#3` is a window contact and `#4` an occupancy sensor, neither exposed.) The counter is found by component name among the radiator's siblings, not by its index.
+
+| Capability | Source | Notes |
+|------------|--------|-------|
+| `meter_power` (kWh) | `core:ElectricEnergyConsumptionState` on the counter endpoint, in Wh ÷ 1000 | Cumulative, so Homey Energy and Insights can use it as is. Resolution on the units seen is 1 kWh. |
+| `measure_power` (W) | `io:PowerState` × `io:CurrentWorkingRateState` ÷ 100 | **An estimate**, flagged `isApproximated`: the radiator publishes its rating (750 / 1000 W…) and the share of time its element is on, not a measured power. Reads 0 W while the radiator is off — a dump of one in standby still carried a working rate of 100 %. |
+| `cozytouch_heating_level` | `io:TargetHeatingLevelState` | Read-only. The level the radiator is applying *now*: `comfort`, `eco`, `off`, `frostprotection`, `comfort-1/-2`. On a programmed radiator this is what changes at the start and end of a comfort period. |
+
+**Weekly schedule**. `core:TimeProgramState` holds, per weekday, three `{start, end}` windows (`00:00`–`00:00` = unused). A window is a *comfort* period; outside every window the radiator is at its eco level. The Flow action **Set comfort periods** reads the program, replaces the chosen day (or Monday–Friday / weekend / every day) and sends the whole program back with `setTimeProgram`; the other days are returned exactly as reported. Input is `06:30-08:00, 17:00-22:00` (three periods at most, on the hour or half hour, ending by 23:30); `none` or empty means eco all day.
+
+Not verified on hardware: nobody publishes a `setTimeProgram` call, so the parameter format (the same list of seven day objects the state returns) is the most likely one, not a known one. The payload is logged (`Sending setTimeProgram: …`) so a refusal can be diagnosed from one report. `core:EcoRoomTemperatureState` reads 3.5 on every dump next to `io:SetpointLoweringTemperatureInProgModeState` 3.5, which looks like a setback rather than a temperature, so there is no eco-temperature action yet; the target-temperature tile writes the comfort temperature.
 
 ### Hub/Gateway (Not Directly Controlled)
 
@@ -679,6 +699,7 @@ homey-cozytouch/
 │       ├── overkiz-commands.js         # Which commands an endpoint advertises
 │       ├── overkiz-device.js           # Widget / controllableName detection
 │       ├── pairing.js                  # Exclude already-paired devices by data.id
+│       ├── time-program.js             # Ipala weekly comfort periods: parse + rewrite
 │       └── water-heater-modes.js       # Modes a tank accepts, per protocol
 │
 ├── settings/

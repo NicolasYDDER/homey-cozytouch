@@ -1,6 +1,6 @@
 {
   "id": "com.nicolasydder.cozytouch",
-  "version": "1.4.12",
+  "version": "1.5.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -791,6 +791,60 @@
       "getable": true,
       "setable": true,
       "uiComponent": "toggle"
+    },
+    "cozytouch_heating_level": {
+      "type": "enum",
+      "title": {
+        "en": "Active level",
+        "fr": "Niveau actif"
+      },
+      "values": [
+        {
+          "id": "off",
+          "title": {
+            "en": "Off",
+            "fr": "Arrêt"
+          }
+        },
+        {
+          "id": "frostprotection",
+          "title": {
+            "en": "Frost Protection",
+            "fr": "Hors-gel"
+          }
+        },
+        {
+          "id": "eco",
+          "title": {
+            "en": "Eco",
+            "fr": "Eco"
+          }
+        },
+        {
+          "id": "comfort-2",
+          "title": {
+            "en": "Comfort -2",
+            "fr": "Confort -2"
+          }
+        },
+        {
+          "id": "comfort-1",
+          "title": {
+            "en": "Comfort -1",
+            "fr": "Confort -1"
+          }
+        },
+        {
+          "id": "comfort",
+          "title": {
+            "en": "Comfort",
+            "fr": "Confort"
+          }
+        }
+      ],
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
     }
   },
   "flow": {
@@ -1009,6 +1063,35 @@
             "type": "device",
             "name": "device",
             "filter": "capabilities=cozytouch_away_mode"
+          }
+        ]
+      },
+      {
+        "id": "heating_level_changed",
+        "title": {
+          "en": "Active level changed",
+          "fr": "Niveau actif changé"
+        },
+        "titleFormatted": {
+          "en": "Active level of [[device]] changed",
+          "fr": "Niveau actif de [[device]] changé"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_heating_level"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "level",
+            "type": "string",
+            "title": {
+              "en": "Level",
+              "fr": "Niveau"
+            },
+            "example": "comfort"
           }
         ]
       }
@@ -1412,6 +1495,116 @@
             ]
           }
         ]
+      },
+      {
+        "id": "set_comfort_periods",
+        "title": {
+          "en": "Set comfort periods",
+          "fr": "Définir les plages de confort"
+        },
+        "titleFormatted": {
+          "en": "Set comfort periods of [[device]] on [[day]] to [[periods]]",
+          "fr": "Définir les plages de confort de [[device]] pour [[day]] sur [[periods]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_heating_level"
+          },
+          {
+            "type": "dropdown",
+            "name": "day",
+            "title": {
+              "en": "Day",
+              "fr": "Jour"
+            },
+            "values": [
+              {
+                "id": "monday",
+                "label": {
+                  "en": "Monday",
+                  "fr": "Lundi"
+                }
+              },
+              {
+                "id": "tuesday",
+                "label": {
+                  "en": "Tuesday",
+                  "fr": "Mardi"
+                }
+              },
+              {
+                "id": "wednesday",
+                "label": {
+                  "en": "Wednesday",
+                  "fr": "Mercredi"
+                }
+              },
+              {
+                "id": "thursday",
+                "label": {
+                  "en": "Thursday",
+                  "fr": "Jeudi"
+                }
+              },
+              {
+                "id": "friday",
+                "label": {
+                  "en": "Friday",
+                  "fr": "Vendredi"
+                }
+              },
+              {
+                "id": "saturday",
+                "label": {
+                  "en": "Saturday",
+                  "fr": "Samedi"
+                }
+              },
+              {
+                "id": "sunday",
+                "label": {
+                  "en": "Sunday",
+                  "fr": "Dimanche"
+                }
+              },
+              {
+                "id": "weekdays",
+                "label": {
+                  "en": "Monday to Friday",
+                  "fr": "Du lundi au vendredi"
+                }
+              },
+              {
+                "id": "weekend",
+                "label": {
+                  "en": "Saturday and Sunday",
+                  "fr": "Samedi et dimanche"
+                }
+              },
+              {
+                "id": "all",
+                "label": {
+                  "en": "Every day",
+                  "fr": "Tous les jours"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "name": "periods",
+            "title": {
+              "en": "Comfort periods",
+              "fr": "Plages de confort"
+            },
+            "placeholder": {
+              "en": "06:30-08:00, 17:00-22:00",
+              "fr": "06:30-08:00, 17:00-22:00"
+            }
+          }
+        ]
       }
     ],
     "conditions": [
@@ -1623,6 +1816,76 @@
             "type": "device",
             "name": "device",
             "filter": "capabilities=cozytouch_away_mode"
+          }
+        ]
+      },
+      {
+        "id": "is_heating_level",
+        "title": {
+          "en": "Active level !{{is|is not}} ...",
+          "fr": "Le niveau actif !{{est|n'est pas}} ..."
+        },
+        "titleFormatted": {
+          "en": "Active level of [[device]] !{{is|is not}} [[level]]",
+          "fr": "Le niveau actif de [[device]] !{{est|n'est pas}} [[level]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "capabilities=cozytouch_heating_level"
+          },
+          {
+            "type": "dropdown",
+            "name": "level",
+            "title": {
+              "en": "Level",
+              "fr": "Niveau"
+            },
+            "values": [
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "frostprotection",
+                "label": {
+                  "en": "Frost Protection",
+                  "fr": "Hors-gel"
+                }
+              },
+              {
+                "id": "eco",
+                "label": {
+                  "en": "Eco",
+                  "fr": "Eco"
+                }
+              },
+              {
+                "id": "comfort-2",
+                "label": {
+                  "en": "Comfort -2",
+                  "fr": "Confort -2"
+                }
+              },
+              {
+                "id": "comfort-1",
+                "label": {
+                  "en": "Comfort -1",
+                  "fr": "Confort -1"
+                }
+              },
+              {
+                "id": "comfort",
+                "label": {
+                  "en": "Comfort",
+                  "fr": "Confort"
+                }
+              }
+            ]
           }
         ]
       }
