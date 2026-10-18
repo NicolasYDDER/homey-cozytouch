@@ -339,6 +339,11 @@ class CozyTouchApp extends Homey.App {
         await args.device.setPassLevel(args.level);
       });
 
+    this.homey.flow.getActionCard('set_comfort_periods')
+      .registerRunListener(async (args) => {
+        await args.device.setComfortPeriods(args.day, args.periods);
+      });
+
     this.homey.flow.getActionCard('set_boost')
       .registerRunListener(async (args) => {
         await args.device.setBoostMode(args.state === 'on');
@@ -362,6 +367,11 @@ class CozyTouchApp extends Homey.App {
     this.homey.flow.getConditionCard('is_heating_mode')
       .registerRunListener(async (args) => {
         return args.device.getCapabilityValue('cozytouch_heating_mode') === args.mode;
+      });
+
+    this.homey.flow.getConditionCard('is_heating_level')
+      .registerRunListener(async (args) => {
+        return args.device.getCapabilityValue('cozytouch_heating_level') === args.level;
       });
 
     this.homey.flow.getConditionCard('is_zone_control_hvac_mode')

@@ -20,7 +20,9 @@
     "mode_not_supported": "Cet appareil ne prend pas en charge ce mode de chauffage.",
     "boost_not_supported": "Cet appareil ne prend pas en charge le mode boost.",
     "capability_not_supported": "Cette commande n'existe pas sur ce modèle d'appareil.",
-    "capabilities_unmapped": "Ce modèle n'est pas encore entièrement pris en charge : aucune des valeurs lues par l'application n'existe sur cet appareil. Envoyez un rapport de diagnostic pour que la prise en charge soit ajoutée."
+    "capabilities_unmapped": "Ce modèle n'est pas encore entièrement pris en charge : aucune des valeurs lues par l'application n'existe sur cet appareil. Envoyez un rapport de diagnostic pour que la prise en charge soit ajoutée.",
+    "schedule_not_supported": "Cet appareil n'a pas de programme hebdomadaire de confort à modifier.",
+    "schedule_failed": "Plages de confort inchangées :"
   },
   "settings": {
     "sync_interval": "Intervalle de mise à jour (secondes)"

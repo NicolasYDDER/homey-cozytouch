@@ -203,7 +203,15 @@ Controls gas boilers, electric radiators, thermostats, and Ipala-style adjustabl
   - **Program** - Follow the weekly schedule configured in the Cozytouch app
   - **Auto** - Automatic mode when supported
 
-**Ipala (Sauter / Thermor)**: Uses the same **Radiator / Heating** driver. Modes are typically **Off**, **Manual**, and **Program**. On turns the heater to Manual; Off turns it Off.
+**Ipala (Sauter / Thermor)**: Uses the same **Radiator / Heating** driver. Modes are typically **Off**, **Manual**, and **Program**. On turns the heater to Manual; Off turns it Off. An Ipala also shows:
+
+- **Active level** - Comfort, Eco or Off: what the radiator is applying right now. On a programmed radiator it switches when a comfort period starts or ends. Flow cards: *Active level changed* (trigger) and *Active level is...* (condition).
+- **Energy** - The total consumed, in kWh. It feeds Homey Energy and Insights.
+- **Power** - The current power in W. The radiator does not measure it: the app multiplies its rated power by the share of time its element is on, so treat it as an estimate. It reads 0 W when the radiator is off.
+
+These appear on the device after a minute or so, once the radiator has reported them.
+
+**Changing the weekly schedule from a Flow**: the action **Set comfort periods** takes a day (or Monday to Friday, Saturday and Sunday, every day) and a text such as `06:30-08:00, 17:00-22:00`. Those are the comfort periods of that day, up to three, on the hour or half hour and ending by 23:30; the radiator is at its Eco level the rest of the day. Write `none` for Eco all day. The text can come from a tag, so a Flow can build it. Other days are left as they are. This action has not been tested on a real radiator yet; if it fails, send a diagnostic report (the log shows what was sent).
 
 ### Water Heater
 
