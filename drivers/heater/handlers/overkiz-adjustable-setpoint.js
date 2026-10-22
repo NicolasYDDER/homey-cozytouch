@@ -63,7 +63,7 @@ class AdjustableSetpointOverkizHandler {
   constructor(ctx) {
     this.ctx = ctx;
     this._logged = new Set();
-    this._writes = new PendingWrites();
+    this._writes = new PendingWrites({ log: (line) => ctx.log(line) });
     // undefined: not looked up yet · null: this stack has no energy counter
     this._energySensorUrl = undefined;
   }

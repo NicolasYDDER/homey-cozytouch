@@ -57,6 +57,27 @@ describe('pending writes', () => {
     assert.equal(writes.accepts('target_temperature', 18), true);
   });
 
+  it('says so when the device never agreed, and only then', () => {
+    const time = clock();
+    const lines = [];
+    const writes = new PendingWrites({ now: time.fn, log: (line) => lines.push(line) });
+
+    writes.expect('onoff', false);
+    writes.accepts('onoff', true); // still settling
+    writes.accepts('onoff', false); // agrees
+    assert.deepEqual(lines, []);
+
+    writes.expect('onoff', false);
+    time.now += SETTLE_MS;
+    assert.equal(writes.accepts('onoff', true), true);
+    assert.equal(lines.length, 1);
+    assert.match(lines[0], /\[onoff\] "false" was sent but the device still reports "true" 120 s later/);
+
+    // said once: the wait is over
+    writes.accepts('onoff', true);
+    assert.equal(lines.length, 1);
+  });
+
   it('keeps one wait per capability, and the latest command wins', () => {
     const time = clock();
     const writes = new PendingWrites({ now: time.fn });
