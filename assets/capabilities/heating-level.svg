@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 960">
+  <!-- Flame with a drop-shaped hollow: the heating level a radiator is applying -->
+  <path fill-rule="evenodd" d="M480 100 C480 100 220 340 220 568 C220 732 336 860 480 860 C624 860 740 732 740 568 C740 464 692 376 636 312 C624 388 584 436 536 448 C548 328 520 200 480 100 Z M480 800 C404 800 348 744 348 672 C348 608 420 544 480 480 C540 544 612 608 612 672 C612 744 556 800 480 800 Z"/>
+</svg>

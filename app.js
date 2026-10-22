@@ -4,6 +4,7 @@ const Homey = require('homey');
 const CozyTouchAPI = require('./lib/CozyTouchAPI');
 const OverkizAPI = require('./lib/OverkizAPI');
 const { withFreshSession } = require('./lib/helpers/session-retry');
+const { RefreshGate, isQuotaError } = require('./lib/helpers/refresh-gate');
 
 // One app setting: delay between each sync cycle for every device.
 // Cycle = Overkiz refreshStates (if any) → poll all devices.
@@ -29,6 +30,7 @@ class CozyTouchApp extends Homey.App {
     this._syncedDevices = new Set();
     this._syncInFlight = false;
     this._syncIntervalHandle = null;
+    this._refreshGate = new RefreshGate();
 
     // Restore saved credentials and pre-authenticate
     await this._restoreCredentials();
@@ -109,7 +111,7 @@ class CozyTouchApp extends Homey.App {
           if (!api.isAuthenticated()) {
             await api.authenticate();
           }
-          await api.refreshStates();
+          await this._refreshStates(api);
         } catch (err) {
           this.error(`Overkiz refreshStates failed: ${err.message}`);
         }
@@ -124,6 +126,29 @@ class CozyTouchApp extends Homey.App {
       }
     } finally {
       this._syncInFlight = false;
+    }
+  }
+
+  /**
+   * Ask Overkiz to have the devices report again. When it refuses for quota the
+   * request is held back for a while instead of repeated every cycle (see
+   * RefreshGate); the devices are read either way, they just report on their own
+   * schedule meanwhile.
+   */
+  async _refreshStates(api) {
+    if (!this._refreshGate.allows(api)) return;
+
+    try {
+      await api.refreshStates();
+    } catch (err) {
+      if (!isQuotaError(err)) throw err;
+      const waitMs = this._refreshGate.refused(api);
+      this.log(`Overkiz refreshStates refused (quota exceeded); not asked again for ${Math.round(waitMs / 60000)} min, devices are still read every cycle`);
+      return;
+    }
+
+    if (this._refreshGate.accepted(api)) {
+      this.log('Overkiz refreshStates accepted again');
     }
   }
 
