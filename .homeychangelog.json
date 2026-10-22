@@ -1,7 +1,7 @@
 {
   "1.5.3": {
-    "en": "New app icon: a house with a thermometer on a purple tile. It is sharper and easier to recognise at small sizes than the previous one.",
-    "fr": "Nouvelle icône de l'application : une maison avec un thermomètre sur une tuile violette. Elle est plus nette et plus facile à reconnaître en petit que la précédente."
+    "en": "New app icon: a house with a thermometer, drawn as a clean line icon with a transparent background. It is sharper and easier to recognise at small sizes than the previous one.",
+    "fr": "Nouvelle icône de l'application : une maison avec un thermomètre, dessinée en traits fins sur fond transparent. Elle est plus nette et plus facile à reconnaître en petit que la précédente."
   },
   "1.5.2": {
     "en": "Hot water tank of an Alféa Duo heat pump: Auto and Boost no longer jump back to Off a few seconds after you set them. The Cozytouch cloud keeps reporting the tank's old state for a while after a command, and the app re-read it too early. What you set now stays on screen until the tank reports it (two minutes at most). Whether the tank really applies Off and Boost is not settled yet: the app now writes in its log when the tank never took a command, so please send a diagnostic report if Auto still ends up on Off.",
