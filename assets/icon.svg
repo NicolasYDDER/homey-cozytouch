@@ -1,7 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
-  <!-- Cozytouch app icon: house with temperature wave -->
-  <path fill="none" d="M40 8L8 32v36a4 4 0 004 4h56a4 4 0 004-4V32L40 8z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
-  <path fill="none" d="M30 72V48h20v24" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
-  <path fill="none" d="M34 34c0-3.3 2.7-6 6-6s6 2.7 6 6c0 2-1.5 4-3 5s-3 2.5-3 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-  <circle cx="40" cy="49" r="1.5" fill="currentColor"/>
+  <!-- Cozytouch app icon, purple tile variant: white house with a thermometer on a flat violet rounded square -->
+  <rect x="0" y="0" width="80" height="80" rx="18" fill="#5E2B97"/>
+  <g transform="translate(40 40) scale(0.74) translate(-40 -40)">
+    <!-- Roof with eaves -->
+    <path fill="none" d="M5 36L40 8l35 28" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Walls -->
+    <path fill="none" d="M12 30.4V68a4 4 0 0 0 4 4h48a4 4 0 0 0 4-4V30.4" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Thermometer -->
+    <path fill="none" d="M36 50.07V30a4 4 0 0 1 8 0v20.07A8 8 0 1 1 36 50.07z" stroke="#FFFFFF" stroke-width="3.8" stroke-linejoin="round"/>
+    <line fill="none" x1="40" y1="57" x2="40" y2="38" stroke="#FFFFFF" stroke-width="3.8" stroke-linecap="round"/>
+    <circle cx="40" cy="57" r="4" fill="#FFFFFF"/>
+    <!-- Scale ticks -->
+    <line fill="none" x1="50" y1="33" x2="56" y2="33" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/>
+    <line fill="none" x1="50" y1="41" x2="56" y2="41" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/>
+    <line fill="none" x1="50" y1="49" x2="56" y2="49" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/>
+  </g>
 </svg>
