@@ -1,18 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
-  <!-- Cozytouch app icon, purple tile variant: white house with a thermometer on a flat violet rounded square -->
-  <rect x="0" y="0" width="80" height="80" rx="18" fill="#5E2B97"/>
-  <g transform="translate(40 40) scale(0.74) translate(-40 -40)">
-    <!-- Roof with eaves -->
-    <path fill="none" d="M5 36L40 8l35 28" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <!-- Walls -->
-    <path fill="none" d="M12 30.4V68a4 4 0 0 0 4 4h48a4 4 0 0 0 4-4V30.4" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <!-- Thermometer -->
-    <path fill="none" d="M36 50.07V30a4 4 0 0 1 8 0v20.07A8 8 0 1 1 36 50.07z" stroke="#FFFFFF" stroke-width="3.8" stroke-linejoin="round"/>
-    <line fill="none" x1="40" y1="57" x2="40" y2="38" stroke="#FFFFFF" stroke-width="3.8" stroke-linecap="round"/>
-    <circle cx="40" cy="57" r="4" fill="#FFFFFF"/>
-    <!-- Scale ticks -->
-    <line fill="none" x1="50" y1="33" x2="56" y2="33" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/>
-    <line fill="none" x1="50" y1="41" x2="56" y2="41" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/>
-    <line fill="none" x1="50" y1="49" x2="56" y2="49" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 960" fill="none">
+  <!-- Cozytouch app icon: house with a thermometer inside. Transparent line drawing on the full 960x960 canvas (store guideline 1.5) -->
+  <!-- Roof with eaves -->
+  <path fill="none" d="M32 428.8L480 70.4L928 428.8" stroke="currentColor" stroke-width="46.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Walls -->
+  <path fill="none" d="M121.6 357.1V838.4A51.2 51.2 0 0 0 172.8 889.6H787.2A51.2 51.2 0 0 0 838.4 838.4V357.1" stroke="currentColor" stroke-width="46.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Thermometer -->
+  <path fill="none" d="M416 568.6V326.4A64 64 0 0 1 544 326.4V568.6A121.6 121.6 0 1 1 416 568.6Z" stroke="currentColor" stroke-width="43.5" stroke-linejoin="round"/>
+  <line fill="none" x1="480" y1="672" x2="480" y2="390.4" stroke="currentColor" stroke-width="33.3" stroke-linecap="round"/>
+  <circle cx="480" cy="672" r="56.3" fill="currentColor"/>
+  <!-- Scale ticks -->
+  <line fill="none" x1="620.8" y1="339.2" x2="710.4" y2="339.2" stroke="currentColor" stroke-width="38.4" stroke-linecap="round"/>
+  <line fill="none" x1="620.8" y1="441.6" x2="710.4" y2="441.6" stroke="currentColor" stroke-width="38.4" stroke-linecap="round"/>
+  <line fill="none" x1="620.8" y1="544" x2="710.4" y2="544" stroke="currentColor" stroke-width="38.4" stroke-linecap="round"/>
 </svg>
