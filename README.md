@@ -592,6 +592,29 @@ eco/comfort setpoint) and is the one public reference for what these tanks accep
 | Temperature | **Not offered.** The component publishes no tank temperature, and an empty tile reads as a broken sensor. The only candidate is Magellan cap `111` (49.9 °C in the same report), not confirmed to be the tank |
 | Away | **Not offered** unless the tank advertises an absence command; switching the tank off is what away means on it. Removed at init from a tank paired earlier that has none |
 
+**Auto going back to Off, Boost doing nothing (1.5.2).** A second owner of the same model reported that Auto
+selected in the picker was Off again when it was reopened, and that Boost did nothing. No log came with it, so
+the cause is not settled; what the code did is. After every command the device re-polls three seconds later
+(`_schedulePostCommandRefresh`), and the cloud goes on reporting the previous `core:DHWOnOffState` /
+`core:BoostOnOffState` for a while — a minute or more on the Ipala, whose log shows it. That first re-poll wrote
+the old value back over what had just been set. Unlike the setpoint, which the tank is asked to republish
+(`refresh…TargetDHWTemperature`), nothing asks it to republish the on/off or boost state. The handler now holds
+what it wrote for up to two minutes (`PendingWrites`, shared with the Ipala), so the picker and the Boost toggle
+stay where the user put them.
+
+What that does *not* tell is whether the tank applies the commands at all: `setDHWOnOffState` and
+`setBoostOnOffState` are the names Home Assistant drives it with, and no report has yet listed what this tank
+advertises. Two log lines are there for that:
+
+- `[cozytouch_heating_mode] "auto" was sent but the device still reports "off" 120 s later; showing what it reports`
+  — the cloud accepted the command and the tank never applied it (or never republished it). Without this line a
+  command that is only slow and one that was ignored look the same.
+- `Commands this tank accepts: …`, or `No command list stored for this tank (paired before commands were recorded)`.
+  The list is recorded at pairing, so a tank paired before 1.4.13 sends every command unchecked, and removing it
+  and adding it again is what records the real list (after which a command the tank lacks fails with its name).
+
+The tank's temperature is a separate matter and unchanged: the component publishes none, so there is no tile.
+
 The mode, profile and configuration have no tile, so the app log carries them once per distinct combination:
 `Tank reports mode "peakAndOffPeakScheduling", profile "eco", configuration "cumulated"`. Command names are
 picked from what the tank advertises, as everywhere on Overkiz; Test Connection now lists them (see below).
