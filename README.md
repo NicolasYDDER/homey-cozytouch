@@ -411,7 +411,7 @@ The following devices have been validated with real hardware:
 | **Atlantic Calypso** (Ballon Thermodynamique) | Thermodynamic water heater | Overkiz | `water_heater` | Fully working (mode, temperature, boost, away) |
 | **Atlantic Pass Cozytouch** (ref. 602251) | Wall module | Overkiz | `pass_cozytouch` | Fully working (heating level, on/off) |
 | **Shogun Zone Control** | Main unit + heating/cooling zones | Overkiz | `zone_control` | Fully working (HVAC mode, zone temps/modes, on/off, tile heat/cool) |
-| **Sauter / Thermor Ipala** | Adjustable-setpoint radiator | Overkiz | `heater` | Fully working (mode, temperature, on/off); energy, active level and comfort periods since 1.5.0, not yet verified on hardware |
+| **Sauter / Thermor Ipala** | Adjustable-setpoint radiator | Overkiz | `heater` | Fully working (mode, temperature, on/off); energy, active level and comfort periods since 1.5.0 — a first hardware report (1.5.1) confirmed mode, setpoint, active level and the power estimate; the schedule action is accepted by the cloud, its effect is still being confirmed |
 
 Added from user reports, only partly validated on real hardware: **Atlantic Alféa Extensa Duo A.I. 5 R32** (Magellan `modelId` 212; supported through its Overkiz endpoints, paired under `heat_pump` for the heating circuit and outside probe, and under `water_heater` for the tank — see the Pass APC heat pump section below. A first hardware report in 1.4.11 confirmed the endpoints are detected; the tank's controls were reworked in 1.4.13 from it) and **Calypso connecté 240L** (Magellan `modelId` 1658, `productId` 62, paired under `water_heater` — its gateway answers on Cozytouch/Magellan only, the Overkiz side returns `No such user account`; own capability block since 1.4.12, see [Water Heater — Calypso connecté](#water-heater--calypso-connecté-productid-62-modelid-1658) below). See [issue #5](https://github.com/NicolasYDDER/homey-cozytouch/issues/5). Also **Alféa Extensa S Duo 8**'s hot water tank (Magellan `modelId` 1376, productId 47, paired under `water_heater`), whose Cozytouch/Magellan capability block differs from every other tank mapped so far — see [Water Heater — Alféa Extensa Duo tank](#water-heater--alféa-extensa-duo-tank-productid-47-modelid-1376) below.
 
@@ -655,7 +655,17 @@ The Overkiz stack of one Ipala is five endpoints; the app reads three of them:
 
 **Weekly schedule**. `core:TimeProgramState` holds, per weekday, three `{start, end}` windows (`00:00`–`00:00` = unused). A window is a *comfort* period; outside every window the radiator is at its eco level. The Flow action **Set comfort periods** reads the program, replaces the chosen day (or Monday–Friday / weekend / every day) and sends the whole program back with `setTimeProgram`; the other days are returned exactly as reported. Input is `06:30-08:00, 17:00-22:00` (three periods at most, on the hour or half hour, ending by 23:30); `none` or empty means eco all day.
 
-Not verified on hardware: nobody publishes a `setTimeProgram` call, so the parameter format (the same list of seven day objects the state returns) is the most likely one, not a known one. The payload is logged (`Sending setTimeProgram: …`) so a refusal can be diagnosed from one report. `core:EcoRoomTemperatureState` reads 3.5 on every dump next to `io:SetpointLoweringTemperatureInProgModeState` 3.5, which looks like a setback rather than a temperature, so there is no eco-temperature action yet; the target-temperature tile writes the comfort temperature.
+Not verified on hardware: nobody publishes a `setTimeProgram` call, so the parameter format (the same list of seven day objects the state returns) is the most likely one, not a known one. The payload is logged (`Sending setTimeProgram: …`) so a refusal can be diagnosed from one report. The first hardware report (1.5.1) ran the action on Sunday: the cloud accepted the command without an error (a 98 ms Flow run) and the payload in the log was the radiator's own program with that day replaced, but whether the radiator then follows it is still unconfirmed. Afterwards the Cozytouch app showed *"the programming source of the PROG mode is set to external control, switch it to Internal programming (PROG menu)"*. Whether that message comes from the command, and whether the radiator ignores the schedule while it shows, is not known; `core:OperatingModeState` is now logged once per value (`Operating mode reported by the radiator: "…"`) because the app reads both `internal` and `external` as Program. `core:EcoRoomTemperatureState` reads 3.5 on every dump next to `io:SetpointLoweringTemperatureInProgModeState` 3.5, which looks like a setback rather than a temperature, so there is no eco-temperature action yet; the target-temperature tile writes the comfort temperature.
+
+**Found with the first hardware report (1.5.1)**:
+
+- **Mode is the operating mode, never the level.** Until 1.5.1 a radiator at its `eco` level was shown as *Manual*, whatever `core:OperatingModeState` said. A programmed radiator is at that level for most of the day, so Program could not be seen on a tile at all (`prog -> manual` and `comfort -> eco` in the same poll). The mode and on/off tiles now follow the operating mode only; the level has its own tile.
+- **The cloud lags a command by up to a minute.** Switching a radiator off read back as `off -> manual -> off` over two polls, because the first poll after the command still returned the old state. `PendingWrites` keeps the value just sent (mode, on/off, setpoint) for two minutes or until the radiator reports it, so the tiles and the *Heating mode changed* trigger no longer follow the stale read.
+- **Readings update about every ten minutes on the cloud side.** The room temperature, the working rate and so the power estimate each changed on a ten-minute beat in the log (the temperature at `:11`, `:21`, `:31`…, the rate at `:17`, `:27`, `:37`…, later `:36`, `:46`), whatever the sync interval. Homey reads them every cycle; the cloud has nothing newer to give, which is also why a power change shows up minutes after the radiator changed.
+- **`refreshStates` was refused on every cycle** (`429 QUOTA_EXCEEDED`, a request a minute for the whole log) — see [Sync and the Overkiz refresh quota](#sync-and-the-overkiz-refresh-quota).
+- **The tile colour is Homey's.** The device page stayed orange after *Off*, which points to Homey colouring a thermostat from its target-temperature value alone (not confirmed): the Ipala keeps reporting its manual setpoint while off or in eco, and the app has no say in the colour. Showing the setpoint the radiator is *applying* (eco or comfort) instead would need a state this app does not read yet — something like `io:EffectiveTemperatureSetpointState`, to be looked for in the **Test Connection** report of a programmed radiator.
+- **Open:** the temperature probe read about 1 °C higher for the few minutes the radiator was off (20.16 → 21.19 → 21.29 → 20.22 °C), with no other radiator moving; the app passes on what endpoint `#2` reports. Absence mode, a temperature offset and the eco/comfort temperatures were asked for and are not read — they need the states from a **Test Connection** report to be mapped.
+
 
 ### Hub/Gateway (Not Directly Controlled)
 
@@ -745,6 +755,8 @@ homey-cozytouch/
 │       ├── overkiz-commands.js         # Which commands an endpoint advertises
 │       ├── overkiz-device.js           # Widget / controllableName detection
 │       ├── pairing.js                  # Exclude already-paired devices by data.id
+│       ├── pending-writes.js           # Hold a value just sent until the cloud reports it
+│       ├── refresh-gate.js             # Back off the Overkiz refresh after a 429 quota refusal
 │       ├── time-program.js             # Ipala weekly comfort periods: parse + rewrite
 │       └── water-heater-modes.js       # Modes a tank accepts, per protocol
 │
@@ -816,7 +828,9 @@ Pairing uses Homey's system `login_credentials` template (no per-driver HTML).
 │   └── fr.json
 │
 ├── assets/
-│   └── icon.svg                        # App icon
+│   ├── icon.svg                        # App icon
+│   └── capabilities/
+│       └── heating-level.svg           # Icon of the Active level capability
 │
 ├── tests/
 │   └── driver-icons.test.js            # Guideline 1.6 checks on every driver icon.svg
@@ -1139,7 +1153,7 @@ Modes a device has no command for are rejected with an error instead of being si
 
 ### Physical remote / local changes vs cloud (Overkiz)
 
-Some Overkiz / Cozytouch devices **do not always push** state changes to the cloud when you use a **wall remote** or local control. The official Cozytouch app often forces a status refresh when opened; Homey reads the **same cloud API** and runs `refreshStates` on each sync cycle, but:
+Some Overkiz / Cozytouch devices **do not always push** state changes to the cloud when you use a **wall remote** or local control. The official Cozytouch app often forces a status refresh when opened; Homey reads the **same cloud API** and asks for a `refreshStates` on each sync cycle (unless Overkiz is refusing it, see [Sync and the Overkiz refresh quota](#sync-and-the-overkiz-refresh-quota)), but:
 
 - If the gateway has not reported the new setpoint yet, Homey (and Cozytouch until refresh) stay outdated.
 - Opening Cozytouch can make the value appear after a few seconds even when Homey’s previous polls looked stale — that is expected platform behaviour, not Homey using a different backend.
@@ -1150,6 +1164,20 @@ This is a known Overkiz limitation (also documented for Home Assistant):
 - Community note (Atlantic Cozytouch): values may update rarely, or after a hard refresh when opening the vendor app — [HA community thread](https://community.home-assistant.io/t/overkiz-by-somfy-integration-polling-interval-for-atlantic-cozytouch/413164/5)
 
 **Is `refreshStates` still useful?** Yes: it is the right cloud call to *request* a gateway refresh (same family as the official apps). It helps when the bridge responds, and keeps Homey aligned once the cloud has the truth. It cannot invent updates the gateway never sent.
+
+### Sync and the Overkiz refresh quota
+
+Overkiz limits the *refresh* request (`POST /setup/devices/states/refresh`) and answers `429 QUOTA_EXCEEDED`
+(*"Too many requests, try again later"*) when it is asked too often — possibly from a quota shared with the
+official Cozytouch app, which asks for refreshes of its own. One report (an Ipala, 1.5.0) logged that refusal on
+**every** sync cycle for ninety minutes: a request a minute, none accepted, one error line each.
+
+Since 1.5.1 a refused refresh is held back — 2 minutes the first time, doubling up to 15 — and asked for normally
+again once it is accepted. The log says so (`Overkiz refreshStates refused (quota exceeded); not asked again
+for N min`, then `Overkiz refreshStates accepted again`). The devices are still read on every cycle, since
+reading states is not what is limited: nothing is lost but a refresh that was not being granted, and readings
+change when the cloud has new ones (see the ten-minute beat noted under [Ipala](#ipala-heater-driver)).
+`lib/helpers/refresh-gate.js` holds the pacing; `app.js` consults it before every refresh.
 
 ### Device shows as unavailable / rate limits
 

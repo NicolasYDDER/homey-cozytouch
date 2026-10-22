@@ -7,6 +7,8 @@ const AdjustableSetpointOverkizHandler = require('./handlers/overkiz-adjustable-
 const { isAdjustableSetpointElectricalHeater } = require('../../lib/helpers/overkiz-device');
 const { ScheduleError } = require('../../lib/helpers/time-program');
 
+const { UnsupportedModeError } = AdjustableSetpointOverkizHandler;
+
 class HeaterDevice extends CozyTouchDevice {
 
   _createHandler(store, data) {
@@ -34,8 +36,20 @@ class HeaterDevice extends CozyTouchDevice {
       this._handler.setMode(value));
   }
 
+  /**
+   * Flow action: the shared "Set heating mode" dropdown lists modes across every
+   * driver, so a radiator can be asked for one it has no command for. That comes
+   * back to the Flow as a readable error instead of the raw handler message.
+   */
   async setHeatingMode(mode) {
-    await this._handler.setMode(mode);
+    try {
+      await this._handler.setMode(mode);
+    } catch (err) {
+      if (err instanceof UnsupportedModeError) {
+        throw new Error(`${this.homey.__('errors.mode_not_supported')} (${mode})`);
+      }
+      throw err;
+    }
   }
 
   /**

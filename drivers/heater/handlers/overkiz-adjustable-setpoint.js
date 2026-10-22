@@ -21,6 +21,10 @@ const {
   parsePeriods,
   applyPeriods,
 } = require('../../../lib/helpers/time-program');
+const { PendingWrites } = require('../../../lib/helpers/pending-writes');
+
+/** A heating mode this radiator has no command for. */
+class UnsupportedModeError extends Error {}
 
 function toNumber(value) {
   const n = parseFloat(value);
@@ -37,6 +41,10 @@ function toNumber(value) {
  * Writes use IO-accepted operating params: standby / basic / internal
  * (Homey maps them to off / manual / prog). Room temperature is read from linked
  * sensor endpoint #2, not from the main actuator.
+ *
+ * The cloud keeps reporting the state from before a command for up to a minute,
+ * so what was just written is held on the tiles until the radiator agrees
+ * (PendingWrites) instead of flipping back at the next poll.
  *
  * Beyond the mode and the setpoint it reads:
  *   - the level the radiator is applying right now (comfort / eco / …), which is
@@ -55,6 +63,7 @@ class AdjustableSetpointOverkizHandler {
   constructor(ctx) {
     this.ctx = ctx;
     this._logged = new Set();
+    this._writes = new PendingWrites();
     // undefined: not looked up yet · null: this stack has no energy counter
     this._energySensorUrl = undefined;
   }
@@ -66,28 +75,43 @@ class AdjustableSetpointOverkizHandler {
     this.ctx.log(message);
   }
 
+  /**
+   * A value read from the radiator, shown unless it is the cloud still answering
+   * with the state from before a command.
+   */
+  _show(name, value) {
+    if (this._writes.accepts(name, value)) this.ctx.setCapability(name, value);
+  }
+
   async _runModeCommand(mode) {
     const mapping = MODE_TO_ADJUSTABLE_SETPOINT[mode];
     if (!mapping) {
-      throw new Error(`Unsupported heating mode: ${mode}`);
+      throw new UnsupportedModeError(`Unsupported heating mode: ${mode}`);
     }
     await this.ctx.executeCommand(mapping.command, [mapping.value]);
+    return mapping;
   }
 
   async setTargetTemperature(value) {
     await this.ctx.executeCommand(EXTRA_COMMANDS.SET_TARGET_TEMPERATURE, [value]);
+    this._writes.expect('target_temperature', value);
   }
 
   async setOnOff(value) {
-    await this._runModeCommand(value ? 'manual' : 'off');
-    this.ctx.setCapability('cozytouch_heating_mode', value ? 'manual' : 'off');
-    this.ctx.setCapability('onoff', value);
+    await this.setMode(value ? 'manual' : 'off');
   }
 
   async setMode(mode) {
-    await this._runModeCommand(mode);
+    const mapping = await this._runModeCommand(mode);
     this.ctx.setCapability('cozytouch_heating_mode', mode);
     this.ctx.setCapability('onoff', mode !== 'off');
+
+    // Only a mode set through the operating mode comes back as the operating
+    // mode; a level (Eco+) never does, so there is nothing to wait for.
+    if (mapping.command === EXTRA_COMMANDS.SET_OPERATING_MODE) {
+      this._writes.expect('cozytouch_heating_mode', mode);
+      this._writes.expect('onoff', mode !== 'off');
+    }
   }
 
   /**
@@ -210,27 +234,26 @@ class AdjustableSetpointOverkizHandler {
     // null when nothing the radiator reported says whether it is off
     let heatingOff = null;
 
+    // The mode comes from the operating mode alone. The level is what the
+    // radiator applies right now, and a programmed radiator is at its eco level
+    // for most of the day without having left its program.
     const level = getStateValue(states, STATES.TARGET_HEATING_LEVEL);
-    if (level === 'eco') {
-      // Eco heating level is not exposed as a Homey mode on Ipala.
-      this.ctx.setCapability('cozytouch_heating_mode', 'manual');
-      this.ctx.setCapability('onoff', true);
-      heatingOff = false;
+    const opMode = getStateValue(states, ADJUSTABLE_SETPOINT_STATES.OPERATING_MODE);
+    if (opMode !== null) {
+      // Said once per value: "internal" and "external" both read as Program, and
+      // which one a radiator reports is what a report about its schedule needs.
+      this._logOnce(`mode:${opMode}`, `Operating mode reported by the radiator: "${opMode}"`);
+      const modeStr = ADJUSTABLE_SETPOINT_OPERATING_TO_MODE[opMode] || 'manual';
+      this._show('cozytouch_heating_mode', modeStr);
+      this._show('onoff', modeStr !== 'off');
+      heatingOff = modeStr === 'off';
     } else {
-      const opMode = getStateValue(states, ADJUSTABLE_SETPOINT_STATES.OPERATING_MODE);
-      if (opMode !== null) {
-        const modeStr = ADJUSTABLE_SETPOINT_OPERATING_TO_MODE[opMode] || 'manual';
-        this.ctx.setCapability('cozytouch_heating_mode', modeStr);
-        this.ctx.setCapability('onoff', modeStr !== 'off');
-        heatingOff = modeStr === 'off';
-      } else {
-        const onOff = getStateValue(states, STATES.ON_OFF);
-        if (onOff !== null) {
-          const isOn = onOff === 'on';
-          this.ctx.setCapability('onoff', isOn);
-          this.ctx.setCapability('cozytouch_heating_mode', isOn ? 'manual' : 'off');
-          heatingOff = !isOn;
-        }
+      const onOff = getStateValue(states, STATES.ON_OFF);
+      if (onOff !== null) {
+        const isOn = onOff === 'on';
+        this._show('onoff', isOn);
+        this._show('cozytouch_heating_mode', isOn ? 'manual' : 'off');
+        heatingOff = !isOn;
       }
     }
 
@@ -239,7 +262,7 @@ class AdjustableSetpointOverkizHandler {
     const targetTemp = getStateValue(states, 'core:TargetTemperatureState')
       || getStateValue(states, STATES.HEATING_TARGET_TEMP);
     if (targetTemp !== null) {
-      this.ctx.setCapability('target_temperature', parseFloat(targetTemp));
+      this._show('target_temperature', parseFloat(targetTemp));
     }
 
     // Room temperature lives on linked sensor #2, not on the main actuator.
@@ -265,5 +288,7 @@ class AdjustableSetpointOverkizHandler {
   }
 
 }
+
+AdjustableSetpointOverkizHandler.UnsupportedModeError = UnsupportedModeError;
 
 module.exports = AdjustableSetpointOverkizHandler;

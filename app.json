@@ -1,6 +1,6 @@
 {
   "id": "com.nicolasydder.cozytouch",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -844,7 +844,8 @@
       ],
       "getable": true,
       "setable": false,
-      "uiComponent": "sensor"
+      "uiComponent": "sensor",
+      "icon": "/assets/capabilities/heating-level.svg"
     }
   },
   "flow": {
@@ -853,11 +854,11 @@
         "id": "measure_temperature_changed",
         "title": {
           "en": "Temperature changed",
-          "fr": "Température changée"
+          "fr": "La température a changé"
         },
         "titleFormatted": {
           "en": "Temperature of [[device]] changed",
-          "fr": "Température de [[device]] changée"
+          "fr": "La température de [[device]] a changé"
         },
         "args": [
           {
@@ -882,11 +883,11 @@
         "id": "heating_mode_changed",
         "title": {
           "en": "Heating mode changed",
-          "fr": "Mode de chauffage changé"
+          "fr": "Le mode de chauffage a changé"
         },
         "titleFormatted": {
           "en": "Heating mode of [[device]] changed",
-          "fr": "Mode de chauffage de [[device]] changé"
+          "fr": "Le mode de chauffage de [[device]] a changé"
         },
         "args": [
           {
@@ -911,11 +912,11 @@
         "id": "pass_cozytouch_level_changed",
         "title": {
           "en": "Pass Cozytouch mode changed",
-          "fr": "Mode Pass Cozytouch changé"
+          "fr": "Le mode Pass Cozytouch a changé"
         },
         "titleFormatted": {
           "en": "Pass Cozytouch mode of [[device]] changed",
-          "fr": "Mode Pass Cozytouch de [[device]] changé"
+          "fr": "Le mode Pass Cozytouch de [[device]] a changé"
         },
         "args": [
           {
@@ -940,11 +941,11 @@
         "id": "zone_control_hvac_mode_changed",
         "title": {
           "en": "Zone Control HVAC mode changed",
-          "fr": "Mode CVC Zone Control changé"
+          "fr": "Le mode CVC Zone Control a changé"
         },
         "titleFormatted": {
           "en": "Zone Control HVAC mode of [[device]] changed",
-          "fr": "Mode CVC Zone Control de [[device]] changé"
+          "fr": "Le mode CVC Zone Control de [[device]] a changé"
         },
         "args": [
           {
@@ -969,11 +970,11 @@
         "id": "hvac_mode_changed",
         "title": {
           "en": "HVAC mode changed",
-          "fr": "Mode CVC changé"
+          "fr": "Le mode CVC a changé"
         },
         "titleFormatted": {
           "en": "HVAC mode of [[device]] changed",
-          "fr": "Mode CVC de [[device]] changé"
+          "fr": "Le mode CVC de [[device]] a changé"
         },
         "args": [
           {
@@ -998,11 +999,11 @@
         "id": "boost_turned_on",
         "title": {
           "en": "Boost turned on",
-          "fr": "Mode boost activé"
+          "fr": "Le mode boost a été activé"
         },
         "titleFormatted": {
           "en": "Boost of [[device]] turned on",
-          "fr": "Mode boost de [[device]] activé"
+          "fr": "Le mode boost de [[device]] a été activé"
         },
         "args": [
           {
@@ -1016,11 +1017,11 @@
         "id": "boost_turned_off",
         "title": {
           "en": "Boost turned off",
-          "fr": "Mode boost désactivé"
+          "fr": "Le mode boost a été désactivé"
         },
         "titleFormatted": {
           "en": "Boost of [[device]] turned off",
-          "fr": "Mode boost de [[device]] désactivé"
+          "fr": "Le mode boost de [[device]] a été désactivé"
         },
         "args": [
           {
@@ -1034,11 +1035,11 @@
         "id": "away_mode_turned_on",
         "title": {
           "en": "Away mode turned on",
-          "fr": "Mode absence activé"
+          "fr": "Le mode absence a été activé"
         },
         "titleFormatted": {
           "en": "Away mode of [[device]] turned on",
-          "fr": "Mode absence de [[device]] activé"
+          "fr": "Le mode absence de [[device]] a été activé"
         },
         "args": [
           {
@@ -1052,11 +1053,11 @@
         "id": "away_mode_turned_off",
         "title": {
           "en": "Away mode turned off",
-          "fr": "Mode absence désactivé"
+          "fr": "Le mode absence a été désactivé"
         },
         "titleFormatted": {
           "en": "Away mode of [[device]] turned off",
-          "fr": "Mode absence de [[device]] désactivé"
+          "fr": "Le mode absence de [[device]] a été désactivé"
         },
         "args": [
           {
@@ -1070,11 +1071,11 @@
         "id": "heating_level_changed",
         "title": {
           "en": "Active level changed",
-          "fr": "Niveau actif changé"
+          "fr": "Le niveau actif a changé"
         },
         "titleFormatted": {
           "en": "Active level of [[device]] changed",
-          "fr": "Niveau actif de [[device]] changé"
+          "fr": "Le niveau actif de [[device]] a changé"
         },
         "args": [
           {

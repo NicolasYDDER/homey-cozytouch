@@ -6,8 +6,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const AdjustableSetpointOverkizHandler = require('../drivers/heater/handlers/overkiz-adjustable-setpoint');
+const { PendingWrites, SETTLE_MS } = require('../lib/helpers/pending-writes');
 const { isElectricEnergySensor } = require('../lib/helpers/overkiz-device');
 const { PASS_COZYTOUCH_LEVELS } = require('../lib/constants/overkiz-mappings');
+const { UnsupportedModeError } = AdjustableSetpointOverkizHandler;
 const {
   ScheduleError,
   resolveDays,
@@ -209,9 +211,57 @@ describe('Ipala active level', () => {
     await handler.updateState();
 
     assert.equal(capabilities.get('cozytouch_heating_level'), 'eco');
-    // ...without changing what the mode and on/off tiles already showed for eco
+    // ...and the radiator is still in its program: eco is where a programmed
+    // radiator spends most of the day, not a different mode (it used to read
+    // "manual" there, so Program could never be seen on a tile)
+    assert.equal(capabilities.get('cozytouch_heating_mode'), 'prog');
+    assert.equal(capabilities.get('onoff'), true);
+  });
+
+  it('keeps a manual radiator manual whatever level it is at', async () => {
+    const states = radiatorStates({
+      'core:OperatingModeState': 'basic',
+      'io:TargetHeatingLevelState': 'eco',
+    });
+    const { handler, capabilities } = setup({ states, sensors: SENSORS });
+    await handler.updateState();
+
     assert.equal(capabilities.get('cozytouch_heating_mode'), 'manual');
     assert.equal(capabilities.get('onoff'), true);
+  });
+
+  it('reads a radiator in standby as off even when its level is still eco', async () => {
+    const states = radiatorStates({
+      'core:OperatingModeState': 'standby',
+      'io:TargetHeatingLevelState': 'eco',
+    });
+    const { handler, capabilities } = setup({ states, sensors: SENSORS });
+    await handler.updateState();
+
+    assert.equal(capabilities.get('cozytouch_heating_mode'), 'off');
+    assert.equal(capabilities.get('onoff'), false);
+    assert.equal(capabilities.get('measure_power'), 0);
+  });
+
+  it('falls back to the on/off state when no operating mode is reported', async () => {
+    for (const [onOff, mode] of [['on', 'manual'], ['off', 'off']]) {
+      const states = radiatorStates({ 'core:OperatingModeState': null, 'core:OnOffState': onOff });
+      const { handler, capabilities } = setup({ states, sensors: SENSORS });
+      await handler.updateState();
+
+      assert.equal(capabilities.get('cozytouch_heating_mode'), mode, onOff);
+      assert.equal(capabilities.get('onoff'), onOff === 'on', onOff);
+    }
+  });
+
+  it('says once which operating mode the radiator reports', async () => {
+    const { handler, calls } = setup({ sensors: SENSORS });
+    await handler.updateState();
+    await handler.updateState();
+
+    const lines = calls.logs.filter((line) => line.includes('Operating mode reported'));
+    assert.equal(lines.length, 1);
+    assert.match(lines[0], /"internal"/);
   });
 
   it('leaves the tile alone on a level it has no value for', async () => {
@@ -232,6 +282,103 @@ describe('Ipala active level', () => {
     assert.equal(capabilities.get('cozytouch_heating_mode'), 'prog');
     assert.equal(capabilities.get('onoff'), true);
     assert.equal(capabilities.get('target_temperature'), 19);
+  });
+});
+
+describe('Ipala commands and the cloud catching up', () => {
+  const OFF = { 'core:OperatingModeState': 'standby', 'io:TargetHeatingLevelState': 'off' };
+
+  /** The radiator the cloud still describes as it was before the command. */
+  const staleStates = () => radiatorStates({ 'core:OperatingModeState': 'basic', 'io:TargetHeatingLevelState': 'comfort' });
+
+  it('keeps a radiator switched off off while the cloud still reports the old state', async () => {
+    // The log of the report: off at 22:26:28, "manual" again at :33, "off" at 22:27:33
+    const { handler, capabilities } = setup({ states: staleStates(), sensors: SENSORS });
+    await handler.updateState();
+    assert.equal(capabilities.get('cozytouch_heating_mode'), 'manual');
+
+    await handler.setOnOff(false);
+    assert.equal(capabilities.get('cozytouch_heating_mode'), 'off');
+    assert.equal(capabilities.get('onoff'), false);
+
+    await handler.updateState();
+    assert.equal(capabilities.get('cozytouch_heating_mode'), 'off');
+    assert.equal(capabilities.get('onoff'), false);
+  });
+
+  it('shows the cloud again once it agrees with the command', async () => {
+    const { handler, capabilities } = setup({ states: staleStates(), sensors: SENSORS });
+    await handler.setOnOff(false);
+
+    handler.ctx.getDeviceState = async () => radiatorStates(OFF);
+    await handler.updateState();
+    assert.equal(capabilities.get('cozytouch_heating_mode'), 'off');
+
+    // The wait is over: a later change made elsewhere is a change like any other
+    handler.ctx.getDeviceState = async () => staleStates();
+    await handler.updateState();
+    assert.equal(capabilities.get('cozytouch_heating_mode'), 'manual');
+    assert.equal(capabilities.get('onoff'), true);
+  });
+
+  it('believes the radiator again when it never agreed', async () => {
+    let now = 0;
+    const { handler, capabilities } = setup({ states: staleStates(), sensors: SENSORS });
+    handler._writes = new PendingWrites({ now: () => now });
+
+    await handler.setMode('off');
+    now += SETTLE_MS - 1;
+    await handler.updateState();
+    assert.equal(capabilities.get('cozytouch_heating_mode'), 'off');
+
+    now += 1;
+    await handler.updateState();
+    assert.equal(capabilities.get('cozytouch_heating_mode'), 'manual');
+  });
+
+  it('holds a setpoint just sent against a stale one', async () => {
+    const { handler, capabilities } = setup({ sensors: SENSORS });
+    await handler.updateState();
+    assert.equal(capabilities.get('target_temperature'), 19);
+
+    await handler.setTargetTemperature(20.5);
+    capabilities.set('target_temperature', 20.5); // Homey stores what the tile was set to
+    await handler.updateState();
+    assert.equal(capabilities.get('target_temperature'), 20.5);
+
+    handler.ctx.getDeviceState = async () => radiatorStates({ 'core:TargetTemperatureState': 20.5 });
+    await handler.updateState();
+    assert.equal(capabilities.get('target_temperature'), 20.5);
+  });
+
+  it('sends the commands the radiator accepts for each mode', async () => {
+    const { handler, calls } = setup();
+    await handler.setMode('prog');
+    await handler.setMode('manual');
+    await handler.setOnOff(false);
+    await handler.setTargetTemperature(21);
+
+    assert.deepEqual(calls.executed, [
+      ['setOperatingMode', ['internal']],
+      ['setOperatingMode', ['basic']],
+      ['setOperatingMode', ['standby']],
+      ['setTargetTemperature', [21]],
+    ]);
+  });
+
+  it('does not wait for a mode the radiator never reports back as its mode', async () => {
+    // Eco+ is a level, set with setHeatingLevel; the mode stays what it was
+    const { handler, capabilities } = setup({ states: staleStates(), sensors: SENSORS });
+    await handler.setMode('eco_plus');
+    await handler.updateState();
+
+    assert.equal(capabilities.get('cozytouch_heating_mode'), 'manual');
+  });
+
+  it('refuses a mode it has no command for, and sends nothing', async () => {
+    const { handler, calls } = setup();
+    await assert.rejects(() => handler.setMode('auto'), UnsupportedModeError);
+    assert.equal(calls.executed.length, 0);
   });
 });
 
@@ -385,6 +532,18 @@ describe('Ipala manifest', () => {
     const capability = manifest.capabilities.cozytouch_heating_level;
     assert.deepEqual(capability.values.map((v) => v.id), PASS_COZYTOUCH_LEVELS);
     assert.equal(capability.setable, false);
+  });
+
+  it('gives the level an icon, and every declared capability icon exists', () => {
+    // Without one Homey draws an empty dotted square beside the value
+    assert.ok(manifest.capabilities.cozytouch_heating_level.icon, 'the level declares an icon');
+
+    for (const [id, capability] of Object.entries(manifest.capabilities)) {
+      if (!capability.icon) continue;
+      const file = path.join(__dirname, '..', capability.icon);
+      assert.ok(fs.existsSync(file), `${id} icon ${capability.icon} does not exist`);
+      assert.match(fs.readFileSync(file, 'utf8'), /<svg[^>]*viewBox="0 0 (\d+) \1"/, `${id} icon has a square viewBox`);
+    }
   });
 
   it('only offers the Flow cards to radiators that have the level', () => {

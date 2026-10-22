@@ -209,7 +209,9 @@ Controls gas boilers, electric radiators, thermostats, and Ipala-style adjustabl
 - **Energy** - The total consumed, in kWh. It feeds Homey Energy and Insights.
 - **Power** - The current power in W. The radiator does not measure it: the app multiplies its rated power by the share of time its element is on, so treat it as an estimate. It reads 0 W when the radiator is off.
 
-These appear on the device after a minute or so, once the radiator has reported them.
+These appear on the device after a minute or so, once the radiator has reported them. The radiator reports its room temperature and its heating rate to the Cozytouch cloud about every ten minutes, so those two (and the power worked out from the rate) change on that beat whatever the update interval is.
+
+The **Heating mode** tile shows *Program* for a programmed radiator all day, including its Eco periods; *Active level* is what tells Comfort from Eco. In the Flow cards, *Eco+* and *Auto* are listed for every radiator but an Ipala only does Off, Manual and Program: asking for another one fails with "This device does not support that heating mode".
 
 **Changing the weekly schedule from a Flow**: the action **Set comfort periods** takes a day (or Monday to Friday, Saturday and Sunday, every day) and a text such as `06:30-08:00, 17:00-22:00`. Those are the comfort periods of that day, up to three, on the hour or half hour and ending by 23:30; the radiator is at its Eco level the rest of the day. Write `none` for Eco all day. The text can come from a tag, so a Flow can build it. Other days are left as they are. This action has not been tested on a real radiator yet; if it fails, send a diagnostic report (the log shows what was sent).
 
