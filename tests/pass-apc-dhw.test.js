@@ -4,6 +4,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
 const PassApcHandler = require('../drivers/water_heater/handlers/overkiz-pass-apc');
+const { PendingWrites, SETTLE_MS } = require('../lib/helpers/pending-writes');
 const {
   activeSetpoint,
   describeTankSchedule,
@@ -110,17 +111,39 @@ describe('Pass APC tank — reading', () => {
     const ctx = fakeCtx();
     const handler = new PassApcHandler(ctx);
 
-    await handler.updateState();
-    assert.equal(ctx.logs.length, 1);
-    assert.match(ctx.logs[0], /mode "peakAndOffPeakScheduling", profile "eco", configuration "cumulated"/);
+    const scheduleLines = () => ctx.logs.filter((line) => line.startsWith('Tank reports'));
 
     await handler.updateState();
-    assert.equal(ctx.logs.length, 1, 'repeated the same line on every poll');
+    assert.equal(scheduleLines().length, 1);
+    assert.match(scheduleLines()[0], /mode "peakAndOffPeakScheduling", profile "eco", configuration "cumulated"/);
+
+    await handler.updateState();
+    assert.equal(scheduleLines().length, 1, 'repeated the same line on every poll');
 
     ctx.getDeviceState = async () => states({ 'io:PassAPCDHWProfileState': 'comfort' });
     await handler.updateState();
-    assert.equal(ctx.logs.length, 2);
-    assert.match(ctx.logs[1], /profile "comfort"/);
+    assert.equal(scheduleLines().length, 2);
+    assert.match(scheduleLines()[1], /profile "comfort"/);
+  });
+
+  // A tank paired before commands were recorded has no list, so every command
+  // goes out unchecked; a report about a control that does nothing needs to say so.
+  it('says once which commands the tank accepts', async () => {
+    const ctx = fakeCtx();
+    const handler = new PassApcHandler(ctx);
+    await handler.updateState();
+    await handler.updateState();
+
+    const lines = ctx.logs.filter((line) => line.startsWith('Commands this tank accepts'));
+    assert.equal(lines.length, 1);
+    assert.match(lines[0], /setDHWOnOffState, setBoostOnOffState/);
+  });
+
+  it('says so when no command list was ever stored for the tank', async () => {
+    const ctx = fakeCtx({ commands: [] });
+    await new PassApcHandler(ctx).updateState();
+
+    assert.match(ctx.logs.join('\n'), /No command list stored for this tank \(paired before commands were recorded\)/);
   });
 
   it('logs nothing when the tank reports no schedule at all', async () => {
@@ -132,7 +155,7 @@ describe('Pass APC tank — reading', () => {
       }),
     });
     await new PassApcHandler(ctx).updateState();
-    assert.equal(ctx.logs.length, 0);
+    assert.equal(ctx.logs.some((line) => line.startsWith('Tank reports')), false);
   });
 });
 
@@ -299,6 +322,80 @@ describe('Pass APC tank — on/off and boost', () => {
     const ctx = fakeCtx();
     await assert.rejects(() => new PassApcHandler(ctx).setAwayMode(true), /accepts none of these commands/);
     assert.deepEqual(ctx.sent, []);
+  });
+});
+
+// The device re-polls a few seconds after every command, and the cloud keeps
+// reporting the state from before it for a while: Auto went back to Off and Boost
+// back to off on that first re-poll, whether or not the tank had taken the command.
+describe('Pass APC tank — the cloud catching up after a command', () => {
+  const offStates = () => states({ 'core:DHWOnOffState': 'off' });
+
+  it('keeps Auto on screen while the cloud still reports the tank off', async () => {
+    const ctx = fakeCtx({ tankStates: offStates() });
+    const handler = new PassApcHandler(ctx);
+    await handler.updateState();
+    assert.equal(ctx.values.cozytouch_heating_mode, 'off');
+
+    await handler.setMode('auto');
+    await handler.updateState();
+    assert.equal(ctx.values.cozytouch_heating_mode, 'auto');
+  });
+
+  it('keeps Off on screen while the cloud still reports the tank on', async () => {
+    const ctx = fakeCtx();
+    const handler = new PassApcHandler(ctx);
+    await handler.setMode('off');
+    await handler.updateState();
+    assert.equal(ctx.values.cozytouch_heating_mode, 'off');
+  });
+
+  it('keeps boost on screen while the cloud still reports it off', async () => {
+    const ctx = fakeCtx();
+    const handler = new PassApcHandler(ctx);
+    await handler.updateState();
+    ctx.values.cozytouch_boost = true; // what the tile was set to
+    await handler.setBoost(true);
+
+    await handler.updateState();
+    assert.equal(ctx.values.cozytouch_boost, true);
+  });
+
+  it('follows the tank again once it agrees', async () => {
+    const ctx = fakeCtx({ tankStates: offStates() });
+    const handler = new PassApcHandler(ctx);
+    await handler.setMode('auto');
+
+    ctx.getDeviceState = async () => states();
+    await handler.updateState();
+    assert.equal(ctx.values.cozytouch_heating_mode, 'auto');
+
+    // ...so a later switch-off made in the Cozytouch app is seen
+    ctx.getDeviceState = async () => offStates();
+    await handler.updateState();
+    assert.equal(ctx.values.cozytouch_heating_mode, 'off');
+  });
+
+  it('shows what the tank reports, and says so, when it never took the command', async () => {
+    let now = 0;
+    const ctx = fakeCtx({ tankStates: offStates() });
+    const handler = new PassApcHandler(ctx);
+    handler._writes = new PendingWrites({ now: () => now, log: (line) => ctx.log(line) });
+
+    await handler.setMode('auto');
+    now = SETTLE_MS;
+    await handler.updateState();
+
+    assert.equal(ctx.values.cozytouch_heating_mode, 'off');
+    assert.match(ctx.logs.join('\n'), /\[cozytouch_heating_mode\] "auto" was sent but the device still reports "off" 120 s later/);
+  });
+
+  it('sends the same commands as before', async () => {
+    const ctx = fakeCtx();
+    const handler = new PassApcHandler(ctx);
+    await handler.setMode('auto');
+    await handler.setBoost(true);
+    assert.deepEqual(ctx.sent, [['setDHWOnOffState', ['on']], ['setBoostOnOffState', ['on']]]);
   });
 });
 
