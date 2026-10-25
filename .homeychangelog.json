@@ -1,4 +1,8 @@
 {
+  "1.5.6": {
+    "en": "Ipala / adjustable-setpoint radiators: a new device setting offsets the room temperature Homey shows (-5 to +5 °C) when the Overkiz probe reads consistently warmer or cooler than a reference thermometer. Display only — the radiator setpoint is unchanged.",
+    "fr": "Radiateurs Ipala / à consigne réglable : un nouveau réglage d’appareil décale la température ambiante affichée par Homey (−5 à +5 °C) lorsque la sonde Overkiz reste plus chaude ou plus froide qu’un thermomètre de référence. Affichage seulement — la consigne du radiateur n’est pas modifiée."
+  },
   "1.5.5": {
     "en": "Fixes the Pass Cozytouch mode after a Flow or scene: Homey kept showing Comfort or Off while Cozytouch had the new level, because each sync mis-read the heating level and overwrote the tile. Also adds a Flow condition to check the current Pass mode (Off, Frost protection, Eco, Comfort -2/-1, Comfort).",
     "fr": "Corrige le mode Pass Cozytouch après un Flow ou un scénario : Homey gardait Confort ou Arrêt alors que Cozytouch avait le nouveau niveau, car chaque synchronisation relisait mal le niveau de chauffage et écrasait la tuile. Ajoute aussi une condition de Flow pour vérifier le mode Pass en cours (Arrêt, Hors-gel, Eco, Confort -2/-1, Confort)."
