@@ -1153,6 +1153,7 @@ Target temperature has no app card: Homey's built-in **Set the target temperatur
 | Condition | Description | Parameters |
 |-----------|-------------|------------|
 | Heating mode is... | Check current heating mode (incl. heat pump circuits) | `mode`: off, manual, eco_plus, prog, auto |
+| Pass Cozytouch mode is... | Check the Pass module level | `level`: off, frostprotection, eco, comfort-2, comfort-1, comfort |
 | Zone Control HVAC mode is... | Check the Shogun main unit mode | `mode`: off, heat, cool, dry, auto |
 | Zone mode is... | Check a Shogun zone mode | `mode`: off, manual, prog |
 | Boost is on | Check whether boost is running (water heater) | — |

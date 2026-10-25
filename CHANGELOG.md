@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.5] - 2026-10-25
+
+### Fixed
+- **Pass Cozytouch mode no longer reverts after a Flow or scene.** The poll read `STATES.HEATING_LEVEL` (undefined) instead of `TARGET_HEATING_LEVEL`, so every sync fell back to on→comfort / off→off and wiped the level Homey had just set — while Cozytouch kept the correct command. Also holds the written level with `PendingWrites` until Overkiz catches up (same lag pattern as Ipala). Covered by `tests/pass-cozytouch.test.js`.
+
+### Added
+- **Flow condition** `is_pass_cozytouch_level` — check whether the Pass mode is Off / Frost protection / Eco / Comfort -2 / Comfort -1 / Comfort.
+
 ## [1.4.6] - 2026-09-16
 
 ### Fixed
