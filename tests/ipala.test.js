@@ -71,7 +71,13 @@ function radiatorStates(overrides = {}) {
  * A handler wired to recording stubs. `states` answers the radiator, `sensors`
  * answers the other endpoints by URL; `commands` is the store's command list.
  */
-function setup({ states = radiatorStates(), sensors = {}, devices = DEVICES, commands = [] } = {}) {
+function setup({
+  states = radiatorStates(),
+  sensors = {},
+  devices = DEVICES,
+  commands = [],
+  settings = {},
+} = {}) {
   const capabilities = new Map();
   const calls = { executed: [], options: [], added: [], logs: [] };
 
@@ -85,6 +91,7 @@ function setup({ states = radiatorStates(), sensors = {}, devices = DEVICES, com
       calls.added.push(name);
       return true;
     },
+    getSetting: (key) => settings[key],
     getDeviceState: async () => states,
     executeCommand: async (name, params) => calls.executed.push([name, params]),
     api: {
@@ -176,6 +183,17 @@ describe('Ipala energy', () => {
     assert.equal(capabilities.has('meter_power'), false);
     assert.equal(capabilities.get('measure_temperature'), 15.4);
     assert.equal(capabilities.get('measure_power'), 500);
+  });
+
+  it('applies the room temperature offset setting without changing the Overkiz read', async () => {
+    const { handler, capabilities } = setup({
+      sensors: SENSORS,
+      settings: { temperature_offset: 1.5 },
+    });
+    await handler.updateState();
+
+    assert.equal(capabilities.get('measure_temperature'), 16.9);
+    assert.equal(capabilities.get('target_temperature'), 19);
   });
 
   it('retries the counter lookup after a failed one, but not after "none"', async () => {

@@ -71,6 +71,12 @@ class HeaterDevice extends CozyTouchDevice {
     }
   }
 
+  async onSettings({ changedKeys }) {
+    if (changedKeys.includes('temperature_offset')) {
+      await this.pollFromApp();
+    }
+  }
+
 }
 
 module.exports = HeaterDevice;

@@ -160,6 +160,16 @@ class AdjustableSetpointOverkizHandler {
   }
 
   /**
+   * Device setting: added to the room temperature Overkiz reports. Does not
+   * change the radiator’s setpoint — only what Homey shows / Flows see.
+   */
+  _temperatureOffset() {
+    if (typeof this.ctx.getSetting !== 'function') return 0;
+    const n = parseFloat(this.ctx.getSetting('temperature_offset'));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  /**
    * The energy counter is an endpoint of its own on the radiator's stack. Looked
    * up by name in the account's device list; a failed lookup is not remembered,
    * so the next poll tries again, while "there is none" is.
@@ -268,7 +278,8 @@ class AdjustableSetpointOverkizHandler {
     // Room temperature lives on linked sensor #2, not on the main actuator.
     const currentTemp = await this._readLinkedTemperature();
     if (currentTemp !== null && !Number.isNaN(currentTemp)) {
-      this.ctx.setCapability('measure_temperature', currentTemp);
+      const shown = Math.round((currentTemp + this._temperatureOffset()) * 10) / 10;
+      this.ctx.setCapability('measure_temperature', shown);
     }
 
     await this._updateEnergy(states, heatingOff);
