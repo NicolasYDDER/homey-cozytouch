@@ -2,10 +2,15 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const PassCozytouchOverkizHandler = require('../drivers/pass_cozytouch/handlers/overkiz');
 const { PendingWrites, SETTLE_MS } = require('../lib/helpers/pending-writes');
-const { STATES } = require('../lib/constants/overkiz-mappings');
+const { STATES, PASS_COZYTOUCH_LEVELS } = require('../lib/constants/overkiz-mappings');
+
+const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'app.json'), 'utf8'));
+const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 
 function passStates(overrides = {}) {
   const base = {
@@ -102,5 +107,25 @@ describe('Pass Cozytouch Overkiz handler', () => {
     await handler.updateState();
     assert.equal(capabilities.get('cozytouch_pass_level'), 'comfort');
     assert.equal(capabilities.get('onoff'), true);
+  });
+});
+
+describe('Pass Cozytouch Flow condition', () => {
+  it('declares is_pass_cozytouch_level with the same levels as the action card', () => {
+    const condition = manifest.flow.conditions.find((c) => c.id === 'is_pass_cozytouch_level');
+    const action = manifest.flow.actions.find((a) => a.id === 'set_pass_cozytouch_level');
+    assert.ok(condition, 'condition card missing from app.json');
+    assert.ok(condition.titleFormatted, 'condition needs titleFormatted');
+    assert.match(condition.args.find((a) => a.type === 'device').filter, /pass_cozytouch/);
+
+    const conditionLevels = condition.args.find((a) => a.name === 'level').values.map((v) => v.id);
+    const actionLevels = action.args.find((a) => a.name === 'level').values.map((v) => v.id);
+    assert.deepEqual(conditionLevels, actionLevels);
+    assert.deepEqual(conditionLevels, PASS_COZYTOUCH_LEVELS);
+  });
+
+  it('registers a run listener for is_pass_cozytouch_level', () => {
+    assert.match(appSource, /getConditionCard\('is_pass_cozytouch_level'\)/);
+    assert.match(appSource, /cozytouch_pass_level/);
   });
 });

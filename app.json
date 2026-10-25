@@ -1889,6 +1889,76 @@
             ]
           }
         ]
+      },
+      {
+        "id": "is_pass_cozytouch_level",
+        "title": {
+          "en": "Pass Cozytouch mode !{{is|is not}} ...",
+          "fr": "Le mode Pass Cozytouch !{{est|n'est pas}} ..."
+        },
+        "titleFormatted": {
+          "en": "Pass Cozytouch mode !{{is|is not}} [[level]]",
+          "fr": "Le mode Pass Cozytouch !{{est|n'est pas}} [[level]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=pass_cozytouch"
+          },
+          {
+            "type": "dropdown",
+            "name": "level",
+            "title": {
+              "en": "Mode",
+              "fr": "Mode"
+            },
+            "values": [
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Arrêt"
+                }
+              },
+              {
+                "id": "frostprotection",
+                "label": {
+                  "en": "Frost Protection",
+                  "fr": "Hors-gel"
+                }
+              },
+              {
+                "id": "eco",
+                "label": {
+                  "en": "Eco",
+                  "fr": "Eco"
+                }
+              },
+              {
+                "id": "comfort-2",
+                "label": {
+                  "en": "Comfort -2",
+                  "fr": "Confort -2"
+                }
+              },
+              {
+                "id": "comfort-1",
+                "label": {
+                  "en": "Comfort -1",
+                  "fr": "Confort -1"
+                }
+              },
+              {
+                "id": "comfort",
+                "label": {
+                  "en": "Comfort",
+                  "fr": "Confort"
+                }
+              }
+            ]
+          }
+        ]
       }
     ]
   }
