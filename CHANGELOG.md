@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.6] - 2026-10-25
+
+### Added
+- **Ipala room temperature offset** (device setting, −5…+5 °C). Homey can show a calibrated ambient reading when the Overkiz probe is consistently off versus a reference thermometer. Display only — does not change the radiator setpoint. Covered by `tests/ipala.test.js`.
+
 ## [1.5.5] - 2026-10-25
 
 ### Fixed
