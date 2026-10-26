@@ -11,12 +11,40 @@
     "fr": "Atlantic Cozytouch"
   },
   "description": {
-    "en": "Warm rooms and hot water, exactly when your home needs them",
-    "fr": "Des pièces chaudes et de l'eau chaude, exactement quand votre maison en a besoin"
+    "en": "Heating, hot water and comfort that follow your home",
+    "fr": "Chauffage, eau chaude et confort au rythme de votre maison"
   },
   "category": [
     "climate"
   ],
+  "tags": {
+    "en": [
+      "Thermor",
+      "Sauter",
+      "heating",
+      "water heater",
+      "towel dryer",
+      "heat pump",
+      "air conditioning",
+      "radiator",
+      "Alféa",
+      "Calypso",
+      "Kelud",
+      "Ipala",
+      "Pass Cozytouch",
+      "Shogun",
+      "Naema"
+    ],
+    "fr": [
+      "chauffage",
+      "chauffe eau",
+      "sèche serviettes",
+      "radiateur",
+      "pompe à chaleur",
+      "climatisation",
+      "ballon"
+    ]
+  },
   "brandColor": "#E3001B",
   "images": {
     "small": "/assets/images/small.jpg",

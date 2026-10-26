@@ -1,3 +1,3 @@
-Control your Atlantic heating, hot water, and towel rack devices through the Cozytouch cloud platform. Supports both CozyTouch (Magellan) and Overkiz protocols automatically. Works with Atlantic, Thermor, and Sauter branded products connected to a Cozytouch bridge.
+Bring your Atlantic heating, hot water and climate into everyday life with Homey. Warm the living room before you get home, keep the bathroom towel rack ready for the morning, boost the water heater when guests arrive, or ease everything back when the house is empty.
 
-Tested with Atlantic Kelud and Sauter Asama towel racks, and Atlantic Calypso thermodynamic water heater. Also supports gas boilers, heat pumps, and air conditioning units paired to the Cozytouch app.
+Works with Atlantic, Thermor and Sauter devices already linked to your Cozytouch account — radiators, water heaters, towel racks, heat pumps, air conditioning, Pass Cozytouch modules and zone control. Sign in once, add your devices, then let Homey Flows handle the rest.
